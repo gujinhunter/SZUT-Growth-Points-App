@@ -16,6 +16,35 @@
     "navigationBarTitleText": "苏州工学院成长积分系统",
     "navigationBarTextStyle": "black"
   },
+
+
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#ff6b81",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/projectList/projectList",
+        "text": "积分项目",
+        "iconPath": "assets/icons/project_active.png",
+        "selectedIconPath": "assets/icons/project_active.png"
+      },
+      {
+        "pagePath": "pages/myApplications/myApplications",
+        "text": "我的申请",
+        "iconPath": "assets/icons/apply_active.png",
+        "selectedIconPath": "assets/icons/apply_active.png"
+      },
+      {
+        "pagePath": "pages/myPoints/myPoints",
+        "text": "我的积分",
+        "iconPath": "assets/icons/points_active.png",
+        "selectedIconPath": "assets/icons/points_active.png"
+      }
+    ]
+  },
+
   "sitemapLocation": "sitemap.json",
   "style": "v2",
   "lazyCodeLoading": "requiredComponents"

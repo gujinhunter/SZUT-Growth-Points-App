@@ -1,6 +1,6 @@
 // pages/myApplications/myApplications.js
-// pages/myApplications/myApplications.js
 const db = wx.cloud.database();
+
 Page({
   data: { list: [] },
   onLoad() {

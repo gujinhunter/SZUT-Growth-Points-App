@@ -1,76 +1,76 @@
+const db = wx.cloud.database();
+
 Page({
-    data: {
-      isLoggedIn: false,
-      isBound: false,
-      name: '',
-      studentId: ''
-    },
-  
-    onLoad() {
-      console.log("停留在登录页调试模式");
-    },
-  
-    handleLogin(e) {
-      console.log("微信一键登录", e);
-      this.setData({
-        isLoggedIn: true
-      });
-    },
-  
-    onNameInput(e) {
-      this.setData({ name: e.detail.value });
-    },
-  
-    onIdInput(e) {
-      this.setData({ studentId: e.detail.value });
-    },
-  
-    bindUser() {
-      if (!this.data.name || !this.data.studentId) {
-        wx.showToast({ title: '请填写完整信息', icon: 'none' });
-        return;
-      }
-  
-      // 1. 调用云函数获取 openid（每个用户唯一标识）
-      wx.cloud.callFunction({
-        name: 'getOpenId'
-      }).then(res => {
-        const openid = res.result.openid;
-  
-        // 2. 构造要存入数据库的用户对象
-        const db = wx.cloud.database();
-        const user = {
-          _openid: openid,               // openid：小程序用户唯一标识
-          name: this.data.name,          // 姓名
-          studentId: this.data.studentId,// 学号
-          role: 'student',               // 默认身份是学生
-          createdAt: db.serverDate()     // 自动记录服务器时间
-        };
-  
-        // 3. 保存数据到 "users" 集合
-        db.collection('users').add({
-          data: user
-        }).then(() => {
-          wx.showToast({ title: '绑定成功', icon: 'success' });
-  
-          // 4. 更新状态
-          this.setData({
-            isBound: true
-          });
-  
-          // 5. 跳转到学生端首页（例如项目列表页）
+  data: {
+    needBind: false,
+    name: '',
+    studentId: ''
+  },
+
+  onLoad() {
+    // 检查是否已绑定
+    wx.cloud.callFunction({ name: 'getOpenId' }).then(res => {
+      const openid = res.result.openid;
+      db.collection('users').where({ _openid: openid }).get().then(r => {
+        if (r.data.length > 0) {
+          const user = r.data[0];
           wx.reLaunch({
-            url: '/pages/projectList/projectList'
+            url: user.role === 'admin'
+              ? '/pages/admin/review/review'
+              : '/pages/projectList/projectList'
           });
-  
-        }).catch(err => {
-          console.error('保存失败:', err);
-          wx.showToast({ title: '保存失败，请重试', icon: 'none' });
-        });
-      }).catch(err => {
-        console.error('获取openid失败:', err);
-        wx.showToast({ title: '系统错误，请稍后重试', icon: 'none' });
+        }
       });
+    });
+  },
+
+  handleLogin() {
+    wx.getUserProfile({
+      desc: '用于绑定学生信息',
+      success: (res) => {
+        wx.cloud.callFunction({ name: 'getOpenId' }).then(result => {
+          const openid = result.result.openid;
+          db.collection('users').where({ _openid: openid }).get().then(r => {
+            if (r.data.length === 0) {
+              this.setData({ needBind: true }); // 未绑定 → 显示输入框
+            } else {
+              const user = r.data[0];
+              wx.reLaunch({
+                url: user.role === 'admin'
+                  ? '/pages/admin/review/review'
+                  : '/pages/projectList/projectList'
+              });
+            }
+          });
+        });
+      }
+    });
+  },
+
+  // 处理信息的录入，实现数据的双向绑定
+  onNameInput(e) { this.setData({ name: e.detail.value }); },
+  onIdInput(e) { this.setData({ studentId: e.detail.value }); },
+
+  // 处理当需要进行初次[微信号<——>用户]绑定，在后段数据库添加新用户，并重定向页面
+  bindUser() {
+    if (!this.data.name || !this.data.studentId) {
+      wx.showToast({ title: '请填写完整', icon: 'none' });
+      return;
     }
-  });
-  
+
+    wx.cloud.callFunction({ name: 'getOpenId' }).then(res => {
+      const user = {
+        name: this.data.name,
+        studentId: this.data.studentId,
+        role: 'student',
+        totalPoints: 0,
+        createdAt: db.serverDate()
+      };
+
+      db.collection('users').add({ data: user }).then(() => {
+        wx.showToast({ title: '绑定成功' });
+        wx.reLaunch({ url: '/pages/projectList/projectList' });
+      });
+    });
+  }
+});

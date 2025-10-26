@@ -1,10 +1,29 @@
 <!--pages/projectList/projectList.wxml-->
+
 <view class="container">
-  <view class="card" wx:for="{{projects}}" wx:key="{{_id}}">
-    <view>
-      <text>{{item.name}}（{{item.points}}分）</text>
+  <view wx:if="{{loading}}" class="loading">正在加载活动列表...</view>
+
+  <block wx:for="{{activities}}" wx:key="category">
+    <!-- 分类标题 -->
+    <view class="category" bindtap="toggleCategory" data-category="{{item.category}}">
+      <text class="category-title">{{item.category}}</text>
+      <text class="arrow">{{activeCategory === item.category ? '▲' : '▼'}}</text>
     </view>
-    <view class="small">{{item.description}}</view>
-    <button bindtap="applyToProject" data-id="{{item._id}}">申请</button>
-  </view>
+
+    <!-- 分类下的项目 -->
+    <view wx:if="{{activeCategory === item.category}}" class="activity-list">
+      <block wx:for="{{item.items}}" wx:key="name">
+        <view class="activity-card" bindtap="showDetail" data-item="{{item}}">
+          <view class="activity-name">{{item.name}}</view>
+          <view class="activity-score">
+            积分：
+            <text class="score">
+              {{Array.isArray(item.score) ? item.score.join('/') : item.score}}
+            </text>点
+          </view>
+          <view class="activity-remark">{{item.remark}}</view>
+        </view>
+      </block>
+    </view>
+  </block>
 </view>

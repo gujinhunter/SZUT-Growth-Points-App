@@ -13,8 +13,8 @@
 
     <!-- 微信授权登录按钮 -->
     <!-- 点击后会触发 handleLogin() 函数，用于检查 openid 并判断是否需要绑定 -->
-    <button type="primary" class="login-btn" bindtap="handleLogin">
-      微信一键登录并绑定
+    <button wx:if="{{!needBind}}" type="primary" class="login-btn" bindtap="handleLogin">
+  微信一键登录并绑定
     </button>
 
     <!-- 绑定表单：当 needBind = true 时才显示 -->
