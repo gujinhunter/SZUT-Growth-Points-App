@@ -1,0 +1,11 @@
+<!--pages/myPoints/myPoints.wxml-->
+<view class="container">
+  <view class="card">
+    <view>我的总积分：{{totalPoints}}</view>
+    <view>学院平均分：{{averagePoints}}</view>
+    <view>我的名次：{{rank}}</view>
+  </view>
+  <view class="card" wx:for="{{detail}}" wx:key="{{_id}}">
+    <text>{{item.projectName}}：{{item.points}} 分</text>
+  </view>
+</view>

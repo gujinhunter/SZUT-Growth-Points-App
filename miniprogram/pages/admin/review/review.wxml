@@ -1,0 +1,13 @@
+<!--pages/admin/review/review.wxml-->
+<view class="container">
+  <view class="card">
+    <input placeholder="搜索姓名/学号" bindinput="onSearch"/>
+    <button bindtap="fetch">搜索</button>
+  </view>
+  <view class="card" wx:for="{{list}}" wx:key="{{_id}}">
+    <view>{{item.studentName || item.studentOpenId}} - {{item.projectName}}</view>
+    <view>提交：{{item.createdAt}}</view>
+    <button bindtap="approve" data-id="{{item._id}}">通过</button>
+    <button bindtap="reject" data-id="{{item._id}}">驳回</button>
+  </view>
+</view>

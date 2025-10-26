@@ -1,0 +1,10 @@
+<!--pages/projectList/projectList.wxml-->
+<view class="container">
+  <view class="card" wx:for="{{projects}}" wx:key="{{_id}}">
+    <view>
+      <text>{{item.name}}（{{item.points}}分）</text>
+    </view>
+    <view class="small">{{item.description}}</view>
+    <button bindtap="applyToProject" data-id="{{item._id}}">申请</button>
+  </view>
+</view>

@@ -1,0 +1,11 @@
+<!--pages/myApplications/myApplications.wxml-->
+<view class="container">
+  <view class="card" wx:for="{{list}}" wx:key="{{_id}}">
+    <view>
+      <text>{{item.projectName}} - {{item.status}}</text>
+    </view>
+    <view class="small">提交时间：{{item.createdAt}}</view>
+    <view wx:if="{{item.status==='rejected'}}">驳回备注：{{item.remark}}</view>
+    <button bindtap="viewDetail" data-id="{{item._id}}">查看</button>
+  </view>
+</view>

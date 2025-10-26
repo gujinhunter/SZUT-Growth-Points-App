@@ -1,0 +1,15 @@
+<!--pages/apply/apply.wxml-->
+<view class="container">
+  <view class="card">
+    <view>项目：{{project.name}}（{{project.points}}分）</view>
+    <textarea placeholder="活动说明" bindinput="onDesc"></textarea>
+    <picker mode="date" bindchange="onDateChange">
+      <view>参与时间：{{date || '请选择'}}</view>
+    </picker>
+    <view>
+      <button bindtap="chooseFile">上传证明（图片 / PDF）</button>
+      <view wx:for="{{attachments}}" wx:key="{{index}}">{{item.fileID}}</view>
+    </view>
+    <button bindtap="submit">提交申请</button>
+  </view>
+</view>

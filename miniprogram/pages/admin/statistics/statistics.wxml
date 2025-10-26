@@ -1,0 +1,12 @@
+<!--pages/admin/statistics/statistics.wxml-->
+<view class="container">
+  <view class="card">
+    <button bindtap="exportCsv">导出统计（CSV）</button>
+  </view>
+  <view class="card">
+    <text>排行榜（示例）</text>
+    <view wx:for="{{rankList}}" wx:key="{{_id}}">
+      <text>{{index+1}}. {{item.name}} - {{item.totalPoints}}</text>
+    </view>
+  </view>
+</view>

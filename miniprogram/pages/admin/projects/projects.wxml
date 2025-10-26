@@ -1,0 +1,11 @@
+<!--pages/admin/projects/projects.wxml-->
+<view class="container">
+  <view class="card">
+    <button bindtap="create">新增项目</button>
+  </view>
+  <view class="card" wx:for="{{projects}}" wx:key="{{_id}}">
+    <view>{{item.name}}（{{item.points}}分）</view>
+    <button bindtap="edit" data-id="{{item._id}}">编辑</button>
+    <button bindtap="del" data-id="{{item._id}}">删除</button>
+  </view>
+</view>

@@ -1,0 +1,96 @@
+/* ====================== 背景层 ====================== */
+.background {
+    position: fixed;           /* 固定定位，使背景不随滚动条滚动 */
+    top: 0;                    /* 距离顶部 0 */
+    left: 0;                   /* 距离左边 0 */
+    width: 100vw;              /* 宽度占满整个视口（viewport width） */
+    height: 100vh;             /* 高度占满整个视口（viewport height） */
+    z-index: -1;               /* 设置层级为负数，让背景在所有内容之下 */
+}
+  
+.bg-img {
+    width: 100%;               /* 图片宽度填满父容器 */
+    height: 100%;              /* 图片高度填满父容器 */
+    object-fit: cover;         /* 保持图片比例并裁剪，填满整个区域 */
+    filter: brightness(0.65);  /* 调暗背景亮度为 65%，让前景文字更清晰 */
+}
+  
+/* ====================== 主容器 ====================== */
+.container {
+    display: flex;              /* 使用 Flex 布局 */
+    justify-content: center;    /* 子元素水平居中 */
+    align-items: center;        /* 子元素垂直居中 */
+    height: 100vh;              /* 占满整个屏幕高度 */
+    padding: 20rpx;             /* 页面四周留出一点内边距 */
+    box-sizing: border-box;     /* 让 padding 不影响整体宽高 */
+}
+  
+/* ====================== 白色半透明卡片 ====================== */
+.card {
+    transform: translateY(-40%);           /* 向上移动40%  */
+    background: rgba(255, 255, 255, 0.9);  /* 白色 + 透明度 0.9，稍带透明效果 */
+    border-radius: 24rpx;                  /* 圆角 */
+    padding: 60rpx 50rpx;                  /* 内边距，上下 60、左右 50 */
+    box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.2); /* 投影，让卡片悬浮感更强 */
+    width: 80%;                            /* 占屏幕宽度 80% */
+    max-width: 600rpx;                     /* 最大宽度限制为 600rpx，防止太宽 */
+    text-align: center;                    /* 内部内容居中对齐 */
+}
+  
+/* ====================== 标题文字 ====================== */
+.title {
+    font-size: 34rpx;      /* 字体大小 */
+    font-weight: bold;     /* 加粗 */
+    color: #333;           /* 字体颜色偏深灰 */
+    margin-bottom: 50rpx;  /* 标题与下方按钮之间的间距 */
+}
+  
+/* ====================== 登录按钮 ====================== */
+.login-btn {
+    background-color: #1AAD19;  /* 微信官方绿色 */
+    color: white;               /* 按钮文字为白色 */
+    font-size: 30rpx;           /* 字体大小 */
+    padding: 24rpx 0;           /* 上下内边距 24rpx */
+    border-radius: 50rpx;       /* 圆角按钮 */
+    width: 100%;                /* 按钮占满整个卡片宽度 */
+    margin-bottom: 40rpx;       /* 与下方输入框区域保持距离 */
+}
+  
+/* ====================== 确认绑定按钮 ====================== */
+.bind-btn {
+    background-color: #1AAD19;  /* 同样是绿色按钮，保持风格统一 */
+    color: white;
+    font-size: 30rpx;
+    padding: 24rpx 0;
+    border-radius: 50rpx;
+    width: 100%;
+    margin-top: 30rpx;          /* 与上方输入框区域保持距离 */
+}
+  
+/* ====================== 输入区域整体 ====================== */
+.bind-form {
+    margin-top: 30rpx;          /* 表单与上方按钮保持间距 */
+}
+  
+/* ====================== 单个输入组样式 ====================== */
+.input-group {
+    margin-bottom: 30rpx;       /* 每个输入框之间的垂直间距 */
+    text-align: left;           /* 输入框说明文字靠左对齐 */
+}
+  
+.input-group text {
+    display: block;             /* 让文字独占一行 */
+    font-size: 28rpx;           /* 文字大小 */
+    color: #555;                /* 深灰色文字 */
+    margin-bottom: 10rpx;       /* 与输入框之间的距离 */
+}
+  
+.input-group input {
+    width: 100%;                /* 输入框占满宽度 */
+    height: 70rpx;              /* 输入框高度 */
+    border: 1px solid #ddd;     /* 边框颜色为浅灰 */
+    border-radius: 10rpx;       /* 圆角输入框 */
+    padding: 0 20rpx;           /* 左右内边距 */
+    font-size: 28rpx;           /* 输入文字大小 */
+    background: #fff;           /* 白底 */
+}

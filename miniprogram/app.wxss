@@ -1,27 +1,38 @@
-/**app.wxss**/
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-sizing: border-box;
-} 
+/** app.wxss **/
 
-button {
-  background: initial; 
-}
-
-button:focus{
-  outline: 0;
-}
-
-button::after{
-  border: none;
-}
-
-
+/* 整个小程序页面的全局样式设置 */
 page {
-  background: #be3131;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+    font-family: -apple-system, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Arial";
+    background: #f7f7f8;  /* 设置全局背景颜色为浅灰色，避免纯白太刺眼 */
 }
+
+/* 页面内容的基础容器样式 */
+.container {
+    padding: 16px;  /* 内边距，确保内容不会紧贴屏幕边缘 */
+}
+
+/* 卡片容器样式，用于展示信息块 */
+.card {
+    background: #fff;   /* 卡片背景为白色 */
+    padding: 12px;   /* 内边距，控制卡片内容与边框的距离 */
+    border-radius: 10px;  /* 设置圆角，让卡片边缘更柔和 */
+    margin-bottom: 12px;   /* 卡片之间的间距 */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04); /* 添加轻微阴影，使卡片有浮起的视觉效果 */
+}
+
+/* 按钮的通用样式 */
+.btn {
+    display: inline-block;  /* 让按钮以内联块的形式显示，可设置宽高和边距 */
+    padding: 8px 12px;  /* 设置内边距，控制按钮大小 */
+    border-radius: 6px;  /* 设置圆角 */
+    background: #07c160;  /* 按钮背景颜色为微信主题绿色 */
+    color: #fff;  /* 按钮文字为白色 */
+    text-align: center;  /* 居中文字 */
+}
+
+/* 辅助文字的小号样式 */
+.small {
+    font-size: 12px;  /* 设置字体大小为12px */
+    color: #666;   /* 设置字体颜色为深灰色 */
+}
+  
