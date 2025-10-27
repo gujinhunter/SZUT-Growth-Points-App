@@ -1,15 +1,28 @@
-<!--pages/apply/apply.wxml-->
 <view class="container">
-  <view class="card">
-    <view>项目：{{project.name}}（{{project.points}}分）</view>
-    <textarea placeholder="活动说明" bindinput="onDesc"></textarea>
-    <picker mode="date" bindchange="onDateChange">
-      <view>参与时间：{{date || '请选择'}}</view>
-    </picker>
-    <view>
-      <button bindtap="chooseFile">上传证明（图片 / PDF）</button>
-      <view wx:for="{{attachments}}" wx:key="{{index}}">{{item.fileID}}</view>
+  <view class="title">申请项目：{{projectName}}</view>
+
+  <form bindsubmit="submitForm">
+    <view class="form-item">
+      <text>姓名：</text>
+      <input name="name" placeholder="请输入姓名" />
     </view>
-    <button bindtap="submit">提交申请</button>
-  </view>
+
+    <view class="form-item">
+      <text>联系方式：</text>
+      <input name="phone" placeholder="请输入手机号" />
+    </view>
+
+    <view class="form-item">
+      <text>申请理由：</text>
+      <textarea name="reason" placeholder="请输入申请理由"></textarea>
+    </view>
+
+    <view class="form-item upload">
+      <text>上传附件：</text>
+      <button type="primary" bindtap="chooseFile">选择文件</button>
+      <text wx:if="{{fileName}}">{{fileName}}</text>
+    </view>
+
+    <button formType="submit" type="primary" class="submit-btn">提交申请</button>
+  </form>
 </view>

@@ -13,7 +13,10 @@
     <!-- 分类下的项目 -->
     <view wx:if="{{activeCategory === item.category}}" class="activity-list">
       <block wx:for="{{item.items}}" wx:key="name">
-        <view class="activity-card" bindtap="showDetail" data-item="{{item}}">
+
+        <!-- ✅ 修改点①：将原先的 bindtap="showDetail" 改为 bindtap="goToApply" -->
+        <!-- ✅ 修改点②：传递当前项目对象 data-item="{{item}}" -->
+        <view class="activity-card" bindtap="goToApply" data-item="{{item}}">
           <view class="activity-name">{{item.name}}</view>
           <view class="activity-score">
             积分：
@@ -23,6 +26,7 @@
           </view>
           <view class="activity-remark">{{item.remark}}</view>
         </view>
+
       </block>
     </view>
   </block>

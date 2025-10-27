@@ -12,17 +12,16 @@ Page({
     this.loadActivities();
   },
 
-  // 从数据库加载数据
-  // 从数据库加载全部活动数据（分批拉取）
-loadActivities() {
-    wx.showLoading({ title: '加载中...' });
+  // 从数据库加载数据（分批拉取）
+  loadActivities() {
+    wx.showLoading({ title: '加载中...' }); // 弹出加载中提示，提升用户体验
   
     const MAX_LIMIT = 20; // 每次最多取20条
     db.collection('activities').count().then(res => {
       const total = res.total; // 总记录数
       const batchTimes = Math.ceil(total / MAX_LIMIT); // 需要拉取的次数
+
       const tasks = [];
-  
       for (let i = 0; i < batchTimes; i++) {
         const promise = db.collection('activities')
           .skip(i * MAX_LIMIT)
@@ -35,7 +34,6 @@ loadActivities() {
       Promise.all(tasks).then(results => {
         // 合并所有批次的数据
         let allData = results.reduce((acc, cur) => acc.concat(cur.data), []);
-        console.log('数据库返回全部数据：', allData);
   
         // 按 category 分类整理
         const grouped = {};
@@ -68,13 +66,23 @@ loadActivities() {
     });
   },
 
-  // 点击某个活动显示详情
+  /* ❌ 删除：原先的 showDetail 弹窗函数
   showDetail(e) {
     const { item } = e.currentTarget.dataset;
     wx.showModal({
       title: item.name,
       content: `类别：${item.category}\n积分：${Array.isArray(item.score) ? item.score.join('/') : item.score}点\n说明：${item.remark || '无'}`,
       showCancel: false
+    });
+  }
+  */
+
+  // ✅ 新增：点击活动后跳转到 apply 页面
+  goToApply(e) {
+    const item = e.currentTarget.dataset.item;
+    // 跳转到 apply 页面，同时传递项目 id 和名称
+    wx.navigateTo({
+      url: `/pages/apply/apply?projectId=${item._id}&projectName=${item.name}`
     });
   }
 });

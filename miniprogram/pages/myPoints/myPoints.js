@@ -1,5 +1,4 @@
 // pages/myPoints/myPoints.js
-// pages/myPoints/myPoints.js
 const db = wx.cloud.database();
 Page({
   data: { totalPoints: 0, averagePoints: 0, rank: '-', detail: [] },

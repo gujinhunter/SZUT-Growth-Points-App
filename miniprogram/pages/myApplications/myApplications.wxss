@@ -1,1 +1,60 @@
 /* pages/myApplications/myApplications.wxss */
+.container {
+    padding: 30rpx;
+    background-color: #f9f9fb;
+    min-height: 100vh;
+  }
+  
+  .title {
+    font-size: 36rpx;
+    font-weight: bold;
+    margin-bottom: 20rpx;
+    color: #333;
+  }
+  
+  .card {
+    background: #fff;
+    border-radius: 16rpx;
+    box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.05);
+    padding: 20rpx;
+    margin-bottom: 24rpx;
+  }
+  
+  .row {
+    margin-bottom: 10rpx;
+  }
+  
+  .label {
+    color: #888;
+    width: 180rpx;
+    display: inline-block;
+  }
+  
+  .status {
+    font-weight: bold;
+  }
+  
+  .status.pending {
+    color: #ff9800;
+  }
+  
+  .status.approved {
+    color: #4CAF50;
+  }
+  
+  .status.rejected {
+    color: #f44336;
+  }
+  
+  .file-link {
+    color: #007aff;
+    text-decoration: underline;
+  }
+  
+  .empty {
+    text-align: center;
+    color: #888;
+    margin-top: 200rpx;
+    font-size: 28rpx;
+  }
+  

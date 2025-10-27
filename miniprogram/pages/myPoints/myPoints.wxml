@@ -1,11 +1,41 @@
 <!--pages/myPoints/myPoints.wxml-->
+<!-- pages/myPoints/myPoints.wxml -->
 <view class="container">
-  <view class="card">
-    <view>我的总积分：{{totalPoints}}</view>
-    <view>学院平均分：{{averagePoints}}</view>
-    <view>我的名次：{{rank}}</view>
+  <!-- 顶部积分概览 -->
+  <view class="points-summary">
+    <view class="summary-bg"></view>
+    <view class="summary-content">
+      <text class="title">我的积分</text>
+      <text class="score">{{totalPoints}}</text>
+      <text class="unit">分</text>
+    </view>
   </view>
-  <view class="card" wx:for="{{detail}}" wx:key="{{_id}}">
-    <text>{{item.projectName}}：{{item.points}} 分</text>
+
+  <!-- 积分明细标题 -->
+  <view class="section-title">
+    <text>积分明细</text>
+  </view>
+
+  <!-- 积分明细列表 -->
+  <block wx:if="{{records.length > 0}}">
+    <block wx:for="{{records}}" wx:key="_id">
+      <view class="record-card">
+        <view class="record-left">
+          <text class="record-name">{{item.projectName}}</text>
+          <text class="record-date">{{item.date}}</text>
+        </view>
+        <view class="record-right">
+          <text class="record-score {{item.score > 0 ? 'plus' : 'minus'}}">
+            {{item.score > 0 ? '+' : ''}}{{item.score}}
+          </text>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <!-- 没有积分记录时 -->
+  <view wx:else class="empty">
+    暂无积分记录
   </view>
 </view>
+

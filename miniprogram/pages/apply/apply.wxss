@@ -1,1 +1,39 @@
 /* pages/apply/apply.wxss */
+.container {
+    padding: 30rpx;
+    background-color: #f9f9fb;
+  }
+  
+  .title {
+    font-size: 36rpx;
+    font-weight: bold;
+    margin-bottom: 30rpx;
+    color: #333;
+  }
+  
+  .form-item {
+    margin-bottom: 30rpx;
+  }
+  
+  input,
+  textarea {
+    width: 100%;
+    background: #fff;
+    border-radius: 10rpx;
+    padding: 20rpx;
+    box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.05);
+  }
+  
+  .upload {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .submit-btn {
+    background-color: #ff6b81;
+    color: white;
+    border-radius: 30rpx;
+    margin-top: 20rpx;
+  }
+  
