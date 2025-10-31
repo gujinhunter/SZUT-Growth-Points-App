@@ -5,14 +5,23 @@ Page({
     projectId: '',
     projectName: '',
     fileID: '',
-    fileName: ''
+    fileName: '',
+    currentOpenId: ''
   },
 
-  onLoad(options) {
+  async onLoad(options) {
     this.setData({
       projectId: options.projectId,
       projectName: options.projectName
     });
+
+    try {
+      const res = await wx.cloud.callFunction({ name: 'getOpenId' });
+      this.setData({ currentOpenId: res.result.openid });
+    } catch (err) {
+      console.error('获取 openid 失败', err);
+      wx.showToast({ title: '无法获取身份信息', icon: 'none' });
+    }
   },
 
   // 选择文件
@@ -49,10 +58,15 @@ Page({
   // 提交表单
   submitForm(e) {
     const { name, phone, reason } = e.detail.value;
-    const { projectId, projectName, fileID } = this.data;
+    const { projectId, projectName, fileID, currentOpenId } = this.data;
 
     if (!name || !phone || !reason) {
       wx.showToast({ title: '请填写完整信息', icon: 'none' });
+      return;
+    }
+
+    if (!currentOpenId) {
+      wx.showToast({ title: '身份信息缺失，请重试', icon: 'none' });
       return;
     }
 
@@ -64,6 +78,8 @@ Page({
         phone,
         reason,
         fileID,
+        studentOpenId: currentOpenId,
+        points: 0,
         status: '待审核',
         createTime: new Date()
       },

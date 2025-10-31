@@ -80,7 +80,7 @@ Page({
           // 1) 更新 application 的状态为已通过
           await db.collection('applications').doc(appId).update({
             data: {
-              status: '已通过',
+              status: 'approved',
               reviewTime: new Date()
             }
           });
