@@ -1,12 +1,24 @@
-<!--pages/admin/statistics/statistics.wxml-->
 <view class="container">
-  <view class="card">
-    <button bindtap="exportCsv">导出统计（CSV）</button>
-  </view>
-  <view class="card">
-    <text>排行榜（示例）</text>
-    <view wx:for="{{rankList}}" wx:key="{{_id}}">
-      <text>{{index+1}}. {{item.name}} - {{item.totalPoints}}</text>
+  <view class="title">系统统计</view>
+
+  <view class="summary">
+    <view class="summary-item">
+      <text class="label">总申请数</text>
+      <text class="value">{{totalApplications}}</text>
+    </view>
+    <view class="summary-item">
+      <text class="label">已通过</text>
+      <text class="value pass">{{approved}}</text>
+    </view>
+    <view class="summary-item">
+      <text class="label">已驳回</text>
+      <text class="value reject">{{rejected}}</text>
     </view>
   </view>
+
+  <view class="chart-title">各类别申请数</view>
+  <ec-canvas id="categoryChart" canvas-id="categoryChart" ec="{{ec}}"></ec-canvas>
+
+  <view class="chart-title">积分分布</view>
+  <ec-canvas id="scoreChart" canvas-id="scoreChart" ec="{{ec2}}"></ec-canvas>
 </view>

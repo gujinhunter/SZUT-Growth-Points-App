@@ -1,86 +1,98 @@
 /* pages/myPoints/myPoints.wxss */
-/* pages/myPoints/myPoints.wxss */
 
 .container {
-    background-color: #f9f9fb;
-    min-height: 100vh;
-    padding-bottom: 40rpx;
+    background-color: #f9f9fb; /* 设置页面背景色为浅灰色，略微脱离纯白，增加层次感。 */
+    min-height: 100vh;         /* 确保容器最小高度占满整个视口（vh = viewport height）。 */
+    padding-bottom: 40rpx;     /* 底部留出间距，避免内容紧贴底部。 */
   }
   
   /* 顶部积分卡片 */
   .points-summary {
-    position: relative;
-    height: 300rpx;
-    margin-bottom: 40rpx;
+    position: relative; /* 相对定位，作为内部绝对定位元素的参照。 */
+    height: 300rpx;     /* 固定卡片高度。 */
+    margin-bottom: 40rpx; /* 卡片底部留出空白。 */
   }
   
   .summary-bg {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to right, #ff758c, #ff6b81);
-    border-bottom-left-radius: 60rpx;
-    border-bottom-right-radius: 60rpx;
-    box-shadow: 0 6rpx 12rpx rgba(255, 107, 129, 0.3);
+    position: absolute;   /* 绝对定位，使其覆盖在 `points-summary` 容器内。 */
+    width: 100%;          /* 宽度占满父容器。 */
+    height: 100%;         /* 高度占满父容器。 */
+    background: linear-gradient(to right, #ff758c, #ff6b81); /* 关键样式：从浅粉到深粉的水平渐变背景。 */
+    border-bottom-left-radius: 60rpx;  /* 左下角大圆角。 */
+    border-bottom-right-radius: 60rpx; /* 右下角大圆角，形成卡片悬浮效果。 */
+    box-shadow: 0 6rpx 12rpx rgba(255, 107, 129, 0.3); /* 轻微的阴影效果，增加立体感。 */
   }
   
   .summary-content {
-    position: absolute;
-    top: 80rpx;
+    position: absolute; /* 绝对定位，使内容浮在背景之上。 */
+    top: 80rpx;         /* 距离顶部 80rpx，将内容向下推，避免紧贴屏幕顶部。 */
     left: 0;
-    right: 0;
-    text-align: center;
-    color: #fff;
+    right: 0;           /* 左右定位为 0，使内容居中显示。 */
+    text-align: center; /* 内部文本水平居中。 */
+    color: #fff;        /* 所有文本颜色为白色，与背景形成对比。 */
   }
   
   .summary-content .title {
-    font-size: 34rpx;
-    opacity: 0.9;
+    font-size: 34rpx; /* 标题字体大小。 */
+    opacity: 0.9;     /* 轻微的透明度，使颜色柔和。 */
+  }
+
+  /* ✅ 新增：积分数字与单位在同一行居中 */
+  .score-row {
+    display: flex;
+    justify-content: center;
+    align-items: baseline; /* 保证“分”与数字底部对齐 */
+    margin-top: 20rpx;
   }
   
+  
   .summary-content .score {
-    display: block;
-    font-size: 100rpx;
-    font-weight: bold;
-    line-height: 1.2;
-    margin: 20rpx 0;
+    display: block;    /* 独占一行。 */
+    font-size: 100rpx; /* 巨大的字体，突出总积分。 */
+    font-weight: bold; /* 粗体。 */
+    line-height: 1.2;  /* 行高，控制垂直间距。 */
+    margin: 20rpx 0;   /* 上下留白。 */
   }
   
   .summary-content .unit {
-    font-size: 26rpx;
-    opacity: 0.8;
+    font-size: 26rpx; /* 单位字体大小。 */
+    opacity: 0.8;     /* 轻微透明。 */
   }
   
+  /* --- */
+
   /* 标题 */
   .section-title {
-    font-size: 32rpx;
-    font-weight: bold;
-    margin: 20rpx 40rpx;
-    color: #333;
-    border-left: 8rpx solid #ff6b81;
-    padding-left: 16rpx;
+    font-size: 32rpx;   /* 标题字体大小。 */
+    font-weight: bold;  /* 粗体。 */
+    margin: 20rpx 40rpx; /* 上下左右外边距。 */
+    color: #333;        /* 字体颜色。 */
+    border-left: 8rpx solid #ff6b81; /* 左侧添加一个粗的粉色竖线作为装饰，增强区域划分。 */
+    padding-left: 16rpx; /* 标题文字和左侧竖线之间的间距。 */
   }
   
+  /* --- */
+
   /* 积分明细卡片 */
   .record-card {
-    background-color: #fff;
-    margin: 20rpx 40rpx;
-    border-radius: 20rpx;
-    padding: 24rpx 30rpx;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s;
+    background-color: #fff; /* 卡片背景为白色。 */
+    margin: 20rpx 40rpx;    /* 上下左右外边距，使卡片与边缘和相邻卡片分离。 */
+    border-radius: 20rpx;   /* 卡片圆角。 */
+    padding: 24rpx 30rpx;   /* 内部填充。 */
+    display: flex;          /* 启用 Flex 布局。 */
+    justify-content: space-between; /* 子元素（左右部分）两端对齐。 */
+    align-items: center;    /* 子元素在垂直方向上居中。 */
+    box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.05); /* 柔和的阴影，使卡片轻微浮起。 */
+    transition: transform 0.2s; /* 添加过渡效果，使点击时的缩放变化更平滑。 */
   }
   
   .record-card:active {
-    transform: scale(0.98);
+    transform: scale(0.98); /* 伪类：当卡片被点击或触摸时，缩小到 98%，提供点击反馈。 */
   }
   
   .record-left {
-    display: flex;
-    flex-direction: column;
+    display: flex;         /* 启用 Flex 布局。 */
+    flex-direction: column; /* 子元素垂直堆叠（项目名在日期上方）。 */
   }
   
   .record-name {
@@ -91,7 +103,7 @@
   
   .record-date {
     font-size: 24rpx;
-    color: #888;
+    color: #888; /* 较浅的灰色，弱化日期信息。 */
     margin-top: 6rpx;
   }
   
@@ -101,18 +113,19 @@
   }
   
   .record-score.plus {
-    color: #4CAF50;
+    color: #4CAF50; /* 绿色，用于显示积分增加。 */
   }
   
   .record-score.minus {
-    color: #f44336;
+    color: #f44336; /* 红色，用于显示积分减少（或扣除）。 */
   }
+
+  /* --- */
   
   /* 空状态 */
   .empty {
-    text-align: center;
-    color: #aaa;
-    margin-top: 200rpx;
+    text-align: center; /* 文本居中。 */
+    color: #aaa;       /* 浅灰色文本。 */
+    margin-top: 200rpx; /* 较大的上外边距，将提示文字推到页面中间靠下的位置。 */
     font-size: 28rpx;
   }
-  

@@ -5,6 +5,7 @@
     "pages/apply/apply",
     "pages/myApplications/myApplications",
     "pages/myPoints/myPoints",
+    "pages/admin/home/home",
     "pages/admin/review/review",
     "pages/admin/projects/projects",
     "pages/admin/statistics/statistics"
@@ -16,8 +17,6 @@
     "navigationBarTitleText": "苏州工学院成长积分系统",
     "navigationBarTextStyle": "black"
   },
-
-
   "tabBar": {
     "color": "#999999",
     "selectedColor": "#ff6b81",
@@ -44,7 +43,6 @@
       }
     ]
   },
-
   "sitemapLocation": "sitemap.json",
   "style": "v2",
   "lazyCodeLoading": "requiredComponents"

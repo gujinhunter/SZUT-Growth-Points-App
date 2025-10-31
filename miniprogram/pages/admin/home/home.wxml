@@ -1,0 +1,37 @@
+<!--pages/admin/home/home.wxml-->
+<view class="container">
+  <!-- 顶部标题 -->
+  <view class="header">
+    <image src="/assets/admin-logo.png" class="logo"></image>
+    <view class="title-area">
+      <text class="title">助学信息后台管理系统</text>
+      <text class="subtitle">欢迎回来，管理员</text>
+    </view>
+  </view>
+
+  <!-- 操作面板 -->
+  <view class="panel">
+    <view class="menu" bindtap="goToPage" data-url="/pages/admin/review/review">
+      <image src="/assets/icon-review.png" class="menu-icon"></image>
+      <text class="menu-title">申请审核</text>
+      <text class="menu-desc">查看并审核学生申请</text>
+    </view>
+
+    <view class="menu" bindtap="goToPage" data-url="/pages/admin/projects/projects">
+      <image src="/assets/icon-projects.png" class="menu-icon"></image>
+      <text class="menu-title">项目管理</text>
+      <text class="menu-desc">添加、修改、删除项目</text>
+    </view>
+
+    <view class="menu" bindtap="goToPage" data-url="/pages/admin/statistics/statistics">
+      <image src="/assets/icon-stats.png" class="menu-icon"></image>
+      <text class="menu-title">数据统计</text>
+      <text class="menu-desc">查看系统总体数据分析</text>
+    </view>
+  </view>
+
+  <!-- 底部信息 -->
+  <view class="footer">
+    <text>© 2025 助学成长积分平台</text>
+  </view>
+</view>

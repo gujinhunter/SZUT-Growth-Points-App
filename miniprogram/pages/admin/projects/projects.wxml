@@ -1,11 +1,24 @@
-<!--pages/admin/projects/projects.wxml-->
 <view class="container">
-  <view class="card">
-    <button bindtap="create">新增项目</button>
+  <view class="header">
+    <text class="title">项目管理</text>
+    <button type="primary" size="mini" bindtap="addProject">+ 新增项目</button>
   </view>
-  <view class="card" wx:for="{{projects}}" wx:key="{{_id}}">
-    <view>{{item.name}}（{{item.points}}分）</view>
-    <button bindtap="edit" data-id="{{item._id}}">编辑</button>
-    <button bindtap="del" data-id="{{item._id}}">删除</button>
+
+  <block wx:for="{{projects}}" wx:key="_id">
+    <view class="card">
+      <view class="info">
+        <view class="name">{{item.name}}</view>
+        <view class="category">类别：{{item.category}}</view>
+        <view class="score">积分：{{item.score}}</view>
+      </view>
+      <view class="actions">
+        <button size="mini" bindtap="editProject" data-id="{{item._id}}" data-item="{{item}}">编辑</button>
+        <button size="mini" type="warn" bindtap="deleteProject" data-id="{{item._id}}">删除</button>
+      </view>
+    </view>
+  </block>
+
+  <view wx:if="{{projects.length === 0}}" class="empty">
+    暂无项目，请添加。
   </view>
 </view>

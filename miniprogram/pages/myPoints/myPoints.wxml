@@ -1,13 +1,17 @@
-<!--pages/myPoints/myPoints.wxml-->
 <!-- pages/myPoints/myPoints.wxml -->
+
 <view class="container">
   <!-- 顶部积分概览 -->
   <view class="points-summary">
     <view class="summary-bg"></view>
     <view class="summary-content">
       <text class="title">我的积分</text>
-      <text class="score">{{totalPoints}}</text>
-      <text class="unit">分</text>
+
+      <!--  ✅ 新增：积分数字与单位在同一行居中  -->
+      <view class="score-row">
+        <text class="score">{{totalPoints}}</text>
+        <text class="unit">分</text>
+      </view>
     </view>
   </view>
 

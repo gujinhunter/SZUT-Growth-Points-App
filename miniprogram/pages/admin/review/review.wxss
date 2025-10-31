@@ -1,1 +1,75 @@
-/* pages/admin/review/review.wxss */
+/* miniprogram/pages/admin/review.wxss */
+.container {
+    min-height: 100vh;
+    background: #f9f9fb;
+    padding-bottom: 40rpx;
+    padding-top: 20rpx;
+  }
+  
+  .title {
+    font-size: 36rpx;
+    font-weight: 700;
+    color: #333;
+    padding: 20rpx 30rpx;
+  }
+  
+  .loading {
+    text-align: center;
+    color: #888;
+    margin-top: 30rpx;
+  }
+  
+  .card {
+    background: #fff;
+    margin: 20rpx 30rpx;
+    padding: 22rpx;
+    border-radius: 16rpx;
+    display: flex;
+    justify-content: space-between;
+    box-shadow: 0 6rpx 12rpx rgba(0,0,0,0.04);
+  }
+  
+  .card-left {
+    max-width: 60%;
+  }
+  
+  .project {
+    font-size: 30rpx;
+    font-weight: 600;
+    color: #222;
+  }
+  
+  .name, .time, .reason {
+    font-size: 24rpx;
+    color: #666;
+    margin-top: 8rpx;
+  }
+  
+  .card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  
+  .status {
+    font-weight: 700;
+    font-size: 26rpx;
+  }
+  
+  .status.pending { color: #ff9800; }
+  .status.approved { color: #4CAF50; }
+  .status.rejected { color: #f44336; }
+  
+  .btn-row {
+    display: flex;
+    gap: 10rpx;
+    margin-top: 12rpx;
+  }
+  .empty {
+    text-align: center;
+    color: #aaa;
+    margin-top: 200rpx;
+    font-size: 28rpx;
+  }
+  
