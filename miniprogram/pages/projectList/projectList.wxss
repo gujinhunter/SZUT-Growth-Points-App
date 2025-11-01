@@ -11,7 +11,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #ff74a1;
+    background: #34589e;
     color: white;
     padding: 25rpx;
     margin-top: 20rpx;

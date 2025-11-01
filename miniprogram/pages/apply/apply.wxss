@@ -1,39 +1,169 @@
-/* pages/apply/apply.wxss */
-.container {
-    padding: 30rpx;
-    background-color: #f9f9fb;
-  }
-  
-  .title {
-    font-size: 36rpx;
-    font-weight: bold;
-    margin-bottom: 30rpx;
-    color: #333;
-  }
-  
-  .form-item {
-    margin-bottom: 30rpx;
-  }
-  
-  input,
-  textarea {
-    width: 100%;
-    background: #fff;
-    border-radius: 10rpx;
-    padding: 20rpx;
-    box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.05);
-  }
-  
-  .upload {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  
-  .submit-btn {
-    background-color: #ff6b81;
-    color: white;
-    border-radius: 30rpx;
-    margin-top: 20rpx;
-  }
-  
+.apply-page {
+  min-height: 100vh;
+  padding: 48rpx 32rpx 80rpx;
+  box-sizing: border-box;
+  background-color: #f9f9fb;
+}
+
+.hero-card {
+  padding: 30rpx;
+  border-radius: 28rpx;
+  color: #fff;
+  background: linear-gradient(135deg, #ff74a1 0%, #ff9ec1 100%);
+  /* box-shadow: 0 24rpx 48rpx rgba(255, 116, 161, 0.25); */
+}
+
+.hero-badge {
+  display: inline-block;
+  padding: 10rpx 24rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.hero-title {
+  font-size: 42rpx;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+
+.hero-desc {
+  font-size: 26rpx;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+.section + .section {
+  margin-top: 32rpx;   /* 每个 section 之间留出 32rpx 间隔，可按需求调大/调小 */
+}
+
+
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 28rpx;
+  position: relative;
+  padding-left: 20rpx;
+}
+
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6rpx;
+  height: 32rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(180deg, #ff74a1 0%, #ff9ec1 100%);
+}
+
+.field-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 16rpx;
+}
+
+.field-hint,
+.word-limit {
+  color: #666;
+}
+
+input {
+  width: 100%;
+  height: 92rpx;
+  padding: 0 28rpx;
+  border-radius: 20rpx;
+  background-color: #fff;
+  border: 2rpx solid transparent;
+  box-sizing: border-box;
+  font-size: 28rpx;
+  line-height: 92rpx;
+  transition: all 0.25s ease;
+  box-shadow: inset 0 0 0 rgba(0, 0, 0, 0);
+  overflow: hidden;
+}
+
+textarea {
+  width: 100%;
+  min-height: 200rpx;
+  padding: 26rpx 28rpx;
+  border-radius: 20rpx;
+  background-color: #fff;
+  border: 2rpx solid transparent;
+  box-sizing: border-box;
+  font-size: 28rpx;
+  line-height: 1.6;
+  transition: all 0.25s ease;
+  box-shadow: inset 0 0 0 rgba(0, 0, 0, 0);
+}
+
+input:focus,
+textarea:focus {
+  border-color: #ff74a1;
+  background-color: #fff;
+  box-shadow: 0 12rpx 30rpx rgba(255, 116, 161, 0.18);
+}
+
+.upload-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 116, 161, 0.08);
+  border: 2rpx dashed rgba(255, 116, 161, 0.45);
+}
+
+.upload-desc {
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+.upload-file {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #333;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.upload-btn {
+  padding: 0 32rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid #ff74a1;
+  background: rgba(255, 255, 255, 0.6);
+  color: #ff74a1;
+  font-size: 26rpx;
+}
+
+.upload-btn::after {
+  border: none;
+}
+
+.submit-btn {
+  margin-top: 40rpx;
+  height: 96rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #ff74a1 0%, #ff9ec1 100%);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 600;
+  box-shadow: 0 16rpx 32rpx rgba(255, 116, 161, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.submit-btn::after {
+  border: none;
+}

@@ -1,4 +1,7 @@
 {
-    "navigationBarTitleText": "管理员主页"
-}
-  
+    "navigationBarTitleText": "管理员首页",
+    "usingComponents": {
+      "ec-canvas": "/components/ec-canvas/ec-canvas"
+    },
+    "enablePullDownRefresh": true
+  }

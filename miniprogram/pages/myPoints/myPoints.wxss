@@ -17,7 +17,7 @@
     position: absolute;   /* 绝对定位，使其覆盖在 `points-summary` 容器内。 */
     width: 100%;          /* 宽度占满父容器。 */
     height: 100%;         /* 高度占满父容器。 */
-    background: linear-gradient(to right, #ff758c, #ff6b81); /* 关键样式：从浅粉到深粉的水平渐变背景。 */
+    background: linear-gradient(to right, #34589e, #0942b3); /* 关键样式：从浅粉到深粉的水平渐变背景。 */
     border-bottom-left-radius: 60rpx;  /* 左下角大圆角。 */
     border-bottom-right-radius: 60rpx; /* 右下角大圆角，形成卡片悬浮效果。 */
     box-shadow: 0 6rpx 12rpx rgba(255, 107, 129, 0.3); /* 轻微的阴影效果，增加立体感。 */
@@ -67,7 +67,7 @@
     font-weight: bold;  /* 粗体。 */
     margin: 20rpx 40rpx; /* 上下左右外边距。 */
     color: #333;        /* 字体颜色。 */
-    border-left: 8rpx solid #ff6b81; /* 左侧添加一个粗的粉色竖线作为装饰，增强区域划分。 */
+    border-left: 8rpx solid #34589e; /* 左侧添加一个粗的粉色竖线作为装饰，增强区域划分。 */
     padding-left: 16rpx; /* 标题文字和左侧竖线之间的间距。 */
   }
   

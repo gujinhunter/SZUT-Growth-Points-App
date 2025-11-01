@@ -1,26 +1,49 @@
-<view class="container">
-  <view class="title">申请项目：{{projectName}}</view>
+<view class="apply-page">
+  <view class="hero-card">
+    <text class="hero-badge">申请项目</text>
+    <view class="hero-title">{{projectName || '待选项目'}}</view>
+    <view class="hero-desc">请完善以下信息，提交后我们会在 15 个工作日内反馈结果</view>
+  </view>
 
-  <form bindsubmit="submitForm">
-    <view class="form-item">
-      <text>姓名：</text>
-      <input name="name" placeholder="请输入姓名" />
+  <form class="form-card" bindsubmit="submitForm">
+    <view class="section">
+      <view class="section-title">基本信息</view>
+
+      <view class="field">
+        <view class="field-label">姓名</view>
+        <input name="name" 
+        placeholder="请输入姓名" 
+        placeholder-style="color:#6c78a5;font-size:28rpx;" />
+      </view>
+
+      <view class="field">
+        <view class="field-label">联系方式</view>
+        <input name="phone" 
+        type="number" placeholder="请输入手机号" 
+        placeholder-style="color:#6c78a5;font-size:28rpx;" />
+        <!-- <view class="field-hint">请确保手机号准确无误</view> -->
+      </view>
     </view>
 
-    <view class="form-item">
-      <text>联系方式：</text>
-      <input name="phone" placeholder="请输入手机号" />
+    <view class="section">
+      <view class="section-title">申请理由</view>
+
+      <view class="field">
+        <textarea name="reason" placeholder="请详细描述申请原因、预期收获等信息" placeholder-class="placeholder" auto-height></textarea>
+        <view class="word-limit">建议不超过 50 字</view>
+      </view>
     </view>
 
-    <view class="form-item">
-      <text>申请理由：</text>
-      <textarea name="reason" placeholder="请输入申请理由"></textarea>
-    </view>
+    <view class="section">
+      <view class="section-title">附件上传</view>
 
-    <view class="form-item upload">
-      <text>上传附件：</text>
-      <button type="primary" bindtap="chooseFile">选择文件</button>
-      <text wx:if="{{fileName}}">{{fileName}}</text>
+      <view class="upload-panel">
+        <view class="upload-left">
+          <view class="upload-desc">支持 PDF、DOC、PPT 等格式，大小不超过 20MB</view>
+          <view class="upload-file" wx:if="{{fileName}}">{{fileName}}</view>
+        </view>
+        <button type="default" class="upload-btn" bindtap="chooseFile">选择文件</button>
+      </view>
     </view>
 
     <button formType="submit" type="primary" class="submit-btn">提交申请</button>

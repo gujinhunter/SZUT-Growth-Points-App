@@ -25,7 +25,7 @@ page {
     display: inline-block;  /* 让按钮以内联块的形式显示，可设置宽高和边距 */
     padding: 8px 12px;  /* 设置内边距，控制按钮大小 */
     border-radius: 6px;  /* 设置圆角 */
-    background: #07c160;  /* 按钮背景颜色为微信主题绿色 */
+    background: #34589e;  /* 按钮背景颜色为蓝色 */
     color: #fff;  /* 按钮文字为白色 */
     text-align: center;  /* 居中文字 */
 }

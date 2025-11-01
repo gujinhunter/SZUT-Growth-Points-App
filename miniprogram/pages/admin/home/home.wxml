@@ -1,37 +1,83 @@
-<!--pages/admin/home/home.wxml-->
-<view class="container">
-  <!-- 顶部标题 -->
-  <view class="header">
-    <image src="/assets/admin-logo.png" class="logo"></image>
-    <view class="title-area">
-      <text class="title">助学信息后台管理系统</text>
-      <text class="subtitle">欢迎回来，管理员</text>
+<view class="admin-home">
+  <view class="hero-card">
+    <view class="hero-top">
+      <view>
+        <view class="hero-title">管理员控制台</view>
+        <view class="hero-sub">欢迎回来，{{adminName || '管理员'}}。</view>
+      </view>
+      <view class="date-tag">{{today}}</view>
+    </view>
+
+    <view class="metrics-row">
+      <view class="metric-card primary">
+        <view class="metric-label">今日待审</view>
+        <view class="metric-value">{{metrics.pendingToday}}</view>
+        <view class="metric-desc">待处理申请</view>
+      </view>
+      <view class="metric-card secondary">
+        <view class="metric-label">累计项目</view>
+        <view class="metric-value">{{metrics.totalProjects}}</view>
+        <view class="metric-desc">正在管理的项目</view>
+      </view>
+      <view class="metric-card accent">
+        <view class="metric-label">审核通过率</view>
+        <view class="metric-value">{{metrics.approvalRate}}%</view>
+        <view class="metric-desc">最近30天</view>
+      </view>
     </view>
   </view>
 
-  <!-- 操作面板 -->
-  <view class="panel">
-    <view class="menu" bindtap="goToPage" data-url="/pages/admin/review/review">
-      <image src="/assets/icon-review.png" class="menu-icon"></image>
-      <text class="menu-title">申请审核</text>
-      <text class="menu-desc">查看并审核学生申请</text>
-    </view>
-
-    <view class="menu" bindtap="goToPage" data-url="/pages/admin/projects/projects">
-      <image src="/assets/icon-projects.png" class="menu-icon"></image>
-      <text class="menu-title">项目管理</text>
-      <text class="menu-desc">添加、修改、删除项目</text>
-    </view>
-
-    <view class="menu" bindtap="goToPage" data-url="/pages/admin/statistics/statistics">
-      <image src="/assets/icon-stats.png" class="menu-icon"></image>
-      <text class="menu-title">数据统计</text>
-      <text class="menu-desc">查看系统总体数据分析</text>
+  <view class="quick-grid">
+    <view class="grid-title">待办快捷入口</view>
+    <view class="grid-wrap">
+      <view class="grid-item" data-url="/pages/admin/review/review" bindtap="goPage">
+        <image class="grid-icon" src="/assets/admin/icon-review.png" mode="aspectFit"></image>
+        <view class="grid-text">待审核申请</view>
+        <view class="badge" wx:if="{{metrics.pendingToday}}">{{metrics.pendingToday}}</view>
+      </view>
+      <view class="grid-item" data-url="/pages/admin/projects/projects" bindtap="goPage">
+        <image class="grid-icon" src="/assets/admin/icon-projects.png" mode="aspectFit"></image>
+        <view class="grid-text">项目管理</view>
+      </view>
+      <view class="grid-item" data-url="/pages/admin/statistics/statistics" bindtap="goPage">
+        <image class="grid-icon" src="/assets/admin/icon-stats.png" mode="aspectFit"></image>
+        <view class="grid-text">数据统计</view>
+      </view>
+      <view class="grid-item" data-url="/pages/admin/review/review?status=已通过" bindtap="goPage">
+        <image class="grid-icon" src="/assets/admin/icon-history.png" mode="aspectFit"></image>
+        <view class="grid-text">审核历史</view>
+      </view>
     </view>
   </view>
 
-  <!-- 底部信息 -->
-  <view class="footer">
-    <text>© 2025 助学成长积分平台</text>
+  <view class="filter-card">
+    <view class="card-title">按项目类别筛选</view>
+    <view class="category-row">
+      <block wx:for="{{categoryFilters}}" wx:key="value">
+        <view class="category-tag {{item.active ? 'active' : ''}}"
+              data-value="{{item.value}}"
+              bindtap="handleCategoryTap">
+          {{item.label}}
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="chart-section">
+    <view class="chart-card">
+      <view class="card-header">
+        <view class="card-title">近7天审核趋势</view>
+        <view class="card-sub">单位：条</view>
+      </view>
+      <ec-canvas id="trendChart" canvas-id="trendChart" ec="{{trendChart}}"></ec-canvas>
+    </view>
+
+    <view class="chart-card">
+      <view class="card-header">
+        <view class="card-title">热门项目排行</view>
+        <view class="card-sub">按近30天申请量</view>
+      </view>
+      <ec-canvas id="rankChart" canvas-id="rankChart" ec="{{rankChart}}"></ec-canvas>
+    </view>
   </view>
 </view>

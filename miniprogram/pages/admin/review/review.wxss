@@ -1,75 +1,220 @@
-/* miniprogram/pages/admin/review.wxss */
-.container {
-    min-height: 100vh;
-    background: #f9f9fb;
-    padding-bottom: 40rpx;
-    padding-top: 20rpx;
-  }
-  
-  .title {
-    font-size: 36rpx;
-    font-weight: 700;
-    color: #333;
-    padding: 20rpx 30rpx;
-  }
-  
-  .loading {
-    text-align: center;
-    color: #888;
-    margin-top: 30rpx;
-  }
-  
-  .card {
-    background: #fff;
-    margin: 20rpx 30rpx;
-    padding: 22rpx;
-    border-radius: 16rpx;
-    display: flex;
-    justify-content: space-between;
-    box-shadow: 0 6rpx 12rpx rgba(0,0,0,0.04);
-  }
-  
-  .card-left {
-    max-width: 60%;
-  }
-  
-  .project {
-    font-size: 30rpx;
-    font-weight: 600;
-    color: #222;
-  }
-  
-  .name, .time, .reason {
-    font-size: 24rpx;
-    color: #666;
-    margin-top: 8rpx;
-  }
-  
-  .card-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
-  
-  .status {
-    font-weight: 700;
-    font-size: 26rpx;
-  }
-  
-  .status.pending { color: #ff9800; }
-  .status.approved { color: #4CAF50; }
-  .status.rejected { color: #f44336; }
-  
-  .btn-row {
-    display: flex;
-    gap: 10rpx;
-    margin-top: 12rpx;
-  }
-  .empty {
-    text-align: center;
-    color: #aaa;
-    margin-top: 200rpx;
-    font-size: 28rpx;
-  }
-  
+.admin-page {
+  min-height: 100vh;
+  padding: 48rpx 32rpx 72rpx;
+  box-sizing: border-box;
+  background-color: #f3f5f9;
+}
+
+.page-header {
+  padding: 40rpx 36rpx;
+  border-radius: 24rpx;
+  background: #ffffff;
+  box-shadow: 0 12rpx 28rpx rgba(31, 79, 163, 0.08);
+}
+
+.header-badge {
+  display: inline-block;
+  padding: 10rpx 20rpx;
+  border-radius: 999rpx;
+  background: rgba(31, 79, 163, 0.12);
+  color: #1f4e9d;
+  font-size: 24rpx;
+  margin-bottom: 18rpx;
+}
+
+.header-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1f4e9d;
+  margin-bottom: 12rpx;
+}
+
+.header-desc {
+  font-size: 26rpx;
+  color: #5f6b8a;
+  line-height: 1.5;
+}
+
+.filter-card {
+  margin-top: 28rpx;
+  padding: 32rpx 30rpx;
+  border-radius: 24rpx;
+  background: #ffffff;
+  box-shadow: 0 10rpx 24rpx rgba(31, 79, 163, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.search-input {
+  flex: 1;
+  height: 72rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid rgba(31, 79, 163, 0.18);
+  padding: 0 32rpx;
+  font-size: 26rpx;
+  background: #ffffff;
+}
+
+.search-btn,
+.clear-btn {
+  min-width: 140rpx;
+  height: 68rpx;
+  line-height: 68rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid rgba(31, 79, 163, 0.35);
+  color: #1f4e9d;
+  font-size: 26rpx;
+  background: #f3f6ff;
+}
+
+.clear-btn {
+  border-color: rgba(135, 147, 176, 0.45);
+  color: #707b94;
+  background: #f6f7fb;
+}
+
+.search-btn::after,
+.clear-btn::after {
+  border: none;
+}
+
+.filter-row {
+  display: flex;
+  gap: 18rpx;
+}
+
+.picker-display {
+  flex: 1;
+  height: 70rpx;
+  line-height: 70rpx;
+  padding: 0 28rpx;
+  border-radius: 18rpx;
+  background: rgba(31, 79, 163, 0.08);
+  color: #1f4e9d;
+  font-size: 26rpx;
+}
+
+.content-section {
+  margin-top: 36rpx;
+}
+
+.loading,
+.empty {
+  text-align: center;
+  padding: 80rpx 0;
+  color: #8793b0;
+  font-size: 28rpx;
+}
+
+.review-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 24rpx;
+  padding: 32rpx 28rpx;
+  border-radius: 24rpx;
+  background: #ffffff;
+  border: 2rpx solid rgba(31, 79, 163, 0.08);
+  box-shadow: 0 12rpx 20rpx rgba(31, 79, 163, 0.08);
+}
+
+.review-card + .review-card {
+  margin-top: 24rpx;
+}
+
+.card-info {
+  flex: 1;
+}
+
+.project {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #2a3d6c;
+}
+
+.meta {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #5f6b8a;
+  line-height: 1.6;
+}
+
+.meta.reason {
+  color: #4b5f88;
+}
+
+.card-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16rpx;
+  min-width: 180rpx;
+}
+
+.status-tag {
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  background: rgba(31, 79, 163, 0.1);
+  color: #1f4e9d;
+}
+
+.status-tag.pending {
+  background: rgba(255, 180, 0, 0.16);
+  color: #d98500;
+}
+
+.status-tag.approved {
+  background: rgba(49, 182, 106, 0.16);
+  color: #2c9c5a;
+}
+
+.status-tag.rejected {
+  background: rgba(255, 77, 79, 0.16);
+  color: #d94a4c;
+}
+
+.action-btn {
+  min-width: 160rpx;
+  height: 68rpx;
+  line-height: 68rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  padding: 0 30rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  color: #fff;
+}
+
+.action-btn::after {
+  border: none;
+}
+
+.action-btn.outline {
+  background: transparent;
+  color: #1f4e9d;
+  border: 2rpx solid rgba(31, 79, 163, 0.35);
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #1f4e9d 0%, #2f6fd2 100%);
+  box-shadow: 0 10rpx 20rpx rgba(31, 79, 163, 0.25);
+}
+
+.action-btn.danger {
+  background: linear-gradient(135deg, #d94a4c 0%, #ff8f75 100%);
+}
+
+.action-btn:active {
+  opacity: 0.88;
+}

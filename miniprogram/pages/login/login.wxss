@@ -47,7 +47,7 @@
   
 /* ====================== 登录按钮 ====================== */
 .login-btn {
-    background-color: #1AAD19;  /* 微信官方绿色 */
+    background-color: #34589e;/* 微信官方绿色 */
     color: white;               /* 按钮文字为白色 */
     font-size: 30rpx;           /* 字体大小 */
     padding: 24rpx 0;           /* 上下内边距 24rpx */
@@ -58,7 +58,7 @@
   
 /* ====================== 确认绑定按钮 ====================== */
 .bind-btn {
-    background-color: #1AAD19;  /* 同样是绿色按钮，保持风格统一 */
+    background-color: #34589e;  /* 同样是绿色按钮，保持风格统一 */
     color: white;
     font-size: 30rpx;
     padding: 24rpx 0;
@@ -90,7 +90,7 @@
     height: 70rpx;              /* 输入框高度 */
     border: 1px solid #ddd;     /* 边框颜色为浅灰 */
     border-radius: 10rpx;       /* 圆角输入框 */
-    padding: 0 20rpx;           /* 左右内边距 */
+    padding: 0 10rpx;           /* 左右内边距 */
     font-size: 28rpx;           /* 输入文字大小 */
     background: #fff;           /* 白底 */
 }

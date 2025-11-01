@@ -1,33 +1,96 @@
-<!-- miniprogram/pages/admin/review.wxml -->
-<view class="container">
-  <view class="title">待审核申请</view>
+<view class="admin-page">
+  <view class="page-header">
+    <text class="header-badge">管理员审核</text>
+    <view class="header-title">待审核申请</view>
+    <view class="header-desc">请核对申请信息后再操作，附件和备注可帮助了解详细情况。</view>
+  </view>
 
-  <view wx:if="{{loading}}" class="loading">加载中...</view>
+  <view class="filter-card">
+    <view class="search-row">
+      <input class="search-input"
+             type="text"
+             placeholder="输入姓名 / 学号 / 项目关键字"
+             confirm-type="search"
+             value="{{keyword}}"
+             bindinput="onKeywordInput"
+             bindconfirm="onSearchConfirm" />
+      <button class="search-btn" plain bindtap="onSearch">搜索</button>
+      <button class="clear-btn" plain wx:if="{{keyword}}" bindtap="clearKeyword">清空</button>
+    </view>
 
-  <block wx:if="{{applications.length > 0}}">
-    <block wx:for="{{applications}}" wx:key="_id">
-      <view class="card">
-        <view class="card-left">
-          <text class="project">{{item.projectName}}</text>
-          <text class="name">申请人：{{item.name || item._openid}}</text>
-          <text class="time">{{item.createTimeFormatted}}</text>
-          <text class="reason">理由：{{item.reason || '—'}}</text>
+    <view class="filter-row">
+      <picker mode="selector"
+              range="{{filterOptions.statuses}}"
+              range-key="label"
+              value="{{filters.statusIndex}}"
+              bindchange="onStatusChange">
+        <view class="picker-display">
+          {{filterOptions.statuses[filters.statusIndex].label}}
         </view>
+      </picker>
 
-        <view class="card-right">
-          <text class="status {{item.statusClass}}">{{item.status}}</text>
+      <picker mode="selector"
+              range="{{filterOptions.categories}}"
+              range-key="label"
+              value="{{filters.categoryIndex}}"
+              bindchange="onCategoryChange">
+        <view class="picker-display">
+          {{filterOptions.categories[filters.categoryIndex].label}}
+        </view>
+      </picker>
 
-          <view class="btn-row">
-            <button size="mini" bindtap="previewFile" data-fileid="{{item.fileID}}" wx:if="{{item.fileID}}">查看附件</button>
+      <picker mode="selector"
+              range="{{filterOptions.regions}}"
+              range-key="label"
+              value="{{filters.regionIndex}}"
+              bindchange="onRegionChange">
+        <view class="picker-display">
+          {{filterOptions.regions[filters.regionIndex].label}}
+        </view>
+      </picker>
+    </view>
+  </view>
 
-            <button size="mini" type="primary" bindtap="handleApprove" data-id="{{item._id}}" data-projectid="{{item.projectId}}">通过</button>
+  <view class="content-section">
+    <view wx:if="{{loading}}" class="loading">加载中...</view>
 
-            <button size="mini" type="warn" bindtap="handleReject" data-id="{{item._id}}">驳回</button>
+    <block wx:if="{{applications.length > 0}}">
+      <block wx:for="{{applications}}" wx:key="_id">
+        <view class="review-card" data-id="{{item._id}}" bindtap="goDetail">
+          <view class="card-info">
+            <view class="project">{{item.projectName || '未命名项目'}}</view>
+            <view class="meta">申请人：{{item.name || item._openid}}</view>
+            <view class="meta">学号：{{item.studentId || '—'}}</view>
+            <view class="meta">类别：{{item.projectCategory || '未分类'}}</view>
+            <view class="meta">地区：{{item.projectRegion || '未填写'}}</view>
+            <view class="meta">提交时间：{{item.createTimeFormatted}}</view>
+            <view class="meta reason">申请理由：{{item.reason || '—'}}</view>
+          </view>
+
+          <view class="card-side">
+            <view class="status-tag {{item.statusClass}}">{{item.status}}</view>
+
+            <button size="mini"
+                    class="action-btn outline"
+                    catchtap="previewFile"
+                    data-fileid="{{item.fileID}}"
+                    wx:if="{{item.fileID}}">查看附件</button>
+
+            <button size="mini"
+                    class="action-btn primary"
+                    catchtap="handleApprove"
+                    data-id="{{item._id}}"
+                    data-projectid="{{item.projectId}}">通过</button>
+
+            <button size="mini"
+                    class="action-btn danger"
+                    catchtap="handleReject"
+                    data-id="{{item._id}}">驳回</button>
           </view>
         </view>
-      </view>
+      </block>
     </block>
-  </block>
 
-  <view wx:else class="empty">当前没有待审核申请</view>
+    <view wx:else class="empty">暂无符合条件的申请</view>
+  </view>
 </view>

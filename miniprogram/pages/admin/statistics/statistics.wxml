@@ -1,24 +1,94 @@
-<view class="container">
-  <view class="title">系统统计</view>
-
-  <view class="summary">
-    <view class="summary-item">
-      <text class="label">总申请数</text>
-      <text class="value">{{totalApplications}}</text>
+<view class="stats-page">
+  <view class="summary-card">
+    <view class="summary-header">
+      <view>
+        <view class="summary-title">平台运营概览</view>
+        <view class="summary-desc">统计区间：{{summary.range || '最近30天'}}</view>
+      </view>
+      <view class="refresh" bindtap="loadStatistics">刷新</view>
     </view>
-    <view class="summary-item">
-      <text class="label">已通过</text>
-      <text class="value pass">{{approved}}</text>
-    </view>
-    <view class="summary-item">
-      <text class="label">已驳回</text>
-      <text class="value reject">{{rejected}}</text>
+    <view class="summary-grid">
+      <view class="summary-item">
+        <view class="item-label">总申请量</view>
+        <view class="item-value">{{summary.totalApplications}}</view>
+        <view class="item-sub">环比 {{summary.applicationRise}}%</view>
+      </view>
+      <view class="summary-item">
+        <view class="item-label">通过量</view>
+        <view class="item-value">{{summary.approvedCount}}</view>
+        <view class="item-sub">通过率 {{summary.approvalRate}}%</view>
+      </view>
+      <view class="summary-item">
+        <view class="item-label">驳回量</view>
+        <view class="item-value">{{summary.rejectedCount}}</view>
+        <view class="item-sub">驳回率 {{summary.rejectRate}}%</view>
+      </view>
     </view>
   </view>
 
-  <view class="chart-title">各类别申请数</view>
-  <ec-canvas id="categoryChart" canvas-id="categoryChart" ec="{{ec}}"></ec-canvas>
+  <view class="filter-card">
+    <view class="card-title">快速筛选</view>
+    <view class="filter-row">
+      <picker mode="selector"
+              range="{{filterOptions.dateRanges}}"
+              value="{{filters.dateIndex}}"
+              bindchange="onDateRangeChange">
+        <view class="picker-display">
+          {{filterOptions.dateRanges[filters.dateIndex] || '最近30天'}}
+        </view>
+      </picker>
 
-  <view class="chart-title">积分分布</view>
-  <ec-canvas id="scoreChart" canvas-id="scoreChart" ec="{{ec2}}"></ec-canvas>
+      <picker mode="selector"
+              range="{{filterOptions.categories}}"
+              range-key="label"
+              value="{{filters.categoryIndex}}"
+              bindchange="onCategoryChange">
+        <view class="picker-display">
+          {{filterOptions.categories[filters.categoryIndex].label}}
+        </view>
+      </picker>
+
+      <button class="export-btn" bindtap="exportData">导出报表</button>
+    </view>
+  </view>
+
+  <view class="chart-card">
+    <view class="card-header">
+      <view class="card-title">申请量趋势</view>
+      <view class="card-sub">单位：条 / 天</view>
+    </view>
+    <ec-canvas id="trendChart" canvas-id="trendChart" ec="{{trendChart}}"></ec-canvas>
+  </view>
+
+  <view class="chart-card">
+    <view class="card-header">
+      <view class="card-title">项目申请分布</view>
+      <view class="card-sub">占比最多的五类项目</view>
+    </view>
+    <ec-canvas id="pieChart" canvas-id="pieChart" ec="{{pieChart}}"></ec-canvas>
+  </view>
+
+  <view class="table-card">
+    <view class="card-header">
+      <view class="card-title">近期管理员操作</view>
+      <view class="card-sub">来自 reviewLogs</view>
+    </view>
+    <block wx:if="{{logs.length}}">
+      <view class="log-row log-header">
+        <text class="col col-admin">管理员</text>
+        <text class="col col-action">操作</text>
+        <text class="col col-project">项目</text>
+        <text class="col col-time">时间</text>
+      </view>
+      <block wx:for="{{logs}}" wx:key="id">
+        <view class="log-row">
+          <text class="col col-admin">{{item.adminName || '未知'}}</text>
+          <text class="col col-action">{{item.actionText}}</text>
+          <text class="col col-project">{{item.projectName || '—'}}</text>
+          <text class="col col-time">{{item.time}}</text>
+        </view>
+      </block>
+    </block>
+    <view wx:else class="empty">暂无记录</view>
+  </view>
 </view>
