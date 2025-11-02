@@ -26,26 +26,31 @@ Page({
 
   // 选择文件
   chooseFile() {
-    wx.chooseMessageFile({
+    wx.chooseImage({
       count: 1,
-      type: 'file',
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
       success: res => {
         const file = res.tempFiles[0];
-        this.uploadFile(file);
+        const cloudPath = `applications/${Date.now()}.jpg`;
+        this.uploadFile(cloudPath, file.path);
+      },
+      fail: err => {
+        console.error('选择图片失败', err);
+        wx.showToast({ title: '选择图片失败', icon: 'none' });
       }
     });
   },
 
   // 上传文件到云存储
-  uploadFile(file) {
-    const cloudPath = `applications/${Date.now()}-${file.name}`;
+  uploadFile(cloudPath, filePath) {
     wx.cloud.uploadFile({
       cloudPath,
-      filePath: file.path,
+      filePath,
       success: res => {
         this.setData({
           fileID: res.fileID,
-          fileName: file.name
+          fileName: cloudPath.split('/').pop()
         });
         wx.showToast({ title: '上传成功', icon: 'success' });
       },
