@@ -11,6 +11,19 @@
     </view>
   </view>
 
+  <!-- 统计卡片 -->
+  <view class="stats-card">
+    <view class="stats-item">
+      <text class="stats-label">学院平均</text>
+      <text class="stats-value">{{averagePoints}} 分</text>
+    </view>
+    <view class="stats-divider"></view>
+    <view class="stats-item">
+      <text class="stats-label">当前排名</text>
+      <text class="stats-value">第 {{rank}} 名</text>
+    </view>
+  </view>
+
   <!-- 积分明细标题 -->
   <view class="section-title">
     <text>积分明细</text>
