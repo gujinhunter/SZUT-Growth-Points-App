@@ -234,7 +234,6 @@ Page({
   async handleApprove(e) {
     e.stopPropagation?.();
     const appId = e.currentTarget.dataset.id;
-    const projectId = e.currentTarget.dataset.projectid || null;
     if (!appId) return;
   
     const target = this.data.applications.find(item => item._id === appId);
@@ -245,32 +244,17 @@ Page({
         if (!res.confirm) return;
         wx.showLoading({ title: '处理中...' });
         try {
-          // 获取申请信息以获取项目分值
           const appDoc = await db.collection('applications').doc(appId).get();
           const studentOpenId = appDoc.data?.studentOpenId;
-          
-          // 获取项目分值
-          let pointsToAdd = 0;
-          if (projectId) {
-            const projDoc = await db.collection('activities').doc(projectId).get();
-            const scoreField = projDoc.data?.score;
-            if (Array.isArray(scoreField)) {
-              pointsToAdd = Number(scoreField[0]) || 0;
-            } else {
-              pointsToAdd = Number(scoreField) || 0;
-            }
-          }
-          
-          // 更新申请状态并写入积分
+          const pointsToAdd = appDoc.data?.points || 0;
+  
           await db.collection('applications').doc(appId).update({
             data: {
               status: '已通过',
-              reviewTime: new Date(),
-              points: pointsToAdd
+              reviewTime: new Date()
             }
           });
   
-          // 给学生加积分
           if (studentOpenId && pointsToAdd > 0) {
             const userQuery = await db.collection('users').where({ _openid: studentOpenId }).get();
             if (userQuery.data && userQuery.data.length > 0) {
@@ -285,7 +269,7 @@ Page({
           await this.logReviewAction({
             applicationId: appId,
             action: 'approved',
-            projectId,
+            projectId: target?.projectId || null,
             beforeStatus: target?.status || '',
             afterStatus: '已通过',
             remark: ''

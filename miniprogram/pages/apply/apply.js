@@ -6,7 +6,10 @@ Page({
     projectName: '',
     fileID: '',
     fileName: '',
-    currentOpenId: ''
+    currentOpenId: '',
+    scoreOptions: [],
+    selectedScoreIndex: 0,
+    selectedScore: null
   },
 
   async onLoad(options) {
@@ -22,6 +25,40 @@ Page({
       console.error('获取 openid 失败', err);
       wx.showToast({ title: '无法获取身份信息', icon: 'none' });
     }
+
+    // 加载项目的积分选项
+    if (options.projectId) {
+      await this.loadScoreOptions(options.projectId);
+    }
+  },
+
+  async loadScoreOptions(projectId) {
+    try {
+      const res = await db.collection('activities').doc(projectId).get();
+      const score = res.data?.score;
+      if (Array.isArray(score) && score.length > 0) {
+        this.setData({
+          scoreOptions: score.map(s => String(s)),
+          selectedScore: score[0]
+        });
+      } else if (typeof score === 'number') {
+        this.setData({
+          scoreOptions: [String(score)],
+          selectedScore: score
+        });
+      }
+    } catch (err) {
+      console.error('加载积分选项失败', err);
+    }
+  },
+
+  onScoreChange(e) {
+    const index = Number(e.detail.value);
+    const score = this.data.scoreOptions[index];
+    this.setData({
+      selectedScoreIndex: index,
+      selectedScore: Number(score)
+    });
   },
 
   // 选择文件
@@ -61,9 +98,9 @@ Page({
   },
 
   // 提交表单
-  submitForm(e) {
+  async submitForm(e) {
     const { name, phone, reason } = e.detail.value;
-    const { projectId, projectName, fileID, currentOpenId } = this.data;
+    const { projectId, projectName, fileID, currentOpenId, selectedScore } = this.data;
 
     if (!name || !phone || !reason) {
       wx.showToast({ title: '请填写完整信息', icon: 'none' });
@@ -75,29 +112,38 @@ Page({
       return;
     }
 
-    db.collection('applications').add({
-      data: {
-        projectId,
-        projectName,
-        name,
-        phone,
-        reason,
-        fileID,
-        studentOpenId: currentOpenId,
-        points: 0,
-        status: '待审核',
-        createTime: new Date()
-      },
-      success: () => {
-        wx.showToast({ title: '提交成功', icon: 'success' });
-        setTimeout(() => {
-          wx.navigateBack();
-        }, 1500);
-      },
-      fail: err => {
-        wx.showToast({ title: '提交失败', icon: 'none' });
-        console.error(err);
-      }
-    });
+    wx.showLoading({ title: '提交中...', mask: true });
+
+    try {
+      await db.collection('applications').add({
+        data: {
+          projectId,
+          projectName,
+          name,
+          phone,
+          reason,
+          fileID: fileID || '',
+          studentOpenId: currentOpenId,
+          points: selectedScore || 0,
+          status: '待审核',
+          createTime: new Date()
+        }
+      });
+
+      wx.hideLoading();
+      wx.showToast({ 
+        title: '提交成功', 
+        icon: 'success',
+        duration: 1500
+      });
+
+      setTimeout(() => {
+        wx.navigateBack();
+      }, 1600);
+    } catch (err) {
+      wx.hideLoading();
+      wx.showToast({ title: '提交失败', icon: 'none' });
+      console.error('提交错误', err);
+    }
   }
 });

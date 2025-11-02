@@ -118,6 +118,19 @@ input {
   padding: 0 28rpx;
 }
 
+.picker-display {
+  width: 100%;
+  height: 92rpx;
+  line-height: 92rpx;
+  background-color: rgba(255, 255, 255, 0.96);
+  border-radius: 20rpx;
+  padding: 0 28rpx;
+  border: 2rpx solid rgba(31, 79, 163, 0.18);
+  box-sizing: border-box;
+  font-size: 28rpx;
+  color: #2f3f64;
+}
+
 input:focus,
 textarea:focus {
   border-color: #2f6fd2;

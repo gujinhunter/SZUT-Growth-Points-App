@@ -6,46 +6,57 @@
   </view>
 
   <form class="form-card" bindsubmit="submitForm">
-    <view class="section">
-      <view class="section-title">基本信息</view>
+  <view class="section">
+    <view class="section-title">基本信息</view>
 
-      <view class="field">
-        <view class="field-label">姓名</view>
-        <input name="name" 
-        placeholder="请输入姓名" 
-        placeholder-style="color:#6c78a5;font-size:28rpx;" />
-      </view>
-
-      <view class="field">
-        <view class="field-label">联系方式</view>
-        <input name="phone" 
-        type="number" placeholder="请输入手机号" 
-        placeholder-style="color:#6c78a5;font-size:28rpx;" />
-        <!-- <view class="field-hint">请确保手机号准确无误</view> -->
-      </view>
+    <view class="field">
+      <view class="field-label">姓名</view>
+      <input name="name" 
+      placeholder="请输入姓名" 
+      placeholder-style="color:#6c78a5;font-size:28rpx;" />
     </view>
 
-    <view class="section">
-      <view class="section-title">申请理由</view>
-
-      <view class="field">
-        <textarea name="reason" placeholder="请详细描述申请原因、预期收获等信息" placeholder-class="placeholder" auto-height></textarea>
-        <view class="word-limit">建议不超过 50 字</view>
-      </view>
+    <view class="field">
+      <view class="field-label">联系方式</view>
+      <input name="phone" 
+      type="number" placeholder="请输入手机号" 
+      placeholder-style="color:#6c78a5;font-size:28rpx;" />
     </view>
 
-    <view class="section">
-      <view class="section-title">附件上传</view>
-
-      <view class="upload-panel">
-        <view class="upload-left">
-          <view class="upload-desc">支持 PDF、DOC、PPT 等格式，大小不超过 20MB</view>
-          <view class="upload-file" wx:if="{{fileName}}">{{fileName}}</view>
+    <view class="field" wx:if="{{scoreOptions.length > 0}}">
+      <view class="field-label">申请积分</view>
+      <picker mode="selector" 
+              range="{{scoreOptions}}" 
+              value="{{selectedScoreIndex}}" 
+              bindchange="onScoreChange">
+        <view class="picker-display">
+          {{scoreOptions[selectedScoreIndex] || '请选择积分'}} 分
         </view>
-        <button type="default" class="upload-btn" bindtap="chooseFile">选择文件</button>
-      </view>
+      </picker>
     </view>
+  </view>
 
-    <button formType="submit" type="primary" class="submit-btn">提交申请</button>
-  </form>
+  <view class="section">
+    <view class="section-title">申请理由</view>
+
+    <view class="field">
+      <textarea name="reason" placeholder="请详细描述申请原因、预期收获等信息" placeholder-class="placeholder" auto-height></textarea>
+      <view class="word-limit">建议不超过 50 字</view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">附件上传</view>
+
+    <view class="upload-panel">
+      <view class="upload-left">
+        <view class="upload-desc">支持 PDF、DOC、PPT 等格式，大小不超过 20MB</view>
+        <view class="upload-file" wx:if="{{fileName}}">{{fileName}}</view>
+      </view>
+      <button type="default" class="upload-btn" bindtap="chooseFile">选择文件</button>
+    </view>
+  </view>
+
+  <button formType="submit" type="primary" class="submit-btn">提交申请</button>
+</form>
 </view>
