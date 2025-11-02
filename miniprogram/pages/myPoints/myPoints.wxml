@@ -21,21 +21,19 @@
   </view>
 
   <!-- 积分明细列表 -->
-  <block wx:if="{{records.length > 0}}">
-    <block wx:for="{{records}}" wx:key="_id">
-      <view class="record-card">
-        <view class="record-left">
-          <text class="record-name">{{item.projectName}}</text>
-          <text class="record-date">{{item.date}}</text>
-        </view>
-        <view class="record-right">
-          <text class="record-score {{item.score > 0 ? 'plus' : 'minus'}}">
-            {{item.score > 0 ? '+' : ''}}{{item.score}}
-          </text>
-        </view>
+  <block wx:if="{{detail.length > 0}}">
+  <block wx:for="{{detail}}" wx:key="_id">
+    <view class="record-card">
+      <view class="record-left">
+        <text class="record-name">{{item.projectName}}</text>
+        <text class="record-date"></text>
       </view>
-    </block>
+      <view class="record-right">
+        <text class="record-score plus">+{{item.points}}</text>
+      </view>
+    </view>
   </block>
+</block>
 
   <!-- 没有积分记录时 -->
   <view wx:else class="empty">

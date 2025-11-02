@@ -8,7 +8,7 @@ Page({
     keyword: '',
     currentAdminOpenId: '',
     filters: {
-      statusIndex: 0,
+      statusIndex: 1,
       categoryIndex: 0,
       regionIndex: 0
     },
@@ -203,13 +203,26 @@ Page({
       wx.showToast({ title: '无附件', icon: 'none' });
       return;
     }
-    wx.showLoading({ title: '打开文件...' });
+    wx.showLoading({ title: '打开附件...' });
     wx.cloud.downloadFile({ fileID })
       .then(res => {
         wx.hideLoading();
-        wx.openDocument({
-          filePath: res.tempFilePath
-        });
+        // 判断是否为图片文件
+        const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+        const isImage = imageExts.some(ext => fileID.toLowerCase().includes(ext));
+        
+        if (isImage) {
+          // 图片用预览
+          wx.previewImage({
+            urls: [res.tempFilePath],
+            current: res.tempFilePath
+          });
+        } else {
+          // 文档用打开
+          wx.openDocument({
+            filePath: res.tempFilePath
+          });
+        }
       })
       .catch(err => {
         wx.hideLoading();
@@ -223,22 +236,52 @@ Page({
     const appId = e.currentTarget.dataset.id;
     const projectId = e.currentTarget.dataset.projectid || null;
     if (!appId) return;
-
+  
     const target = this.data.applications.find(item => item._id === appId);
     wx.showModal({
       title: '确认通过',
-      content: '确认将该申请设置为“已通过”并发放积分吗？',
+      content: '确认将该申请设置为"已通过"并发放积分吗？',
       success: async (res) => {
         if (!res.confirm) return;
         wx.showLoading({ title: '处理中...' });
         try {
+          // 获取申请信息以获取项目分值
+          const appDoc = await db.collection('applications').doc(appId).get();
+          const studentOpenId = appDoc.data?.studentOpenId;
+          
+          // 获取项目分值
+          let pointsToAdd = 0;
+          if (projectId) {
+            const projDoc = await db.collection('activities').doc(projectId).get();
+            const scoreField = projDoc.data?.score;
+            if (Array.isArray(scoreField)) {
+              pointsToAdd = Number(scoreField[0]) || 0;
+            } else {
+              pointsToAdd = Number(scoreField) || 0;
+            }
+          }
+          
+          // 更新申请状态并写入积分
           await db.collection('applications').doc(appId).update({
             data: {
               status: '已通过',
-              reviewTime: new Date()
+              reviewTime: new Date(),
+              points: pointsToAdd
             }
           });
-
+  
+          // 给学生加积分
+          if (studentOpenId && pointsToAdd > 0) {
+            const userQuery = await db.collection('users').where({ _openid: studentOpenId }).get();
+            if (userQuery.data && userQuery.data.length > 0) {
+              const userDoc = userQuery.data[0];
+              const newTotal = (userDoc.totalPoints || 0) + pointsToAdd;
+              await db.collection('users').doc(userDoc._id).update({
+                data: { totalPoints: newTotal }
+              });
+            }
+          }
+  
           await this.logReviewAction({
             applicationId: appId,
             action: 'approved',
@@ -247,9 +290,9 @@ Page({
             afterStatus: '已通过',
             remark: ''
           });
-
+  
           wx.hideLoading();
-          wx.showToast({ title: '已通过', icon: 'success' });
+          wx.showToast({ title: '已通过并发放积分', icon: 'success' });
           this.loadApplications();
         } catch (error) {
           console.error('handleApprove error', error);
