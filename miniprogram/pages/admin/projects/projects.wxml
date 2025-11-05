@@ -1,27 +1,35 @@
 <view class="container">
-  <view class="header">
-    <text class="title">项目管理</text>
-    <button type="primary" size="mini" bindtap="addProject">+ 新增项目</button>
+  <view class="page-header">
+    <view class="header-content">
+      <text class="page-title">项目管理</text>
+      <view class="header-spacer"></view>
+      <button class="add-btn" bindtap="addProject">
+        <text class="add-icon">+</text>
+        <text>新增项目</text>
+      </button>
+    </view>
   </view>
 
-  <block wx:for="{{projects}}" wx:key="_id">
-    <view class="card">
-      <view class="info">
-        <view class="name">{{item.name}}</view>
-        <view class="meta">
-          <text class="category">类别：{{item.category || '未分类'}}</text>
-          <text class="score">积分：{{Array.isArray(item.score) ? item.score.join('/') : item.score}}</text>
+  <view class="projects-list">
+    <block wx:for="{{projects}}" wx:key="_id">
+      <view class="card">
+        <view class="info">
+          <view class="name">{{item.name}}</view>
+          <view class="meta">
+            <text class="category">类别：{{item.category || '未分类'}}</text>
+            <text class="score">积分：{{Array.isArray(item.score) ? item.score.join('/') : item.score}}</text>
+          </view>
+          <view class="remark" wx:if="{{item.remark}}">{{item.remark}}</view>
         </view>
-        <view class="remark" wx:if="{{item.remark}}">{{item.remark}}</view>
+        <view class="actions">
+          <button class="edit-btn" size="mini" bindtap="editProject" data-id="{{item._id}}" data-item="{{item}}">编辑</button>
+          <button class="delete-btn" size="mini" bindtap="deleteProject" data-id="{{item._id}}">删除</button>
+        </view>
       </view>
-      <view class="actions">
-        <button size="mini" bindtap="editProject" data-id="{{item._id}}" data-item="{{item}}">编辑</button>
-        <button size="mini" type="warn" bindtap="deleteProject" data-id="{{item._id}}">删除</button>
-      </view>
-    </view>
-  </block>
+    </block>
 
-  <view wx:if="{{projects.length === 0}}" class="empty">
-    暂无项目，请添加。
+    <view wx:if="{{projects.length === 0}}" class="empty">
+      暂无项目，请添加。
+    </view>
   </view>
 </view>
