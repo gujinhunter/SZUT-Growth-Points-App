@@ -11,19 +11,28 @@
   </view>
 
   <view class="projects-list">
-    <block wx:for="{{projects}}" wx:key="_id">
-      <view class="card">
-        <view class="info">
-          <view class="name">{{item.name}}</view>
-          <view class="meta">
-            <text class="category">类别：{{item.category || '未分类'}}</text>
-            <text class="score">积分：{{Array.isArray(item.score) ? item.score.join('/') : item.score}}</text>
-          </view>
-          <view class="remark" wx:if="{{item.remark}}">{{item.remark}}</view>
+    <block wx:for="{{groupedProjects}}" wx:key="category">
+      <view class="category-section">
+        <view class="category-header">
+          <text class="category-title">{{item.category}}</text>
+          <text class="category-count">{{item.projects.length}} 项</text>
         </view>
-        <view class="actions">
-          <button class="edit-btn" size="mini" bindtap="editProject" data-id="{{item._id}}" data-item="{{item}}">编辑</button>
-          <button class="delete-btn" size="mini" bindtap="deleteProject" data-id="{{item._id}}">删除</button>
+        <view class="category-projects">
+          <block wx:for="{{item.projects}}" wx:for-item="project" wx:key="_id">
+            <view class="card">
+              <view class="info">
+                <view class="name">{{project.name}}</view>
+                <view class="meta">
+                  <text class="score">积分：{{Array.isArray(project.score) ? project.score.join('/') : project.score}}</text>
+                </view>
+                <view class="remark" wx:if="{{project.remark}}">{{project.remark}}</view>
+              </view>
+              <view class="actions">
+                <button class="edit-btn" size="mini" bindtap="editProject" data-id="{{project._id}}" data-item="{{project}}">编辑</button>
+                <button class="delete-btn" size="mini" bindtap="deleteProject" data-id="{{project._id}}">删除</button>
+              </view>
+            </view>
+          </block>
         </view>
       </view>
     </block>

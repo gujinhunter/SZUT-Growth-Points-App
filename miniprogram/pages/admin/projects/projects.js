@@ -3,6 +3,7 @@ const db = wx.cloud.database();
 Page({
   data: {
     projects: [],
+    groupedProjects: [],
     categories: []
   },
 
@@ -48,6 +49,7 @@ Page({
           .skip(skip)
           .limit(MAX_LIMIT)
           .orderBy('category', 'asc')
+          .orderBy('createTime', 'desc')
           .get();
 
         allProjects = allProjects.concat(res.data);
@@ -55,7 +57,28 @@ Page({
         hasMore = res.data.length === MAX_LIMIT;
       }
 
-      this.setData({ projects: allProjects });
+      // 按类别分组
+      const grouped = {};
+      allProjects.forEach(project => {
+        const category = project.category || '未分类';
+        if (!grouped[category]) {
+          grouped[category] = [];
+        }
+        grouped[category].push(project);
+      });
+
+      // 转换为数组格式，按类别名排序
+      const groupedProjects = Object.keys(grouped)
+        .sort()
+        .map(category => ({
+          category,
+          projects: grouped[category]
+        }));
+
+      this.setData({ 
+        projects: allProjects,
+        groupedProjects: groupedProjects
+      });
       wx.hideLoading();
     } catch (err) {
       wx.hideLoading();

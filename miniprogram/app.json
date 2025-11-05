@@ -9,7 +9,6 @@
     "pages/admin/review/review",
     "pages/admin/projects/projects",
     "pages/admin/statistics/statistics",
-    "pages/admin/projectEdit",
     "pages/admin/projectEdit/projectEdit"
   ],
   "window": {
