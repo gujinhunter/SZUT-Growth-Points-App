@@ -1,6 +1,7 @@
-import * as echarts from '../../../components/ec-canvas/echarts'; // 根据实际路径调整
+import * as echarts from '../../../components/ec-canvas/echarts';
 
 const db = wx.cloud.database();
+const _ = db.command;
 
 Page({
   data: {
@@ -34,7 +35,6 @@ Page({
   },
 
   onShow() {
-    // 返回首页时可刷新概览
     this.loadOverview();
   },
 
@@ -57,8 +57,9 @@ Page({
   async loadOverview() {
     wx.showLoading({ title: '加载中', mask: true });
     try {
-      const res = await wx.cloud.callFunction({ name: 'adminOverview' });
-      const data = res.result || {};
+      // 直接查询数据库，不依赖云函数
+      const data = await this.loadOverviewDirectly();
+      
       this.setData({
         metrics: {
           pendingToday: data.pendingToday || 0,
@@ -79,9 +80,108 @@ Page({
     }
   },
 
+  async loadOverviewDirectly() {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    // 1. 今日待审核数量
+    const pendingRes = await db.collection('applications')
+      .where({
+        status: '待审核',
+        createTime: _.gte(today).and(_.lt(tomorrow))
+      })
+      .count();
+    const pendingToday = pendingRes.total || 0;
+
+    // 2. 项目总数
+    const projectsRes = await db.collection('activities').count();
+    const totalProjects = projectsRes.total || 0;
+
+    // 3. 审核通过率（最近30天）
+    const recentRes = await db.collection('applications')
+      .where({
+        createTime: _.gte(thirtyDaysAgo)
+      })
+      .get();
+    const total = recentRes.data.length;
+    const approved = recentRes.data.filter(item => item.status === '已通过').length;
+    const approvalRate = total > 0 ? (approved / total * 100) : 0;
+
+    // 4. 最近7天趋势
+    const trend = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+      const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+      const dayRes = await db.collection('applications')
+        .where({
+          createTime: _.gte(date).and(_.lt(nextDate))
+        })
+        .count();
+      const mm = `${date.getMonth() + 1}`.padStart(2, '0');
+      const dd = `${date.getDate()}`.padStart(2, '0');
+      trend.push({
+        date: `${mm}-${dd}`,
+        count: dayRes.total || 0
+      });
+    }
+
+    // 5. 热门项目排行（最近30天）
+    const rankRes = await db.collection('applications')
+      .where({
+        createTime: _.gte(thirtyDaysAgo)
+      })
+      .get();
+
+    const projectMap = {};
+    rankRes.data.forEach(item => {
+      const name = item.projectName || '未命名项目';
+      projectMap[name] = (projectMap[name] || 0) + 1;
+    });
+
+    const rank = Object.entries(projectMap)
+      .map(([project, count]) => ({ project, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    return {
+      pendingToday,
+      totalProjects,
+      approvalRate,
+      trend,
+      rank
+    };
+  },
+
   async loadCategories() {
     try {
-      const res = await db.collection('projects')
+      const res = await db.collection('activities')
+        .field({ category: true })
+        .get();
+      const exists = new Set();
+      res.data.forEach(item => {
+        if (item.category) exists.add(item.category);
+      });
+      const list = Array.from(exists).map(text => ({
+        label: text,
+        value: text,
+        active: false
+      }));
+      this.setData({
+        categoryFilters: [
+          { label: '全部类别', value: '', active: true },
+          ...list
+        ]
+      });
+    } catch (err) {
+      console.error('加载类别失败', err);
+    }
+  },
+
+  async loadCategories() {
+    try {
+      const res = await db.collection('activities')
         .field({ category: true })
         .get();
       const exists = new Set();

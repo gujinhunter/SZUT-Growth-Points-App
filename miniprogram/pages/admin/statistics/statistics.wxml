@@ -68,6 +68,43 @@
     <ec-canvas id="pieChart" canvas-id="pieChart" ec="{{pieChart}}"></ec-canvas>
   </view>
 
+  <view class="chart-card">
+    <view class="card-header">
+      <view class="card-title">类别积分占比</view>
+      <view class="card-sub">按已通过申请统计</view>
+    </view>
+    <ec-canvas id="categoryChart" canvas-id="categoryChart" ec="{{categoryChart}}"></ec-canvas>
+  </view>
+
+  <view class="ranking-card">
+    <view class="card-header">
+      <view class="card-title">总积分排行榜</view>
+      <view class="card-sub">前 {{rankingList.length}} 名</view>
+    </view>
+    <block wx:if="{{rankingList.length > 0}}">
+      <view class="ranking-row ranking-header">
+        <text class="rank-col rank-num">排名</text>
+        <text class="rank-col rank-name">姓名</text>
+        <text class="rank-col rank-student">学号</text>
+        <text class="rank-col rank-points">总积分</text>
+      </view>
+      <block wx:for="{{rankingList}}" wx:key="index">
+        <view class="ranking-row {{index < 3 ? 'top-three' : ''}}">
+          <text class="rank-col rank-num">
+            <text wx:if="{{index === 0}}" class="rank-icon">🥇</text>
+            <text wx:elif="{{index === 1}}" class="rank-icon">🥈</text>
+            <text wx:elif="{{index === 2}}" class="rank-icon">🥉</text>
+            <text wx:else>{{index + 1}}</text>
+          </text>
+          <text class="rank-col rank-name">{{item.name || '未知'}}</text>
+          <text class="rank-col rank-student">{{item.studentId || '—'}}</text>
+          <text class="rank-col rank-points">{{item.totalPoints || 0}}</text>
+        </view>
+      </block>
+    </block>
+    <view wx:else class="empty">暂无数据</view>
+  </view>
+
   <view class="table-card">
     <view class="card-header">
       <view class="card-title">近期管理员操作</view>

@@ -8,8 +8,11 @@
     <view class="card">
       <view class="info">
         <view class="name">{{item.name}}</view>
-        <view class="category">类别：{{item.category}}</view>
-        <view class="score">积分：{{item.score}}</view>
+        <view class="meta">
+          <text class="category">类别：{{item.category || '未分类'}}</text>
+          <text class="score">积分：{{Array.isArray(item.score) ? item.score.join('/') : item.score}}</text>
+        </view>
+        <view class="remark" wx:if="{{item.remark}}">{{item.remark}}</view>
       </view>
       <view class="actions">
         <button size="mini" bindtap="editProject" data-id="{{item._id}}" data-item="{{item}}">编辑</button>

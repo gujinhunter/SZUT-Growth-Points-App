@@ -112,6 +112,11 @@ Page({
       return;
     }
 
+    if (!fileID) {
+      wx.showToast({ title: '请上传附件', icon: 'none' });
+      return;
+    }
+
     wx.showLoading({ title: '提交中...', mask: true });
 
     try {

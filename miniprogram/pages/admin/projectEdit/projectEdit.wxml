@@ -1,0 +1,31 @@
+<view class="edit-page">
+  <view class="form-card">
+    <view class="field">
+      <view class="field-label">项目名称</view>
+      <input class="field-input" value="{{formData.name}}" bindinput="onNameInput" placeholder="请输入项目名称" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">项目类别</view>
+      <picker mode="selector" range="{{categoryOptions}}" value="{{formData.categoryIndex}}" bindchange="onCategoryChange">
+        <view class="picker-display">
+          {{categoryOptions[formData.categoryIndex] || '请选择类别'}}
+        </view>
+      </picker>
+    </view>
+
+    <view class="field">
+      <view class="field-label">积分设置</view>
+      <view class="score-hint">支持单个数字或数组（如：10 或 10,20,30）</view>
+      <input class="field-input" value="{{formData.scoreText}}" bindinput="onScoreInput" placeholder="例如：10 或 10,20,30" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">备注说明</view>
+      <textarea class="field-textarea" value="{{formData.remark}}" bindinput="onRemarkInput" placeholder="请输入项目备注说明" auto-height></textarea>
+    </view>
+
+    <button class="submit-btn" bindtap="saveProject">保存</button>
+    <button class="cancel-btn" bindtap="goBack">取消</button>
+  </view>
+</view>

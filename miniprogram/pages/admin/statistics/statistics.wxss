@@ -113,56 +113,117 @@
     border: none;
   }
   
-  .chart-card {
-    padding-bottom: 20rpx;
-  }
-  
-  .table-card {
-    padding: 36rpx 30rpx;
-  }
-  
-  .log-header {
-    background: #f6f8fc;
-    border-radius: 16rpx;
-    padding: 18rpx 20rpx;
-  }
-  
-  .log-row {
-    display: flex;
-    align-items: center;
-    padding: 22rpx 20rpx;
-    border-bottom: 1px solid rgba(31, 79, 163, 0.08);
-  }
-  
-  .log-row:last-child {
-    border-bottom: none;
-  }
-  
-  .col {
-    font-size: 24rpx;
-    color: #2f3f64;
-  }
-  
-  .col-admin {
-    flex: 1.2;
-  }
-  
-  .col-action {
-    flex: 1;
-  }
-  
-  .col-project {
-    flex: 1.6;
-  }
-  
-  .col-time {
-    flex: 1.4;
-    color: #7c89a3;
-  }
-  
-  .empty {
-    text-align: center;
-    color: #8f99b2;
-    font-size: 26rpx;
-    padding: 60rpx 0;
-  }
+ .chart-card {
+  padding-bottom: 20rpx;
+}
+
+.ranking-card {
+  background: #ffffff;
+  border-radius: 28rpx;
+  box-shadow: 0 14rpx 28rpx rgba(31, 79, 163, 0.1);
+  padding: 32rpx 30rpx;
+}
+
+.ranking-row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 20rpx;
+  border-bottom: 1px solid rgba(31, 79, 163, 0.08);
+}
+
+.ranking-row:last-child {
+  border-bottom: none;
+}
+
+.ranking-header {
+  background: #f6f8fc;
+  border-radius: 16rpx;
+  padding: 18rpx 20rpx;
+  font-weight: 600;
+}
+
+.ranking-row.top-three {
+  background: rgba(31, 79, 163, 0.04);
+  border-radius: 12rpx;
+  margin: 8rpx 0;
+}
+
+.rank-col {
+  font-size: 26rpx;
+  color: #2f3f64;
+}
+
+.rank-num {
+  flex: 0.6;
+  text-align: center;
+}
+
+.rank-name {
+  flex: 1.2;
+}
+
+.rank-student {
+  flex: 1.4;
+  color: #7c89a3;
+}
+
+.rank-points {
+  flex: 1;
+  text-align: right;
+  font-weight: 600;
+  color: #1f4e9d;
+}
+
+.rank-icon {
+  font-size: 32rpx;
+}
+
+.table-card {
+  padding: 36rpx 30rpx;
+}
+
+.log-header {
+  background: #f6f8fc;
+  border-radius: 16rpx;
+  padding: 18rpx 20rpx;
+}
+
+.log-row {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 20rpx;
+  border-bottom: 1px solid rgba(31, 79, 163, 0.08);
+}
+
+.log-row:last-child {
+  border-bottom: none;
+}
+
+.col {
+  font-size: 24rpx;
+  color: #2f3f64;
+}
+
+.col-admin {
+  flex: 1.2;
+}
+
+.col-action {
+  flex: 1;
+}
+
+.col-project {
+  flex: 1.6;
+}
+
+.col-time {
+  flex: 1.4;
+  color: #7c89a3;
+}
+
+.empty {
+  text-align: center;
+  color: #8f99b2;
+  font-size: 26rpx;
+  padding: 60rpx 0;
+}

@@ -21,19 +21,28 @@ Page({
     },
     trendChart: { lazyLoad: true },
     pieChart: { lazyLoad: true },
+    categoryChart: { lazyLoad: true },
     trendData: [],
     pieData: [],
+    categoryData: [],
+    rankingList: [],
     logs: []
   },
 
   onLoad() {
     this.loadCategories();
     this.loadStatistics();
+    this.loadRanking();
+    this.loadCategoryStats();
   },
 
   onPullDownRefresh() {
-    Promise.all([this.loadCategories(), this.loadStatistics()])
-      .finally(() => wx.stopPullDownRefresh());
+    Promise.all([
+      this.loadCategories(),
+      this.loadStatistics(),
+      this.loadRanking(),
+      this.loadCategoryStats()
+    ]).finally(() => wx.stopPullDownRefresh());
   },
 
   async loadCategories() {
@@ -95,6 +104,28 @@ Page({
     }
   },
 
+  async loadRanking() {
+    try {
+      const res = await wx.cloud.callFunction({ name: 'adminRanking' });
+      const list = (res.result?.ranking || []).slice(0, 20);
+      this.setData({ rankingList: list });
+    } catch (err) {
+      console.error('加载排行榜失败', err);
+    }
+  },
+
+  async loadCategoryStats() {
+    try {
+      const res = await wx.cloud.callFunction({ name: 'adminCategoryStats' });
+      const data = res.result?.categoryStats || [];
+      this.setData({ categoryData: data }, () => {
+        this.initCategoryChart();
+      });
+    } catch (err) {
+      console.error('加载类别统计失败', err);
+    }
+  },
+
   onDateRangeChange(e) {
     this.setData({ 'filters.dateIndex': Number(e.detail.value) || 0 }, () => {
       this.loadStatistics();
@@ -113,7 +144,8 @@ Page({
       const { filterOptions, filters } = this.data;
       const payload = {
         range: filterOptions.dateRanges[filters.dateIndex],
-        category: filterOptions.categories[filters.categoryIndex]?.value || ''
+        category: filterOptions.categories[filters.categoryIndex]?.value || '',
+        includeRanking: true
       };
       const res = await wx.cloud.callFunction({
         name: 'adminStatisticsExport',
@@ -234,6 +266,50 @@ Page({
         data: data.map(item => ({
           value: item.count,
           name: item.project
+        }))
+      }]
+    };
+  },
+
+  initCategoryChart() {
+    if (!this.categoryComponent) {
+      this.categoryComponent = this.selectComponent('#categoryChart');
+    }
+    if (!this.categoryComponent) return;
+
+    this.categoryComponent.init((canvas, width, height, dpr) => {
+      const chart = echarts.init(canvas, null, {
+        width,
+        height,
+        devicePixelRatio: dpr
+      });
+      canvas.setChart(chart);
+      chart.setOption(this.getCategoryOption());
+      this.categoryChartInstance = chart;
+      return chart;
+    });
+  },
+
+  getCategoryOption() {
+    const data = this.data.categoryData || [];
+    return {
+      color: ['#1f4e9d', '#2f6fd2', '#5a8ef0', '#8fb4ff', '#b8d4ff'],
+      tooltip: {
+        trigger: 'item',
+        formatter: '{b}: {c} 分 ({d}%)'
+      },
+      series: [{
+        type: 'pie',
+        radius: '65%',
+        center: ['50%', '50%'],
+        label: {
+          color: '#2f3f64',
+          formatter: '{b}\n{c}分'
+        },
+        labelLine: { smooth: true },
+        data: data.map(item => ({
+          value: item.totalPoints,
+          name: item.category
         }))
       }]
     };
