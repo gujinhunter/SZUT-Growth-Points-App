@@ -49,7 +49,7 @@
 .search-row {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 8rpx;
 }
 
 .search-input {
@@ -57,32 +57,39 @@
   height: 72rpx;
   border-radius: 999rpx;
   border: 2rpx solid rgba(31, 79, 163, 0.18);
-  padding: 0 32rpx;
+  padding: 0 24rpx;
   font-size: 26rpx;
   background: #ffffff;
+  box-sizing: border-box;
+  min-width: 0; /* 允许 flex 项目缩小 */
 }
 
-.search-btn,
-.clear-btn {
-  min-width: 140rpx;
-  height: 68rpx;
-  line-height: 68rpx;
+.search-btn {
+  width: 240rpx !important; /* 固定宽度，不再使用 min-width */
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+  padding: 0;
   border-radius: 999rpx;
-  border: 2rpx solid rgba(31, 79, 163, 0.35);
-  color: #1f4e9d;
-  font-size: 26rpx;
-  background: #f3f6ff;
-}
-
-.clear-btn {
-  border-color: rgba(135, 147, 176, 0.45);
-  color: #707b94;
-  background: #f6f7fb;
-}
-
-.search-btn::after,
-.clear-btn::after {
   border: none;
+  font-size: 26rpx;
+  font-weight: 600;
+  /* 确保文字清晰可见，即使有 plain 属性也覆盖 */
+  background: linear-gradient(135deg, #1f4e9d 0%, #2f6fd2 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 6rpx 16rpx rgba(31, 79, 163, 0.25);
+  flex-shrink: 0; /* 防止被压缩 */
+}
+
+.search-btn::after {
+  border: none !important;
+}
+
+.search-btn:active {
+  opacity: 0.85;
+  transform: scale(0.98);
 }
 
 .filter-row {
@@ -93,13 +100,16 @@
 .picker-display {
   flex: 1;
   height: 70rpx;
-  line-height: 70rpx;
+  display: flex;
+  align-items: center;
   padding: 0 28rpx;
   border-radius: 18rpx;
   background: rgba(31, 79, 163, 0.08);
   color: #1f4e9d;
   font-size: 26rpx;
+  line-height: normal;
 }
+
 
 .content-section {
   margin-top: 36rpx;

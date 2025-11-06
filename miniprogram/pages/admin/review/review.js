@@ -8,19 +8,10 @@ Page({
     keyword: '',
     currentAdminOpenId: '',
     filters: {
-      statusIndex: 1,
-      categoryIndex: 0,
-      regionIndex: 0
+      categoryIndex: 0
     },
     filterOptions: {
-      statuses: [
-        { label: '全部状态', value: '' },
-        { label: '待审核', value: '待审核' },
-        { label: '已通过', value: '已通过' },
-        { label: '已驳回', value: '已驳回' }
-      ],
-      categories: [{ label: '全部类别', value: '' }],
-      regions: [{ label: '全部地区', value: '' }]
+      categories: [{ label: '全部类别', value: '' }]
     }
   },
 
@@ -47,25 +38,22 @@ Page({
 
   async loadFilterOptions() {
     try {
+      // 只从待审核的申请中加载类别选项
       const categories = new Set();
-      const regions = new Set();
       let hasMore = true;
       let skip = 0;
       const pageSize = 100;
 
       while (hasMore) {
         const res = await db.collection('applications')
+          .where({ status: '待审核' })
           .skip(skip)
           .limit(pageSize)
-          .field({
-            projectCategory: true,
-            projectRegion: true
-          })
+          .field({ projectCategory: true })
           .get();
 
         res.data.forEach(item => {
           if (item.projectCategory) categories.add(item.projectCategory);
-          if (item.projectRegion) regions.add(item.projectRegion);
         });
 
         skip += res.data.length;
@@ -75,10 +63,7 @@ Page({
 
       this.setData({
         'filterOptions.categories': [{ label: '全部类别', value: '' }].concat(
-          Array.from(categories).map(text => ({ label: text, value: text }))
-        ),
-        'filterOptions.regions': [{ label: '全部地区', value: '' }].concat(
-          Array.from(regions).map(text => ({ label: text, value: text }))
+          Array.from(categories).sort().map(text => ({ label: text, value: text }))
         )
       });
     } catch (err) {
@@ -91,34 +76,25 @@ Page({
     const { filterOptions, filters } = this.data;
     const conditions = [];
 
-    const statusValue = filterOptions.statuses[filters.statusIndex]?.value;
-    if (statusValue) {
-      conditions.push({ status: statusValue });
-    }
+    // 固定只查询待审核状态
+    conditions.push({ status: '待审核' });
 
+    // 类别筛选
     const categoryValue = filterOptions.categories[filters.categoryIndex]?.value;
     if (categoryValue) {
       conditions.push({ projectCategory: categoryValue });
     }
 
-    const regionValue = filterOptions.regions[filters.regionIndex]?.value;
-    if (regionValue) {
-      conditions.push({ projectRegion: regionValue });
-    }
-
+    // 关键词搜索（姓名、学号）
     const keyword = (this.data.keyword || '').trim();
     if (keyword) {
       const reg = db.RegExp({ pattern: keyword, options: 'i' });
       conditions.push(_.or([
         { name: reg },
-        { studentId: reg },
-        { projectName: reg }
+        { studentId: reg }
       ]));
     }
 
-    if (!conditions.length) {
-      return {};
-    }
     if (conditions.length === 1) {
       return conditions[0];
     }
@@ -128,20 +104,59 @@ Page({
   async loadApplications() {
     this.setData({ loading: true });
     try {
-      const query = this.buildQuery();
-      const res = await db.collection('applications')
-        .where(query)
-        .orderBy('createTime', 'desc')
-        .get();
+      const keyword = (this.data.keyword || '').trim();
+      let res;
+
+      // 如果有关键词搜索，需要分页获取所有待审核数据在内存中过滤
+      if (keyword) {
+        let allData = [];
+        const MAX_LIMIT = 20;
+        let skip = 0;
+        let hasMore = true;
+
+        while (hasMore) {
+          const batchRes = await db.collection('applications')
+            .where({ status: '待审核' })
+            .skip(skip)
+            .limit(MAX_LIMIT)
+            .orderBy('createTime', 'desc')
+            .get();
+
+          allData = allData.concat(batchRes.data || []);
+          skip += batchRes.data.length;
+          hasMore = batchRes.data.length === MAX_LIMIT;
+        }
+
+        // 应用筛选条件（类别和关键词）
+        const categoryValue = this.data.filterOptions.categories[this.data.filters.categoryIndex]?.value;
+        const keywordLower = keyword.toLowerCase();
+
+        let filtered = allData.filter(item => {
+          // 关键词匹配（姓名、学号）
+          const matchKeyword = 
+            (item.name && item.name.toLowerCase().includes(keywordLower)) ||
+            (item.studentId && item.studentId.toLowerCase().includes(keywordLower));
+
+          // 类别匹配
+          const matchCategory = !categoryValue || item.projectCategory === categoryValue;
+
+          return matchKeyword && matchCategory;
+        });
+
+        res = { data: filtered };
+      } else {
+        // 无关键词时，直接使用数据库查询
+        const query = this.buildQuery();
+        res = await db.collection('applications')
+          .where(query)
+          .orderBy('createTime', 'desc')
+          .get();
+      }
 
       const apps = (res.data || []).map(item => ({
         ...item,
         createTimeFormatted: item.createTime ? new Date(item.createTime).toLocaleString() : '',
-        statusClass: item.status === '已通过'
-          ? 'approved'
-          : item.status === '已驳回'
-            ? 'rejected'
-            : 'pending'
+        statusClass: 'pending'
       }));
       this.setData({ applications: apps });
     } catch (err) {
@@ -165,25 +180,8 @@ Page({
     this.loadApplications();
   },
 
-  clearKeyword() {
-    this.setData({ keyword: '' });
-    this.loadApplications();
-  },
-
-  onStatusChange(e) {
-    this.setData({ 'filters.statusIndex': Number(e.detail.value) || 0 }, () => {
-      this.loadApplications();
-    });
-  },
-
   onCategoryChange(e) {
     this.setData({ 'filters.categoryIndex': Number(e.detail.value) || 0 }, () => {
-      this.loadApplications();
-    });
-  },
-
-  onRegionChange(e) {
-    this.setData({ 'filters.regionIndex': Number(e.detail.value) || 0 }, () => {
       this.loadApplications();
     });
   },
@@ -207,18 +205,15 @@ Page({
     wx.cloud.downloadFile({ fileID })
       .then(res => {
         wx.hideLoading();
-        // 判断是否为图片文件
         const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
         const isImage = imageExts.some(ext => fileID.toLowerCase().includes(ext));
         
         if (isImage) {
-          // 图片用预览
           wx.previewImage({
             urls: [res.tempFilePath],
             current: res.tempFilePath
           });
         } else {
-          // 文档用打开
           wx.openDocument({
             filePath: res.tempFilePath
           });
@@ -295,7 +290,7 @@ Page({
     const target = this.data.applications.find(item => item._id === appId);
     wx.showModal({
       title: '确认驳回',
-      content: '确认将该申请设置为“已驳回”？',
+      content: '确认将该申请设置为"已驳回"？',
       success: async (res) => {
         if (!res.confirm) return;
         wx.showLoading({ title: '处理中...' });

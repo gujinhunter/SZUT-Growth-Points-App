@@ -14,8 +14,7 @@
              value="{{keyword}}"
              bindinput="onKeywordInput"
              bindconfirm="onSearchConfirm" />
-      <button class="search-btn" plain bindtap="onSearch">搜索</button>
-      <button class="clear-btn" plain wx:if="{{keyword}}" bindtap="clearKeyword">清空</button>
+      <button class="search-btn" bindtap="onSearch">搜索</button>
     </view>
 
     <view class="filter-row">
