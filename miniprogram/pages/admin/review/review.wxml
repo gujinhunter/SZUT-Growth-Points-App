@@ -19,32 +19,12 @@
 
     <view class="filter-row">
       <picker mode="selector"
-              range="{{filterOptions.statuses}}"
-              range-key="label"
-              value="{{filters.statusIndex}}"
-              bindchange="onStatusChange">
-        <view class="picker-display">
-          {{filterOptions.statuses[filters.statusIndex].label}}
-        </view>
-      </picker>
-
-      <picker mode="selector"
               range="{{filterOptions.categories}}"
               range-key="label"
               value="{{filters.categoryIndex}}"
               bindchange="onCategoryChange">
         <view class="picker-display">
           {{filterOptions.categories[filters.categoryIndex].label}}
-        </view>
-      </picker>
-
-      <picker mode="selector"
-              range="{{filterOptions.regions}}"
-              range-key="label"
-              value="{{filters.regionIndex}}"
-              bindchange="onRegionChange">
-        <view class="picker-display">
-          {{filterOptions.regions[filters.regionIndex].label}}
         </view>
       </picker>
     </view>

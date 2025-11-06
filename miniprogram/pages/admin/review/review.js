@@ -36,39 +36,74 @@ Page({
     }
   },
 
-  async loadFilterOptions() {
+   async loadFilterOptions() {
     try {
-      // 只从待审核的申请中加载类别选项
-      const categories = new Set();
-      let hasMore = true;
-      let skip = 0;
-      const pageSize = 100;
-
-      while (hasMore) {
-        const res = await db.collection('applications')
-          .where({ status: '待审核' })
-          .skip(skip)
-          .limit(pageSize)
-          .field({ projectCategory: true })
-          .get();
-
-        res.data.forEach(item => {
-          if (item.projectCategory) categories.add(item.projectCategory);
+      // 从 activities 集合中获取所有独特的项目类别
+      const MAX_LIMIT = 100;
+      
+      // 先获取总数
+      const countRes = await db.collection('activities').count();
+      const total = countRes.total || 0;
+      
+      if (total === 0) {
+        this.setData({
+          'filterOptions.categories': [{ label: '全部类别', value: '' }]
         });
-
-        skip += res.data.length;
-        hasMore = res.data.length === pageSize;
-        if (!hasMore) break;
+        return;
       }
+      
+      // 计算需要分几次查询
+      const batchTimes = Math.ceil(total / MAX_LIMIT);
+      
+      // 并行发起所有查询
+      const tasks = [];
+      for (let i = 0; i < batchTimes; i++) {
+        tasks.push(
+          db.collection('activities')
+            .skip(i * MAX_LIMIT)
+            .limit(MAX_LIMIT)
+            .field({ category: true })
+            .get()
+        );
+      }
+      
+      // 等待所有查询完成
+      const results = await Promise.all(tasks);
+      
+      // 合并所有结果并去重
+      const categories = new Set();
+      results.forEach(result => {
+        if (result && result.data) {
+          result.data.forEach(item => {
+            if (item && item.category && typeof item.category === 'string') {
+              const trimmed = item.category.trim();
+              if (trimmed) {
+                categories.add(trimmed);
+              }
+            }
+          });
+        }
+      });
+
+      // 将类别转换为选项数组，并添加"全部类别"选项
+      const sortedCategories = Array.from(categories).sort();
+      const categoryOptions = [{ label: '全部类别', value: '' }].concat(
+        sortedCategories.map(text => ({ label: text, value: text }))
+      );
 
       this.setData({
-        'filterOptions.categories': [{ label: '全部类别', value: '' }].concat(
-          Array.from(categories).sort().map(text => ({ label: text, value: text }))
-        )
+        'filterOptions.categories': categoryOptions
       });
+      
+      // 调试信息
+      console.log('成功加载类别数量:', sortedCategories.length, '总记录数:', total);
     } catch (err) {
       console.error('加载筛选项失败', err);
       wx.showToast({ title: '筛选数据加载失败', icon: 'none' });
+      // 设置默认值
+      this.setData({
+        'filterOptions.categories': [{ label: '全部类别', value: '' }]
+      });
     }
   },
 
