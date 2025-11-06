@@ -22,34 +22,43 @@
     margin-bottom: 16rpx;
   }
   
-  .field-input,
-  .field-textarea,
-  .picker-display {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.96);
-    border-radius: 20rpx;
-    padding: 24rpx 28rpx;
-    border: 2rpx solid rgba(31, 79, 163, 0.18);
-    box-sizing: border-box;
-    font-size: 28rpx;
-    color: #2f3f64;
-  }
-  
-  .field-input {
-    height: 88rpx;
-    line-height: 88rpx;
-    padding: 0 28rpx;
-  }
-  
-  .field-textarea {
-    min-height: 160rpx;
-    line-height: 1.6;
-  }
-  
-  .picker-display {
-    height: 88rpx;
-    line-height: 88rpx;
-  }
+
+.field-input,
+.field-textarea,
+.picker-display {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 20rpx;
+  border: 2rpx solid rgba(31, 79, 163, 0.18);
+  box-sizing: border-box;
+  font-size: 28rpx;
+  color: #2f3f64;
+}
+
+.field-input {
+  height: 88rpx;
+  padding: 0 28rpx;
+  /* 使用 Flex 确保垂直居中 */
+  display: flex;
+  align-items: center;
+  line-height: normal;
+}
+
+.field-textarea {
+  min-height: 160rpx;
+  padding: 24rpx 28rpx;
+  line-height: 1.6;
+}
+
+.picker-display {
+  height: 88rpx;
+  padding: 0 28rpx;
+  /* 使用 Flex 确保垂直居中 */
+  display: flex;
+  align-items: center;
+  line-height: normal;
+}
+
   
   .score-hint {
     font-size: 22rpx;
@@ -57,30 +66,40 @@
     margin-bottom: 12rpx;
   }
   
-  .submit-btn,
-  .cancel-btn {
-    width: 100%;
-    height: 88rpx;
-    line-height: 88rpx;
-    border-radius: 999rpx;
-    font-size: 30rpx;
-    font-weight: 600;
-    margin-top: 20rpx;
-    border: none;
-  }
+ .submit-btn,
+.cancel-btn {
+  width: 100%;
+  height: 88rpx;
+  /* 关键：用 Flex 居中，避免字体度量导致的偏移 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   
-  .submit-btn {
-    background: linear-gradient(135deg, #1f4e9d 0%, #2f6fd2 100%);
-    color: #fff;
-    box-shadow: 0 12rpx 24rpx rgba(31, 79, 163, 0.25);
-  }
+  /* 去掉行高，不用 line-height 撑高 */
+  line-height: normal;
   
-  .cancel-btn {
-    background: #f6f8fc;
-    color: #7c89a3;
-  }
+  /* 清除按钮默认内边距，确保几何中心 */
+  padding: 0;
   
-  .submit-btn::after,
-  .cancel-btn::after {
-    border: none;
-  }
+  border-radius: 999rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-top: 20rpx;
+  border: none;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #1f4e9d 0%, #2f6fd2 100%);
+  color: #fff;
+  box-shadow: 0 12rpx 24rpx rgba(31, 79, 163, 0.25);
+}
+
+.cancel-btn {
+  background: #f6f8fc;
+  color: #7c89a3;
+}
+
+.submit-btn::after,
+.cancel-btn::after {
+  border: none;
+}
