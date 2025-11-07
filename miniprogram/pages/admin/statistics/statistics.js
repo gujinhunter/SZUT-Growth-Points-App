@@ -1,317 +1,116 @@
-import * as echarts from '../../../components/ec-canvas/echarts';
+// miniprogram/pages/admin/statistics/statistics.js
+const db = wx.cloud.database();
+const _ = db.command;
 
 Page({
   data: {
-    summary: {
-      totalApplications: 0,
-      approvedCount: 0,
-      rejectedCount: 0,
-      approvalRate: 0,
-      rejectRate: 0,
-      applicationRise: 0,
-      range: '最近30天'
-    },
-    filters: {
-      dateIndex: 0,
-      categoryIndex: 0
-    },
-    filterOptions: {
-      dateRanges: ['最近7天', '最近30天', '本学期', '本年'],
-      categories: [{ label: '全部类别', value: '' }]
-    },
-    trendChart: { lazyLoad: true },
-    pieChart: { lazyLoad: true },
-    categoryChart: { lazyLoad: true },
-    trendData: [],
-    pieData: [],
-    categoryData: [],
-    rankingList: [],
-    logs: []
+    loading: true,
+    exporting: false,
+    students: [],
+    lastRefresh: '',
+    emptyText: '暂无学生数据'
   },
 
   onLoad() {
-    this.loadCategories();
-    this.loadStatistics();
-    this.loadRanking();
-    this.loadCategoryStats();
+    this.loadStudents();
   },
 
   onPullDownRefresh() {
-    Promise.all([
-      this.loadCategories(),
-      this.loadStatistics(),
-      this.loadRanking(),
-      this.loadCategoryStats()
-    ]).finally(() => wx.stopPullDownRefresh());
+    this.loadStudents().finally(() => wx.stopPullDownRefresh());
   },
 
-  async loadCategories() {
+  async loadStudents() {
+    this.setData({ loading: true });
     try {
-      const res = await wx.cloud.callFunction({ name: 'adminCategoryList' });
-      const list = (res.result || []).map(item => ({
-        label: item,
-        value: item
-      }));
-      this.setData({
-        'filterOptions.categories': [{ label: '全部类别', value: '' }].concat(list)
-      });
-    } catch (err) {
-      console.error('加载类别失败', err);
-    }
-  },
-
-  async loadStatistics() {
-    wx.showLoading({ title: '加载中', mask: true });
-    try {
-      const { filterOptions, filters } = this.data;
-      const payload = {
-        range: filterOptions.dateRanges[filters.dateIndex],
-        category: filterOptions.categories[filters.categoryIndex]?.value || ''
-      };
-      const res = await wx.cloud.callFunction({
-        name: 'adminStatistics',
-        data: payload
-      });
-      const result = res.result || {};
-      this.setData({
-        summary: {
-          totalApplications: result.summary?.totalApplications || 0,
-          approvedCount: result.summary?.approvedCount || 0,
-          rejectedCount: result.summary?.rejectedCount || 0,
-          approvalRate: (result.summary?.approvalRate || 0).toFixed(1),
-          rejectRate: (result.summary?.rejectRate || 0).toFixed(1),
-          applicationRise: (result.summary?.applicationRise || 0).toFixed(1),
-          range: result.summary?.range || payload.range
-        },
-        trendData: result.trend || [],
-        pieData: result.pie || [],
-        logs: (result.logs || []).map(item => ({
-          id: item._id,
-          adminName: item.adminName || '',
-          projectName: item.projectName || '',
-          actionText: this.formatActionText(item.action),
-          time: item.createTime ? new Date(item.createTime).toLocaleString() : ''
-        }))
-      }, () => {
-        this.initTrendChart();
-        this.initPieChart();
-      });
-    } catch (err) {
-      console.error('统计数据加载失败', err);
-      wx.showToast({ title: '加载失败', icon: 'none' });
-    } finally {
-      wx.hideLoading();
-    }
-  },
-
-  async loadRanking() {
-    try {
-      const res = await wx.cloud.callFunction({ name: 'adminRanking' });
-      const list = (res.result?.ranking || []).slice(0, 20);
-      this.setData({ rankingList: list });
-    } catch (err) {
-      console.error('加载排行榜失败', err);
-    }
-  },
-
-  async loadCategoryStats() {
-    try {
-      const res = await wx.cloud.callFunction({ name: 'adminCategoryStats' });
-      const data = res.result?.categoryStats || [];
-      this.setData({ categoryData: data }, () => {
-        this.initCategoryChart();
-      });
-    } catch (err) {
-      console.error('加载类别统计失败', err);
-    }
-  },
-
-  onDateRangeChange(e) {
-    this.setData({ 'filters.dateIndex': Number(e.detail.value) || 0 }, () => {
-      this.loadStatistics();
-    });
-  },
-
-  onCategoryChange(e) {
-    this.setData({ 'filters.categoryIndex': Number(e.detail.value) || 0 }, () => {
-      this.loadStatistics();
-    });
-  },
-
-  async exportData() {
-    wx.showLoading({ title: '生成中', mask: true });
-    try {
-      const { filterOptions, filters } = this.data;
-      const payload = {
-        range: filterOptions.dateRanges[filters.dateIndex],
-        category: filterOptions.categories[filters.categoryIndex]?.value || '',
-        includeRanking: true
-      };
-      const res = await wx.cloud.callFunction({
-        name: 'adminStatisticsExport',
-        data: payload
-      });
-      if (res.result?.fileID) {
-        const downloadRes = await wx.cloud.downloadFile({
-          fileID: res.result.fileID
-        });
-        wx.openDocument({
-          filePath: downloadRes.tempFilePath,
-          fileType: 'xlsx'
-        });
-      } else {
-        wx.showToast({ title: '未生成文件', icon: 'none' });
+      const MAX_LIMIT = 100;
+      const countRes = await db.collection('users').count();
+      const total = countRes.total || 0;
+      const tasks = [];
+      for (let i = 0; i < Math.ceil(total / MAX_LIMIT); i++) {
+        tasks.push(
+          db.collection('users')
+            .skip(i * MAX_LIMIT)
+            .limit(MAX_LIMIT)
+            .field({
+              name: true,
+              studentId: true,
+              totalPoints: true,
+              className: true,
+              academy: true
+            })
+            .get()
+        );
       }
+      const results = await Promise.all(tasks);
+      const list = results.flatMap(res => res.data || []);
+      list.sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
+      const ranked = list.map((item, index) => ({
+        rank: index + 1,
+        name: item.name || '未填写姓名',
+        studentId: item.studentId || '—',
+        academy: item.academy || '',
+        className: item.className || '',
+        totalPoints: item.totalPoints || 0
+      }));
+      const now = new Date();
+      this.setData({
+        students: ranked,
+        lastRefresh: `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
+        loading: false,
+        emptyText: ranked.length ? '' : '暂无学生数据'
+      });
+    } catch (err) {
+      console.error('加载学生积分失败', err);
+      wx.showToast({ title: '加载失败', icon: 'none' });
+      this.setData({
+        loading: false,
+        students: [],
+        emptyText: '加载失败，请下拉重试'
+      });
+    }
+  },
+
+  async handleExport() {
+    if (this.data.exporting) return;
+    this.setData({ exporting: true });
+    try {
+      wx.showLoading({ title: '生成报表...' });
+      const res = await wx.cloud.callFunction({
+        name: 'adminStatisticsSimpleExport',
+        data: {}
+      });
+      wx.hideLoading();
+      const fileID = res.result?.fileID;
+      if (!fileID) {
+        wx.showToast({ title: '导出失败', icon: 'none' });
+        return;
+      }
+      wx.showModal({
+        title: '导出成功',
+        content: '是否立即下载报表？',
+        confirmText: '下载',
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            wx.cloud.downloadFile({ fileID })
+              .then(downloadRes => {
+                wx.openDocument({
+                  filePath: downloadRes.tempFilePath,
+                  fileType: 'xlsx'
+                });
+              })
+              .catch(err => {
+                console.error('下载报表失败', err);
+                wx.showToast({ title: '下载失败', icon: 'none' });
+              });
+          }
+        }
+      });
     } catch (err) {
       console.error('导出失败', err);
+      wx.hideLoading();
       wx.showToast({ title: '导出失败', icon: 'none' });
     } finally {
-      wx.hideLoading();
+      this.setData({ exporting: false });
     }
-  },
-
-  formatActionText(action) {
-    if (action === 'approved') return '通过申请';
-    if (action === 'rejected') return '驳回申请';
-    if (action === 'created') return '创建项目';
-    return action || '操作';
-  },
-
-  initTrendChart() {
-    if (!this.trendComponent) {
-      this.trendComponent = this.selectComponent('#trendChart');
-    }
-    if (!this.trendComponent) return;
-
-    this.trendComponent.init((canvas, width, height, dpr) => {
-      const chart = echarts.init(canvas, null, {
-        width,
-        height,
-        devicePixelRatio: dpr
-      });
-      canvas.setChart(chart);
-      chart.setOption(this.getTrendOption());
-      this.trendChartInstance = chart;
-      return chart;
-    });
-  },
-
-  getTrendOption() {
-    const data = this.data.trendData || [];
-    const days = data.map(item => item.date);
-    const pending = data.map(item => item.pending || 0);
-    const approved = data.map(item => item.approved || 0);
-    const rejected = data.map(item => item.rejected || 0);
-
-    return {
-      color: ['#2f6fd2', '#2c9c5a', '#d94a4c'],
-      tooltip: { trigger: 'axis' },
-      legend: {
-        data: ['待审核', '已通过', '已驳回'],
-        textStyle: { color: '#4f5e7f' }
-      },
-      grid: { left: 16, right: 16, top: 40, bottom: 24, containLabel: true },
-      xAxis: {
-        type: 'category',
-        data: days,
-        boundaryGap: false,
-        axisLine: { lineStyle: { color: '#8c9abc' } }
-      },
-      yAxis: {
-        type: 'value',
-        axisLine: { lineStyle: { color: '#8c9abc' } },
-        splitLine: { lineStyle: { color: 'rgba(140,154,188,0.2)' } }
-      },
-      series: [
-        { name: '待审核', type: 'line', smooth: true, data: pending },
-        { name: '已通过', type: 'line', smooth: true, data: approved },
-        { name: '已驳回', type: 'line', smooth: true, data: rejected }
-      ]
-    };
-  },
-
-  initPieChart() {
-    if (!this.pieComponent) {
-      this.pieComponent = this.selectComponent('#pieChart');
-    }
-    if (!this.pieComponent) return;
-
-    this.pieComponent.init((canvas, width, height, dpr) => {
-      const chart = echarts.init(canvas, null, {
-        width,
-        height,
-        devicePixelRatio: dpr
-      });
-      canvas.setChart(chart);
-      chart.setOption(this.getPieOption());
-      this.pieChartInstance = chart;
-      return chart;
-    });
-  },
-
-  getPieOption() {
-    const data = this.data.pieData || [];
-    return {
-      color: ['#2f6fd2', '#2c9c5a', '#d94a4c', '#7d60d4', '#ffaf3c'],
-      tooltip: { trigger: 'item' },
-      series: [{
-        type: 'pie',
-        radius: ['40%', '70%'],
-        center: ['50%', '50%'],
-        label: {
-          color: '#2f3f64',
-          formatter: '{b}\n{d}%'
-        },
-        labelLine: { smooth: true },
-        data: data.map(item => ({
-          value: item.count,
-          name: item.project
-        }))
-      }]
-    };
-  },
-
-  initCategoryChart() {
-    if (!this.categoryComponent) {
-      this.categoryComponent = this.selectComponent('#categoryChart');
-    }
-    if (!this.categoryComponent) return;
-
-    this.categoryComponent.init((canvas, width, height, dpr) => {
-      const chart = echarts.init(canvas, null, {
-        width,
-        height,
-        devicePixelRatio: dpr
-      });
-      canvas.setChart(chart);
-      chart.setOption(this.getCategoryOption());
-      this.categoryChartInstance = chart;
-      return chart;
-    });
-  },
-
-  getCategoryOption() {
-    const data = this.data.categoryData || [];
-    return {
-      color: ['#1f4e9d', '#2f6fd2', '#5a8ef0', '#8fb4ff', '#b8d4ff'],
-      tooltip: {
-        trigger: 'item',
-        formatter: '{b}: {c} 分 ({d}%)'
-      },
-      series: [{
-        type: 'pie',
-        radius: '65%',
-        center: ['50%', '50%'],
-        label: {
-          color: '#2f3f64',
-          formatter: '{b}\n{c}分'
-        },
-        labelLine: { smooth: true },
-        data: data.map(item => ({
-          value: item.totalPoints,
-          name: item.category
-        }))
-      }]
-    };
   }
 });

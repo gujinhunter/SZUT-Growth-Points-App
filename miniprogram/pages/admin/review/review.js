@@ -108,25 +108,21 @@ Page({
   },
 
   buildQuery() {
-    const { filterOptions, filters } = this.data;
     const conditions = [];
 
     // 固定只查询待审核状态
     conditions.push({ status: '待审核' });
 
-    // 类别筛选
-    const categoryValue = filterOptions.categories[filters.categoryIndex]?.value;
-    if (categoryValue) {
-      conditions.push({ projectCategory: categoryValue });
-    }
+    // 注意：类别筛选不在数据库查询中处理，因为类别需要从 activities 集合获取
+    // 类别筛选在 loadApplications 方法中获取完数据后处理
 
-    // 关键词搜索（姓名、学号）
+    // 关键词搜索（姓名、项目名称）
     const keyword = (this.data.keyword || '').trim();
     if (keyword) {
       const reg = db.RegExp({ pattern: keyword, options: 'i' });
       conditions.push(_.or([
         { name: reg },
-        { studentId: reg }
+        { projectName: reg }
       ]));
     }
 
@@ -167,13 +163,13 @@ Page({
         const keywordLower = keyword.toLowerCase();
 
         let filtered = allData.filter(item => {
-          // 关键词匹配（姓名、学号）
+          // 关键词匹配（姓名、项目名称）
           const matchKeyword = 
             (item.name && item.name.toLowerCase().includes(keywordLower)) ||
-            (item.studentId && item.studentId.toLowerCase().includes(keywordLower));
+            (item.projectName && item.projectName.toLowerCase().includes(keywordLower));
 
-          // 类别匹配
-          const matchCategory = !categoryValue || item.projectCategory === categoryValue;
+          // 类别匹配（先不过滤，后面会从 activities 获取）
+          const matchCategory = !categoryValue || true; // 暂时不在这里过滤，因为类别需要从 activities 获取
 
           return matchKeyword && matchCategory;
         });
@@ -188,12 +184,73 @@ Page({
           .get();
       }
 
-      const apps = (res.data || []).map(item => ({
-        ...item,
-        createTimeFormatted: item.createTime ? new Date(item.createTime).toLocaleString() : '',
-        statusClass: 'pending'
-      }));
-      this.setData({ applications: apps });
+      // 获取所有申请对应的学号信息和项目类别信息
+      const studentOpenIds = [...new Set((res.data || []).map(item => item.studentOpenId).filter(id => id))];
+      const projectIds = [...new Set((res.data || []).map(item => item.projectId).filter(id => id))];
+      
+      // 批量查询用户信息
+      const userMap = new Map();
+      if (studentOpenIds.length > 0) {
+        // 分批查询用户（每次最多20个）
+        const BATCH_SIZE = 20;
+        for (let i = 0; i < studentOpenIds.length; i += BATCH_SIZE) {
+          const batch = studentOpenIds.slice(i, i + BATCH_SIZE);
+          const userQueries = batch.map(openId => 
+            db.collection('users').where({ _openid: openId }).get()
+          );
+          const userResults = await Promise.all(userQueries);
+          
+          userResults.forEach((userRes, index) => {
+            if (userRes.data && userRes.data.length > 0) {
+              const user = userRes.data[0];
+              userMap.set(batch[index], user.studentId || '');
+            }
+          });
+        }
+      }
+
+      // 批量查询项目信息（获取类别）
+      const projectMap = new Map();
+      if (projectIds.length > 0) {
+        // 分批查询项目（每次最多20个）
+        const BATCH_SIZE = 20;
+        for (let i = 0; i < projectIds.length; i += BATCH_SIZE) {
+          const batch = projectIds.slice(i, i + BATCH_SIZE);
+          const projectQueries = batch.map(projectId => 
+            db.collection('activities').doc(projectId).get()
+          );
+          const projectResults = await Promise.all(projectQueries);
+          
+          projectResults.forEach((projectRes, index) => {
+            if (projectRes.data) {
+              const project = projectRes.data;
+              projectMap.set(batch[index], project.category || '未分类');
+            }
+          });
+        }
+      }
+
+      // 合并申请数据、用户数据和项目数据
+      const apps = (res.data || []).map(item => {
+        const studentId = item.studentOpenId ? (userMap.get(item.studentOpenId) || '') : '';
+        const projectCategory = item.projectId ? (projectMap.get(item.projectId) || '未分类') : '未分类';
+        
+        return {
+          ...item,
+          studentId: studentId, // 从 users 集合获取的学号
+          projectCategory: projectCategory, // 从 activities 集合获取的类别
+          createTimeFormatted: item.createTime ? new Date(item.createTime).toLocaleString() : '',
+          statusClass: 'pending'
+        };
+      });
+
+      // 如果有类别筛选，在这里过滤
+      const categoryValue = this.data.filterOptions.categories[this.data.filters.categoryIndex]?.value;
+      const filteredApps = categoryValue 
+        ? apps.filter(item => item.projectCategory === categoryValue)
+        : apps;
+      
+      this.setData({ applications: filteredApps });
     } catch (err) {
       console.error('加载申请失败', err);
       wx.showToast({ title: '加载失败', icon: 'none' });

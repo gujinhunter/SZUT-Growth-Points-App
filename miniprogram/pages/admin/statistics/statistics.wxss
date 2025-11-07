@@ -1,229 +1,186 @@
-.stats-page {
-    min-height: 100vh;
-    padding: 48rpx 32rpx 80rpx;
-    box-sizing: border-box;
-    background: #f3f5f9;
-    display: flex;
-    flex-direction: column;
-    gap: 32rpx;
-  }
-  
-  .summary-card,
-  .filter-card,
-  .chart-card,
-  .table-card {
-    background: #ffffff;
-    border-radius: 28rpx;
-    box-shadow: 0 14rpx 28rpx rgba(31, 79, 163, 0.1);
-    padding: 32rpx 30rpx;
-  }
-  
-  .summary-header,
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .summary-title,
-  .card-title {
-    font-size: 30rpx;
-    font-weight: 600;
-    color: #1f4e9d;
-  }
-  
-  .summary-desc,
-  .card-sub {
-    font-size: 24rpx;
-    color: #7c89a3;
-  }
-  
-  .refresh {
-    font-size: 24rpx;
-    color: #2f6fd2;
-  }
-  
-  .summary-grid {
-    margin-top: 28rpx;
-    display: flex;
-    gap: 18rpx;
-  }
-  
-  .summary-item {
-    flex: 1;
-    padding: 26rpx;
-    border-radius: 20rpx;
-    background: #f6f8fc;
-    color: #2a3d6c;
-    display: flex;
-    flex-direction: column;
-    gap: 10rpx;
-  }
-  
-  .item-label {
-    font-size: 24rpx;
-    color: #687798;
-  }
-  
-  .item-value {
-    font-size: 40rpx;
-    font-weight: 600;
-    color: #1f4e9d;
-  }
-  
-  .item-sub {
-    font-size: 24rpx;
-    color: #7d88a4;
-  }
-  
-  .filter-card .card-title {
-    margin-bottom: 20rpx;
-  }
-  
-  .filter-row {
-    display: flex;
-    gap: 18rpx;
-    align-items: center;
-  }
-  
-  .picker-display {
-    flex: 1;
-    height: 74rpx;
-    line-height: 74rpx;
-    border-radius: 18rpx;
-    background: rgba(31, 79, 163, 0.08);
-    color: #1f4e9d;
-    font-size: 26rpx;
-    padding: 0 28rpx;
-  }
-  
-  .export-btn {
-    min-width: 180rpx;
-    height: 74rpx;
-    line-height: 74rpx;
-    border-radius: 999rpx;
-    color: #fff;
-    font-size: 26rpx;
-    background: linear-gradient(135deg, #1f4e9d 0%, #2f6fd2 100%);
-    box-shadow: 0 12rpx 24rpx rgba(31, 79, 163, 0.22);
-    border: none;
-  }
-  
-  .export-btn::after {
-    border: none;
-  }
-  
- .chart-card {
-  padding-bottom: 20rpx;
+/* miniprogram/pages/admin/statistics/statistics.wxss */
+.page {
+  min-height: 100vh;
+  padding: 40rpx 32rpx 80rpx;
+  background: #f3f6fb;
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
 }
 
-.ranking-card {
+.page-header {
   background: #ffffff;
-  border-radius: 28rpx;
-  box-shadow: 0 14rpx 28rpx rgba(31, 79, 163, 0.1);
-  padding: 32rpx 30rpx;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 18rpx 36rpx rgba(29, 58, 97, 0.08);
 }
 
-.ranking-row {
+.header-top {
   display: flex;
   align-items: center;
-  padding: 24rpx 20rpx;
-  border-bottom: 1px solid rgba(31, 79, 163, 0.08);
+  justify-content: space-between;
+  gap: 24rpx;
 }
 
-.ranking-row:last-child {
-  border-bottom: none;
-}
-
-.ranking-header {
-  background: #f6f8fc;
-  border-radius: 16rpx;
-  padding: 18rpx 20rpx;
-  font-weight: 600;
-}
-
-.ranking-row.top-three {
-  background: rgba(31, 79, 163, 0.04);
-  border-radius: 12rpx;
-  margin: 8rpx 0;
-}
-
-.rank-col {
-  font-size: 26rpx;
-  color: #2f3f64;
-}
-
-.rank-num {
-  flex: 0.6;
-  text-align: center;
-}
-
-.rank-name {
-  flex: 1.2;
-}
-
-.rank-student {
-  flex: 1.4;
-  color: #7c89a3;
-}
-
-.rank-points {
-  flex: 1;
-  text-align: right;
-  font-weight: 600;
-  color: #1f4e9d;
-}
-
-.rank-icon {
-  font-size: 32rpx;
-}
-
-.table-card {
-  padding: 36rpx 30rpx;
-}
-
-.log-header {
-  background: #f6f8fc;
-  border-radius: 16rpx;
-  padding: 18rpx 20rpx;
-}
-
-.log-row {
+.title-block {
   display: flex;
-  align-items: center;
-  padding: 22rpx 20rpx;
-  border-bottom: 1px solid rgba(31, 79, 163, 0.08);
+  flex-direction: column;
+  gap: 16rpx;
 }
 
-.log-row:last-child {
-  border-bottom: none;
-}
-
-.col {
+.timestamp {
   font-size: 24rpx;
-  color: #2f3f64;
+  color: #557094;
 }
 
-.col-admin {
-  flex: 1.2;
+.button-group {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
 }
 
-.col-action {
+.primary-btn {
+  min-width: 200rpx;
+  height: 72rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #2c4f86 0%, #345f9e 100%);
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.ghost-btn {
+  min-width: 140rpx;
+  height: 60rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid rgba(44, 79, 134, 0.28);
+  background: rgba(44, 79, 134, 0.08);
+  color: #2c4f86;
+  font-size: 24rpx;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #113a6b;
+}
+
+.refresh-info {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  font-size: 24rpx;
+  color: #557094;
+}
+
+.refresh-btn {
+  min-width: 140rpx;
+  height: 60rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #2c4f86 0%, #345f9e 100%);
+  color: #fff;
+  border: none;
+}
+
+.export-btn {
+  height: 88rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #2c4f86 0%, #345f9e 100%);
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.table-wrapper {
+  background: #ffffff;
+  border-radius: 24rpx;
+  box-shadow: 0 12rpx 36rpx rgba(17, 43, 78, 0.08);
+  overflow: hidden;
+}
+
+.table-header,
+.table-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-height: 92rpx;
+}
+
+.table-header {
+  background: #eff4fb;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #2b4673;
+}
+
+.table-row {
+  font-size: 26rpx;
+  color: #203d66;
+}
+
+.table-row.odd {
+  background: #f8fafd;
+}
+
+.table-body {
+  max-height: calc(100vh - 420rpx);
+}
+
+.cell {
+  padding: 0 24rpx;
+  display: flex;
+  align-items: center;
+}
+
+.cell.rank {
+  width: 120rpx;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.cell.name {
+  width: 200rpx;
+}
+
+.cell.id {
+  width: 200rpx;
+}
+
+.cell.academy {
   flex: 1;
+  gap: 4rpx;
+  color: #4c6284;
 }
 
-.col-project {
-  flex: 1.6;
-}
-
-.col-time {
-  flex: 1.4;
-  color: #7c89a3;
+.cell.points {
+  width: 160rpx;
+  justify-content: flex-end;
+  font-weight: 700;
+  color: #1f4b88;
 }
 
 .empty {
-  text-align: center;
-  color: #8f99b2;
+  flex: 1;
+  border-radius: 24rpx;
+  background: #fff;
+  box-shadow: 0 12rpx 36rpx rgba(17, 43, 78, 0.06);
+  padding: 120rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32rpx;
+  color: #6c7c94;
   font-size: 26rpx;
-  padding: 60rpx 0;
 }

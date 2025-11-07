@@ -43,7 +43,7 @@
         <image class="grid-icon" src="/assets/admin/icon-stats.png" mode="aspectFit"></image>
         <view class="grid-text">数据统计</view>
       </view>
-      <view class="grid-item" data-url="/pages/admin/review/review?status=已通过" bindtap="goPage">
+      <view class="grid-item" data-url="/pages/admin/reviewHistory/reviewHistory" bindtap="goPage">
         <image class="grid-icon" src="/assets/admin/icon-history.png" mode="aspectFit"></image>
         <view class="grid-text">审核历史</view>
       </view>

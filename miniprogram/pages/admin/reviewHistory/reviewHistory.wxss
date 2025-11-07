@@ -1,0 +1,157 @@
+/* miniprogram/pages/admin/reviewHistory/reviewHistory.wxss */
+.page {
+  min-height: 100vh;
+  padding: 32rpx;
+  background: #f3f6fb;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.filter-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 20rpx 40rpx rgba(18, 46, 86, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.search-input {
+  flex: 1;
+  height: 72rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid rgba(31, 79, 163, 0.18);
+  padding: 0 28rpx;
+  font-size: 26rpx;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.search-btn {
+  width: 140rpx;
+  height: 72rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #1f4e9d 0%, #2f6fd2 100%);
+  color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.filter-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.picker-display {
+  flex: 1;
+  height: 68rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid rgba(31, 79, 163, 0.14);
+  background: rgba(31, 79, 163, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #1f3d66;
+}
+
+.content-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.loading,
+.empty {
+  padding: 160rpx 32rpx;
+  text-align: center;
+  color: #6e7f9a;
+  font-size: 26rpx;
+}
+
+.log-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 28rpx;
+  box-shadow: 0 12rpx 32rpx rgba(17, 42, 78, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.project {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1c3f6a;
+}
+
+.status {
+  min-width: 120rpx;
+  padding: 0 24rpx;
+  height: 54rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.status.approved {
+  background: linear-gradient(135deg, #1f7d54 0%, #2fa873 100%);
+}
+
+.status.rejected {
+  background: linear-gradient(135deg, #c13f3f 0%, #f25c5c 100%);
+}
+
+.status.pending {
+  background: linear-gradient(135deg, #8b8f9d 0%, #bcc0cc 100%);
+}
+
+.log-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 26rpx;
+  color: #364b6b;
+}
+
+.label {
+  color: #7586a0;
+}
+
+.value {
+  max-width: 480rpx;
+  text-align: right;
+  word-break: break-all;
+}
+
+.row.remark .value {
+  text-align: left;
+  color: #2f4161;
+}

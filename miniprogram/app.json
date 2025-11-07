@@ -9,7 +9,8 @@
     "pages/admin/review/review",
     "pages/admin/projects/projects",
     "pages/admin/statistics/statistics",
-    "pages/admin/projectEdit/projectEdit"
+    "pages/admin/projectEdit/projectEdit",
+    "pages/admin/reviewHistory/reviewHistory"
   ],
   "window": {
     "backgroundColor": "#F6F6F6",

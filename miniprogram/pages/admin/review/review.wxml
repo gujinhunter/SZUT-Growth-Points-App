@@ -41,7 +41,6 @@
             <view class="meta">申请人：{{item.name || item._openid}}</view>
             <view class="meta">学号：{{item.studentId || '—'}}</view>
             <view class="meta">类别：{{item.projectCategory || '未分类'}}</view>
-            <view class="meta">地区：{{item.projectRegion || '未填写'}}</view>
             <view class="meta">提交时间：{{item.createTimeFormatted}}</view>
             <view class="meta reason">申请理由：{{item.reason || '—'}}</view>
           </view>

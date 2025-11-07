@@ -1,0 +1,82 @@
+<!-- miniprogram/pages/admin/reviewHistory/reviewHistory.wxml -->
+<view class="page">
+  <view class="filter-card">
+    <view class="search-row">
+      <input class="search-input"
+             type="text"
+             placeholder="搜索申请人 / 学号 / 项目 / 管理员"
+             confirm-type="search"
+             value="{{keyword}}"
+             bindinput="onKeywordInput"
+             bindconfirm="onSearchConfirm" />
+      <button class="search-btn" bindtap="onSearch">搜索</button>
+    </view>
+
+    <view class="filter-row">
+      <picker mode="selector"
+              range="{{filterOptions.categories}}"
+              range-key="label"
+              value="{{filters.categoryIndex}}"
+              bindchange="onCategoryChange">
+        <view class="picker-display">
+          {{filterOptions.categories[filters.categoryIndex].label}}
+        </view>
+      </picker>
+      <picker mode="selector"
+              range="{{filterOptions.statuses}}"
+              range-key="label"
+              value="{{filters.statusIndex}}"
+              bindchange="onStatusChange">
+        <view class="picker-display">
+          {{filterOptions.statuses[filters.statusIndex].label}}
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <view class="content-section">
+    <view wx:if="{{loading}}" class="loading">加载中...</view>
+
+    <block wx:elif="{{logs.length > 0}}">
+      <block wx:for="{{logs}}" wx:key="_id">
+        <view class="log-card">
+          <view class="log-header">
+            <view class="project">{{item.projectName}}</view>
+            <view class="status {{item.afterStatus === '已通过' ? 'approved' : (item.afterStatus === '已驳回' ? 'rejected' : 'pending')}}">
+              {{item.afterStatusText}}
+            </view>
+          </view>
+
+          <view class="log-body">
+            <view class="row">
+              <text class="label">申请人</text>
+              <text class="value">{{item.studentName}}</text>
+            </view>
+            <view class="row">
+              <text class="label">学号</text>
+              <text class="value">{{item.studentId}}</text>
+            </view>
+            <view class="row">
+              <text class="label">项目类别</text>
+              <text class="value">{{item.projectCategory}}</text>
+            </view>
+            <view class="row">
+              <text class="label">审核时间</text>
+              <text class="value">{{item.createTimeFormatted}}</text>
+            </view>
+            <view class="row">
+              <text class="label">审核人</text>
+              <text class="value">{{item.adminName || '管理员'}}</text>
+            </view>
+            <view class="row remark" wx:if="{{item.remark}}">
+              <text class="label">备注</text>
+              <text class="value">{{item.remark}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </block>
+
+    <view wx:else class="empty">{{emptyText}}</view>
+  </view>
+</view>
