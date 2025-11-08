@@ -22,8 +22,7 @@
           <view class="activity-score">
             积分：
             <text class="score">
-              <!-- score 可能是数组（多档积分），用 / 拼接展示 -->
-              {{Array.isArray(item.score) ? item.score.join('/') : item.score}}
+                {{item.displayScore}}
             </text>点
           </view>
           <view class="activity-remark">{{item.remark}}</view>

@@ -3,8 +3,8 @@ const db = wx.cloud.database();
 
 Page({
   data: {
-    activities: [],     // 所有活动数据
-    loading: true,      // 加载状态
+    activities: [],      // 所有活动数据
+    loading: true,       // 加载状态
     activeCategory: null // 当前展开的分类（可用于折叠展开）
   },
 
@@ -21,6 +21,10 @@ Page({
       const total = res.total; // 总记录数
       const batchTimes = Math.ceil(total / MAX_LIMIT); // 需要拉取的次数
 
+
+      // 每次调用 .get() 只是返回一个 Promise（异步请求），
+      // 先把这些“待完成的请求”按顺序 push 到 tasks 里，
+      // 等到 Promise.all(tasks) 执行时，才会真正等待所有请求完成并拿到数据。
       const tasks = [];
       for (let i = 0; i < batchTimes; i++) {
         const promise = db.collection('activities')
@@ -41,10 +45,19 @@ Page({
           if (!grouped[item.category]) grouped[item.category] = [];
           grouped[item.category].push(item);
         });
+
+        const formatScore = score => {
+          if (Array.isArray(score)) return score.join('/');
+          if (typeof score === 'string') return score.replace(/,/g, '/');
+          return score || '';
+        };
   
         const activities = Object.keys(grouped).map(category => ({
           category,
-          items: grouped[category]
+          items: grouped[category].map(item => ({
+            ...item,
+            displayScore: formatScore(item.score)
+          }))
         }));
   
         this.setData({ activities, loading: false });
@@ -77,7 +90,7 @@ Page({
   }
   */
 
-  // ✅ 新增：点击活动后跳转到 apply 页面
+  // 点击活动后跳转到 apply 页面
   goToApply(e) {
     const item = e.currentTarget.dataset.item;
     // 跳转到 apply 页面，同时传递项目 id 和名称

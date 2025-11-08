@@ -50,7 +50,7 @@
 
     <view class="upload-panel">
       <view class="upload-left">
-        <view class="upload-desc">支持 PDF、DOC、PPT 等格式，大小不超过 20MB</view>
+        <view class="upload-desc">目前仅支持图片格式，请将证明材料转成图片上传</view>
         <view class="upload-file" wx:if="{{fileName}}">{{fileName}}</view>
       </view>
       <button type="default" class="upload-btn" bindtap="chooseFile">选择文件</button>
