@@ -1,16 +1,21 @@
 <!-- miniprogram/pages/admin/statistics/statistics.wxml -->
 <view class="page">
   <view class="page-header">
+  <view class="header-top">
     <view class="title">积分统计</view>
-    <view class="refresh-info">
+    <view class="timestamp">
       <text>上次更新：</text>
       <text>{{lastRefresh || '—'}}</text>
-      <button class="refresh-btn" size="mini" bindtap="loadStudents" loading="{{loading}}" disabled="{{loading}}">刷新</button>
     </view>
-    <button class="export-btn" bindtap="handleExport" loading="{{exporting}}" disabled="{{exporting || loading}}">
-      导出名单
-    </button>
   </view>
+
+  <button class="export-btn"
+          bindtap="handleExport"
+          loading="{{exporting}}"
+          disabled="{{exporting || loading}}">
+    导出名单
+  </button>
+</view>
 
   <view class="table-wrapper" wx:if="{{students.length}}">
     <view class="table-header">

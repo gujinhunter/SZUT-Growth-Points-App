@@ -62,22 +62,4 @@
       </block>
     </view>
   </view>
-
-  <view class="chart-section">
-    <view class="chart-card">
-      <view class="card-header">
-        <view class="card-title">近7天审核趋势</view>
-        <view class="card-sub">单位：条</view>
-      </view>
-      <ec-canvas id="trendChart" canvas-id="trendChart" ec="{{trendChart}}"></ec-canvas>
-    </view>
-
-    <view class="chart-card">
-      <view class="card-header">
-        <view class="card-title">热门项目排行</view>
-        <view class="card-sub">按近30天申请量</view>
-      </view>
-      <ec-canvas id="rankChart" canvas-id="rankChart" ec="{{rankChart}}"></ec-canvas>
-    </view>
-  </view>
 </view>

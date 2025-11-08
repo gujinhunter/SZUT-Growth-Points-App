@@ -158,6 +158,7 @@
   width: 200rpx;
 }
 
+
 .cell.academy {
   flex: 1;
   gap: 4rpx;

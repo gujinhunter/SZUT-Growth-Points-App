@@ -1,4 +1,3 @@
-// cloudfunctions/adminStatisticsSimpleExport/index.js
 const cloud = require('wx-server-sdk');
 const ExcelJS = require('exceljs');
 

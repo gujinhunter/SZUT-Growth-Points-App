@@ -1,5 +1,3 @@
-import * as echarts from '../../../components/ec-canvas/echarts';
-
 const db = wx.cloud.database();
 const _ = db.command;
 
@@ -14,15 +12,7 @@ Page({
     },
     categoryFilters: [
       { label: '全部类别', value: '', active: true }
-    ],
-    trendChart: {
-      lazyLoad: true
-    },
-    rankChart: {
-      lazyLoad: true
-    },
-    trendData: null,
-    rankData: null
+    ]
   },
 
   onLoad() {
@@ -65,12 +55,7 @@ Page({
           pendingToday: data.pendingToday || 0,
           totalProjects: data.totalProjects || 0,
           approvalRate: (data.approvalRate || 0).toFixed(1)
-        },
-        trendData: data.trend || [],
-        rankData: data.rank || []
-      }, () => {
-        this.initTrendChart();
-        this.initRankChart();
+        }
       });
     } catch (err) {
       console.error('概览数据加载失败', err);
@@ -85,98 +70,23 @@ Page({
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-    // 1. 今日待审核数量
+  
     const pendingRes = await db.collection('applications')
-      .where({
-        status: '待审核',
-        createTime: _.gte(today).and(_.lt(tomorrow))
-      })
+      .where({ status: '待审核', createTime: _.gte(today).and(_.lt(tomorrow)) })
       .count();
     const pendingToday = pendingRes.total || 0;
-
-    // 2. 项目总数
+  
     const projectsRes = await db.collection('activities').count();
     const totalProjects = projectsRes.total || 0;
-
-    // 3. 审核通过率（最近30天）
+  
     const recentRes = await db.collection('applications')
-      .where({
-        createTime: _.gte(thirtyDaysAgo)
-      })
+      .where({ createTime: _.gte(thirtyDaysAgo) })
       .get();
     const total = recentRes.data.length;
     const approved = recentRes.data.filter(item => item.status === '已通过').length;
     const approvalRate = total > 0 ? (approved / total * 100) : 0;
-
-    // 4. 最近7天趋势
-    const trend = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-      const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
-      const dayRes = await db.collection('applications')
-        .where({
-          createTime: _.gte(date).and(_.lt(nextDate))
-        })
-        .count();
-      const mm = `${date.getMonth() + 1}`.padStart(2, '0');
-      const dd = `${date.getDate()}`.padStart(2, '0');
-      trend.push({
-        date: `${mm}-${dd}`,
-        count: dayRes.total || 0
-      });
-    }
-
-    // 5. 热门项目排行（最近30天）
-    const rankRes = await db.collection('applications')
-      .where({
-        createTime: _.gte(thirtyDaysAgo)
-      })
-      .get();
-
-    const projectMap = {};
-    rankRes.data.forEach(item => {
-      const name = item.projectName || '未命名项目';
-      projectMap[name] = (projectMap[name] || 0) + 1;
-    });
-
-    const rank = Object.entries(projectMap)
-      .map(([project, count]) => ({ project, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-
-    return {
-      pendingToday,
-      totalProjects,
-      approvalRate,
-      trend,
-      rank
-    };
-  },
-
-  async loadCategories() {
-    try {
-      const res = await db.collection('activities')
-        .field({ category: true })
-        .get();
-      const exists = new Set();
-      res.data.forEach(item => {
-        if (item.category) exists.add(item.category);
-      });
-      const list = Array.from(exists).map(text => ({
-        label: text,
-        value: text,
-        active: false
-      }));
-      this.setData({
-        categoryFilters: [
-          { label: '全部类别', value: '', active: true },
-          ...list
-        ]
-      });
-    } catch (err) {
-      console.error('加载类别失败', err);
-    }
+  
+    return { pendingToday, totalProjects, approvalRate };
   },
 
   async loadCategories() {
@@ -225,110 +135,6 @@ Page({
     } else {
       wx.navigateTo({ url });
     }
-  },
-
-  initTrendChart() {
-    if (!this.trendComponent) {
-      this.trendComponent = this.selectComponent('#trendChart');
-    }
-    if (!this.trendComponent) return;
-
-    this.trendComponent.init((canvas, width, height, dpr) => {
-      const chart = echarts.init(canvas, null, {
-        width,
-        height,
-        devicePixelRatio: dpr
-      });
-      canvas.setChart(chart);
-      chart.setOption(this.getTrendOption());
-      this.trendChartInstance = chart;
-      return chart;
-    });
-  },
-
-  initRankChart() {
-    if (!this.rankComponent) {
-      this.rankComponent = this.selectComponent('#rankChart');
-    }
-    if (!this.rankComponent) return;
-
-    this.rankComponent.init((canvas, width, height, dpr) => {
-      const chart = echarts.init(canvas, null, {
-        width,
-        height,
-        devicePixelRatio: dpr
-      });
-      canvas.setChart(chart);
-      chart.setOption(this.getRankOption());
-      this.rankChartInstance = chart;
-      return chart;
-    });
-  },
-
-  getTrendOption() {
-    const data = this.data.trendData || [];
-    const days = data.map(item => item.date);
-    const counts = data.map(item => item.count);
-
-    return {
-      color: ['#2f6fd2'],
-      grid: { left: 14, right: 10, top: 34, bottom: 26, containLabel: true },
-      tooltip: { trigger: 'axis' },
-      xAxis: {
-        type: 'category',
-        data: days,
-        axisLine: { lineStyle: { color: '#8c9abc' } }
-      },
-      yAxis: {
-        type: 'value',
-        axisLine: { lineStyle: { color: '#8c9abc' } },
-        splitLine: { lineStyle: { color: 'rgba(140,154,188,0.2)' } }
-      },
-      series: [{
-        name: '审核量',
-        type: 'line',
-        smooth: true,
-        areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(47, 111, 210, 0.35)' },
-            { offset: 1, color: 'rgba(47, 111, 210, 0.02)' }
-          ])
-        },
-        data: counts
-      }]
-    };
-  },
-
-  getRankOption() {
-    const data = (this.data.rankData || []).slice(0, 5);
-    const names = data.map(item => item.project);
-    const counts = data.map(item => item.count);
-
-    return {
-      color: ['#1f4e9d'],
-      grid: { left: 90, right: 30, top: 24, bottom: 26 },
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-      xAxis: {
-        type: 'value',
-        axisLine: { lineStyle: { color: '#8c9abc' } },
-        splitLine: { lineStyle: { color: 'rgba(140,154,188,0.2)' } }
-      },
-      yAxis: {
-        type: 'category',
-        inverse: true,
-        data: names,
-        axisLine: { lineStyle: { color: '#8c9abc' } }
-      },
-      series: [{
-        name: '申请量',
-        type: 'bar',
-        barWidth: 16,
-        itemStyle: {
-          borderRadius: [0, 8, 8, 0]
-        },
-        data: counts
-      }]
-    };
   },
 
   formatDate(date) {

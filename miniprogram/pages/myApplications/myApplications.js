@@ -2,7 +2,8 @@ const db = wx.cloud.database();
 
 Page({
   data: {
-    applications: []
+    applications: [],
+    applicationGroups: []
   },
 
   onShow() {
@@ -25,7 +26,23 @@ Page({
                 createTimeFormatted: new Date(item.createTime).toLocaleString(),
                 statusClass: this.getStatusClass(item.status)
               }));
-              this.setData({ applications: formatted });
+
+              const groupConfig = [
+                { status: '待审核', key: 'pending', label: '待审核' },
+                { status: '已通过', key: 'approved', label: '已通过' },
+                { status: '已驳回', key: 'rejected', label: '已驳回' }
+              ];
+            
+              const grouped = groupConfig.map(cfg => ({
+                status: cfg.status,
+                label: cfg.label,
+                list: formatted.filter(item => item.status === cfg.status)
+              })).filter(group => group.list.length > 0);
+
+              this.setData({
+                applications: formatted,
+                applicationGroups: grouped
+              });
             }
           });
       }

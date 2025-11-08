@@ -1,82 +1,82 @@
-<!-- miniprogram/pages/admin/reviewHistory/reviewHistory.wxml -->
 <view class="page">
-  <view class="filter-card">
-    <view class="search-row">
-      <input class="search-input"
-             type="text"
-             placeholder="搜索申请人 / 学号 / 项目 / 管理员"
-             confirm-type="search"
-             value="{{keyword}}"
-             bindinput="onKeywordInput"
-             bindconfirm="onSearchConfirm" />
+  <view class="header-card">
+    <view class="title-area">
+      <view class="title">审核历史</view>
+      <view class="subtitle">最近 50 条记录，可通过筛选快速定位</view>
+    </view>
+
+    <view class="search-area">
+      <view class="search-box">
+        <icon type="search" size="16" color="#6480a0"/>
+        <input placeholder="搜索申请人 / 学号 / 项目 / 审核人"
+               confirm-type="search"
+               value="{{keyword}}"
+               bindinput="onKeywordInput"
+               bindconfirm="onSearchConfirm"/>
+      </view>
       <button class="search-btn" bindtap="onSearch">搜索</button>
     </view>
 
-    <view class="filter-row">
-      <picker mode="selector"
+    <view class="filter-area">
+      <picker class="filter-picker"
+              mode="selector"
               range="{{filterOptions.categories}}"
               range-key="label"
               value="{{filters.categoryIndex}}"
               bindchange="onCategoryChange">
-        <view class="picker-display">
-          {{filterOptions.categories[filters.categoryIndex].label}}
-        </view>
+        <view>{{filterOptions.categories[filters.categoryIndex].label}}</view>
       </picker>
-      <picker mode="selector"
+      <picker class="filter-picker"
+              mode="selector"
               range="{{filterOptions.statuses}}"
               range-key="label"
               value="{{filters.statusIndex}}"
               bindchange="onStatusChange">
-        <view class="picker-display">
-          {{filterOptions.statuses[filters.statusIndex].label}}
-        </view>
+        <view>{{filterOptions.statuses[filters.statusIndex].label}}</view>
       </picker>
     </view>
   </view>
 
-  <view class="content-section">
+  <view class="content">
     <view wx:if="{{loading}}" class="loading">加载中...</view>
 
-    <block wx:elif="{{logs.length > 0}}">
+    <scroll-view wx:elif="{{logs.length}}" scroll-y class="list">
       <block wx:for="{{logs}}" wx:key="_id">
         <view class="log-card">
-          <view class="log-header">
-            <view class="project">{{item.projectName}}</view>
-            <view class="status {{item.afterStatus === '已通过' ? 'approved' : (item.afterStatus === '已驳回' ? 'rejected' : 'pending')}}">
-              {{item.afterStatusText}}
-            </view>
+          <view class="log-badge {{item.afterStatus === '已通过' ? 'approved' : (item.afterStatus === '已驳回' ? 'rejected' : 'pending')}}">
+            {{item.afterStatusText}}
           </view>
 
-          <view class="log-body">
-            <view class="row">
-              <text class="label">申请人</text>
-              <text class="value">{{item.studentName}}</text>
+          <view class="log-title">
+            <text class="project">{{item.projectName}}</text>
+            <text class="timestamp">{{item.createTimeFormatted}}</text>
+          </view>
+
+          <view class="log-meta">
+            <view class="meta-item">
+              <text class="meta-label">申请人</text>
+              <text class="meta-value">{{item.studentName}}（{{item.studentId}}）</text>
             </view>
-            <view class="row">
-              <text class="label">学号</text>
-              <text class="value">{{item.studentId}}</text>
+            <view class="meta-item">
+              <text class="meta-label">类别</text>
+              <text class="meta-value">{{item.projectCategory}}</text>
             </view>
-            <view class="row">
-              <text class="label">项目类别</text>
-              <text class="value">{{item.projectCategory}}</text>
+            <view class="meta-item">
+              <text class="meta-label">审核人</text>
+              <text class="meta-value">{{item.adminName}}</text>
             </view>
-            <view class="row">
-              <text class="label">审核时间</text>
-              <text class="value">{{item.createTimeFormatted}}</text>
-            </view>
-            <view class="row">
-              <text class="label">审核人</text>
-              <text class="value">{{item.adminName || '管理员'}}</text>
-            </view>
-            <view class="row remark" wx:if="{{item.remark}}">
-              <text class="label">备注</text>
-              <text class="value">{{item.remark}}</text>
+            <view class="meta-item" wx:if="{{item.remark}}">
+              <text class="meta-label">备注</text>
+              <text class="meta-value remark">{{item.remark}}</text>
             </view>
           </view>
         </view>
       </block>
-    </block>
+    </scroll-view>
 
-    <view wx:else class="empty">{{emptyText}}</view>
+    <view wx:else class="empty">
+      <image src="/assets/empty.png" mode="aspectFit"></image>
+      <text>{{emptyText}}</text>
+    </view>
   </view>
 </view>
