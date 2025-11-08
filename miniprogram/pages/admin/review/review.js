@@ -381,35 +381,44 @@ Page({
 
     const target = this.data.applications.find(item => item._id === appId);
     wx.showModal({
-      title: '确认驳回',
-      content: '确认将该申请设置为"已驳回"？',
+      title: '驳回原因',
+      editable: true,                 // 需要基础库 ≥ 2.13.0
+      placeholderText: '请填写驳回说明',
+      confirmText: '提交',
+      cancelText: '取消',
       success: async (res) => {
         if (!res.confirm) return;
+        const remark = (res.content || '').trim();
+        if (!remark) {
+          wx.showToast({ title: '请填写驳回原因', icon: 'none' });
+          return;
+        }
         wx.showLoading({ title: '处理中...' });
         try {
           await db.collection('applications').doc(appId).update({
             data: {
               status: '已驳回',
-              reviewTime: new Date()
+              reviewTime: new Date(),
+              rejectRemark: remark      // 保存给申请者查看
             }
           });
-
+ 
           await this.logReviewAction({
             applicationId: appId,
             action: 'rejected',
             projectId: target?.projectId || null,
             beforeStatus: target?.status || '',
             afterStatus: '已驳回',
-            remark: ''
+            remark                               // 记录在审核日志里
           });
-
+ 
           wx.hideLoading();
           wx.showToast({ title: '已驳回', icon: 'success' });
           this.loadApplications();
         } catch (error) {
-          console.error('handleReject error', error);
           wx.hideLoading();
           wx.showToast({ title: '驳回失败', icon: 'none' });
+          console.error('handleReject error', error);
         }
       }
     });

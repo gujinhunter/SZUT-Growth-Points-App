@@ -24,6 +24,10 @@
           <text class="label">附件：</text>
           <text class="file-link" bindtap="previewFile" data-fileid="{{item.fileID}}">查看附件</text>
         </view>
+           <view wx:if="{{item.status === '已驳回' && item.rejectRemark}}" class="row">
+     <text class="label">驳回说明：</text>
+     <text class="reject-text">{{item.rejectRemark}}</text>
+   </view>
       </view>
     </block>
   </block>

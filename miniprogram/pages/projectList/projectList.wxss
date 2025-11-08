@@ -1,63 +1,77 @@
 /* pages/projectList/projectList.wxss */
-/* 页面容器 */
+
+/* 页面容器：设定整体内边距、背景色、最小高度撑满屏幕 */
 .container {
-    padding: 20rpx;
-    background-color: #f9f9fb;
-    min-height: 100vh;
-  }
-  
-  /* 分类标题 */
-  .category {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #34589e;
-    color: white;
-    padding: 25rpx;
-    margin-top: 20rpx;
-    border-radius: 12rpx;
-    font-size: 30rpx;
-    font-weight: 600;
-  }
-  .arrow {
-    font-size: 28rpx;
-    opacity: 0.8;
-  }
-  
-  /* 活动卡片 */
-  .activity-list {
-    margin-top: 10rpx;
-  }
-  .activity-card {
-    background: white;
-    border-radius: 16rpx;
-    padding: 25rpx 30rpx;
-    margin: 15rpx 0;
-    box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1);
-  }
-  .activity-name {
-    font-size: 30rpx;
-    color: #333;
-    font-weight: 500;
-    margin-bottom: 10rpx;
-  }
-  .activity-score {
-    font-size: 26rpx;
-    color: #666;
-  }
-  .score {
-    color: #1aad19;
-    font-weight: 600;
-  }
-  .activity-remark {
-    font-size: 24rpx;
-    color: #999;
-    margin-top: 8rpx;
-  }
-  .loading {
-    text-align: center;
-    margin-top: 200rpx;
-    color: #666;
-    font-size: 28rpx;
-  }
-  
+  padding: 20rpx;
+  background-color: #f9f9fb;
+  min-height: 100vh;
+}
+
+/* 分类标题区域：横向排列标题和箭头，蓝底白字 */
+.category {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #34589e;
+  color: white;
+  padding: 25rpx;
+  margin-top: 20rpx;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+/* 分类右侧的小箭头图标样式 */
+.arrow {
+  font-size: 28rpx;
+  opacity: 0.8;
+}
+
+/* 活动列表外层间距 */
+.activity-list {
+  margin-top: 10rpx;
+}
+
+/* 单条活动卡片：白底圆角、阴影、内边距 */
+.activity-card {
+  background: white;
+  border-radius: 16rpx;
+  padding: 25rpx 30rpx;
+  margin: 15rpx 0;
+  box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1);
+}
+
+/* 活动名称：字号稍大、深色加粗 */
+.activity-name {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 10rpx;
+}
+
+/* 积分文本区域：次要信息，灰色小字 */
+.activity-score {
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 积分数值高亮为绿色并加粗 */
+.score {
+  color: #1aad19;
+  font-weight: 600;
+}
+
+/* 活动备注说明：更小字号浅灰色 */
+.activity-remark {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+/* 加载提示样式：居中显示灰色提示文字 */
+.loading {
+  text-align: center;
+  margin-top: 200rpx;
+  color: #666;
+  font-size: 28rpx;
+}

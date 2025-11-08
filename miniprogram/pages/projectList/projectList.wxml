@@ -1,32 +1,33 @@
-<!--pages/projectList/projectList.wxml-->
+<!-- pages/projectList/projectList.wxml -->
 
 <view class="container">
+  <!-- loading 状态提示 -->
   <view wx:if="{{loading}}" class="loading">正在加载活动列表...</view>
 
+  <!-- 遍历活动分类（activities 数组），wx:key 以 category 去重 -->
   <block wx:for="{{activities}}" wx:key="category">
-    <!-- 分类标题 -->
+    <!-- 分类标题：点击可展开/收起项目列表 -->
     <view class="category" bindtap="toggleCategory" data-category="{{item.category}}">
       <text class="category-title">{{item.category}}</text>
+      <!-- 根据 activeCategory 判断箭头朝向 -->
       <text class="arrow">{{activeCategory === item.category ? '▲' : '▼'}}</text>
     </view>
 
-    <!-- 分类下的项目 -->
+    <!-- 展开状态时显示分类下的项目列表 -->
     <view wx:if="{{activeCategory === item.category}}" class="activity-list">
       <block wx:for="{{item.items}}" wx:key="name">
-
-        <!-- ✅ 修改点①：将原先的 bindtap="showDetail" 改为 bindtap="goToApply" -->
-        <!-- ✅ 修改点②：传递当前项目对象 data-item="{{item}}" -->
+        <!-- 项目卡片：点击跳转到申请页，并携带当前项目数据 -->
         <view class="activity-card" bindtap="goToApply" data-item="{{item}}">
           <view class="activity-name">{{item.name}}</view>
           <view class="activity-score">
             积分：
             <text class="score">
+              <!-- score 可能是数组（多档积分），用 / 拼接展示 -->
               {{Array.isArray(item.score) ? item.score.join('/') : item.score}}
             </text>点
           </view>
           <view class="activity-remark">{{item.remark}}</view>
         </view>
-
       </block>
     </view>
   </block>

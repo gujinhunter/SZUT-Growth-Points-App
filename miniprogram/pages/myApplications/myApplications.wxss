@@ -45,6 +45,10 @@
   .status.rejected {
     color: #f44336;
   }
+
+     .reject-text {
+     color: #f44336;
+   }
   
   .file-link {
     color: #007aff;
