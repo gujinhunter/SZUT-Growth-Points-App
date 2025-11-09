@@ -12,6 +12,10 @@
           <text class="label">申请时间：</text>
           <text>{{item.createTimeFormatted}}</text>
         </view>
+        <view class="row" wx:if="{{item.pointsText !== undefined}}">
+          <text class="label">申请积分：</text>
+          <text>{{item.pointsText}} 点</text>
+        </view>
         <view class="row">
           <text class="label">状态：</text>
           <text class="status {{item.statusClass}}">{{item.status}}</text>
@@ -22,17 +26,11 @@
         </view>
         <view wx:if="{{item.fileIDs.length}}" class="row attachments">
           <text class="label">附件：</text>
-          <view class="files">
-            <block wx:for="{{item.fileIDs}}" wx:key="*this" wx:for-item="fileId" wx:for-index="fileIndex">
-              <text class="file-link"
-                    bindtap="previewFile"
-                    data-appindex="{{appIndex}}"
-                    data-fileindex="{{fileIndex}}"
-                    data-fileid="{{fileId}}">
-                {{item.fileNames[fileIndex] || ('附件' + (fileIndex + 1))}}
-              </text>
-            </block>
-          </view>
+          <text class="file-link"
+                bindtap="previewFile"
+                data-appindex="{{appIndex}}">
+            查看附件（{{item.fileIDs.length}} 个）
+          </text>
         </view>
            <view wx:if="{{item.status === '已驳回' && item.rejectRemark}}" class="row">
      <text class="label">驳回说明：</text>

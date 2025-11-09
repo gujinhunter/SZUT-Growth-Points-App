@@ -234,12 +234,18 @@ Page({
       const apps = (res.data || []).map(item => {
         const studentId = item.studentOpenId ? (userMap.get(item.studentOpenId) || '') : '';
         const projectCategory = item.projectId ? (projectMap.get(item.projectId) || '未分类') : '未分类';
+        const fileIDs = Array.isArray(item.fileIDs)
+          ? item.fileIDs
+          : item.fileID
+            ? [item.fileID]
+            : [];
         
         return {
           ...item,
           studentId: studentId, // 从 users 集合获取的学号
           projectCategory: projectCategory, // 从 activities 集合获取的类别
-          createTimeFormatted: item.createTime ? new Date(item.createTime).toLocaleString() : '',
+          fileIDs,
+          createTimeFormatted: this.formatDateTime(item.createTime),
           statusClass: 'pending'
         };
       });
@@ -288,7 +294,24 @@ Page({
 
   previewFile(e) {
     e.stopPropagation?.();
-    const fileID = e.currentTarget.dataset.fileid;
+    const fileIDs = e.currentTarget.dataset.fileids;
+    const list = Array.isArray(fileIDs) ? fileIDs : (fileIDs ? [fileIDs] : []);
+    if (!list.length) {
+      wx.showToast({ title: '无附件', icon: 'none' });
+      return;
+    }
+
+    wx.showActionSheet({
+      itemList: list.map((_, idx) => `附件${idx + 1}`),
+      success: res => {
+        const fileID = list[res.tapIndex];
+        if (!fileID) return;
+        this.openFile(fileID);
+      }
+    });
+  },
+
+  openFile(fileID) {
     if (!fileID) {
       wx.showToast({ title: '无附件', icon: 'none' });
       return;
@@ -297,8 +320,9 @@ Page({
     wx.cloud.downloadFile({ fileID })
       .then(res => {
         wx.hideLoading();
+        const lower = (fileID || '').toLowerCase();
         const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
-        const isImage = imageExts.some(ext => fileID.toLowerCase().includes(ext));
+        const isImage = imageExts.some(ext => lower.includes(ext));
         
         if (isImage) {
           wx.previewImage({
@@ -316,6 +340,19 @@ Page({
         console.error('附件打开失败', err);
         wx.showToast({ title: '打开失败', icon: 'none' });
       });
+  },
+
+  formatDateTime(dateInput) {
+    if (!dateInput) return '';
+    const date = new Date(dateInput);
+    if (Number.isNaN(date.getTime())) return '';
+    const yyyy = date.getFullYear();
+    const mm = `${date.getMonth() + 1}`.padStart(2, '0');
+    const dd = `${date.getDate()}`.padStart(2, '0');
+    const hh = `${date.getHours()}`.padStart(2, '0');
+    const mi = `${date.getMinutes()}`.padStart(2, '0');
+    const ss = `${date.getSeconds()}`.padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
   },
 
   async handleApprove(e) {

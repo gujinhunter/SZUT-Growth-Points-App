@@ -32,9 +32,12 @@ Page({
                   : fileIDs.map((_, idx) => `附件${idx + 1}`);
                 return {
                   ...item,
+                  pointsText: Array.isArray(item.points)
+                    ? item.points.join('/')
+                    : (item.points ?? 0),
                   fileIDs,
                   fileNames,
-                  createTimeFormatted: new Date(item.createTime).toLocaleString(),
+                  createTimeFormatted: this.formatDateTime(item.createTime),
                   statusClass: this.getStatusClass(item.status)
                 };
               });
@@ -68,13 +71,47 @@ Page({
     return 'pending';
   },
 
+  formatDateTime(dateInput) {
+    if (!dateInput) return '';
+    const date = new Date(dateInput);
+    if (Number.isNaN(date.getTime())) return '';
+    const yyyy = date.getFullYear();
+    const mm = `${date.getMonth() + 1}`.padStart(2, '0');
+    const dd = `${date.getDate()}`.padStart(2, '0');
+    const hh = `${date.getHours()}`.padStart(2, '0');
+    const mi = `${date.getMinutes()}`.padStart(2, '0');
+    const ss = `${date.getSeconds()}`.padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+  },
+
   // 查看上传文件
   previewFile(e) {
     const appIndex = Number(e.currentTarget.dataset.appindex);
-    const fileIndex = Number(e.currentTarget.dataset.fileindex);
     const app = this.data.applications?.[appIndex];
     const fileIDs = app?.fileIDs || [];
-    const fileID = e.currentTarget.dataset.fileid || fileIDs[fileIndex] || fileIDs[0];
+    const fileNames = app?.fileNames || [];
+
+    if (!fileIDs.length) {
+      wx.showToast({ title: '无附件', icon: 'none' });
+      return;
+    }
+
+    const fileList = fileIDs.map((id, idx) => ({
+      fileID: id,
+      fileName: fileNames[idx] || `附件${idx + 1}`
+    }));
+
+    wx.showActionSheet({
+      itemList: fileList.map(item => item.fileName),
+      success: res => {
+        const selected = fileList[res.tapIndex];
+        if (!selected) return;
+        this.openFile(selected.fileID);
+      }
+    });
+  },
+
+  openFile(fileID) {
     if (!fileID) {
       wx.showToast({ title: '无附件', icon: 'none' });
       return;

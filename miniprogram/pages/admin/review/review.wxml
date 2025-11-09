@@ -51,8 +51,8 @@
             <button size="mini"
                     class="action-btn outline"
                     catchtap="previewFile"
-                    data-fileid="{{item.fileID}}"
-                    wx:if="{{item.fileID}}">查看附件</button>
+                    data-fileids="{{item.fileIDs}}"
+                    wx:if="{{item.fileIDs.length}}">查看附件</button>
 
             <button size="mini"
                     class="action-btn primary"

@@ -155,7 +155,7 @@ Page({
           afterStatus: item.afterStatus,
           afterStatusText: item.afterStatus || '—',
           createTime: item.createTime || null,
-          createTimeFormatted: item.createTime ? new Date(item.createTime).toLocaleString() : '',
+          createTimeFormatted: this.formatDateTime(item.createTime),
           action: item.action || ''
         };
       });
@@ -266,5 +266,18 @@ Page({
     this.setData({ 'filters.statusIndex': Number(e.detail.value) || 0 }, () => {
       this.loadLogs({ skipLoading: false });
     });
+  },
+
+  formatDateTime(dateInput) {
+    if (!dateInput) return '';
+    const date = new Date(dateInput);
+    if (Number.isNaN(date.getTime())) return '';
+    const yyyy = date.getFullYear();
+    const mm = `${date.getMonth() + 1}`.padStart(2, '0');
+    const dd = `${date.getDate()}`.padStart(2, '0');
+    const hh = `${date.getHours()}`.padStart(2, '0');
+    const mi = `${date.getMinutes()}`.padStart(2, '0');
+    const ss = `${date.getSeconds()}`.padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
   }
 });

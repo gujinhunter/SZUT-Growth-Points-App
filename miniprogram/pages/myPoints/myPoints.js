@@ -39,7 +39,7 @@ Page({
           const details = r.data.map(a => ({
             projectName: a.projectName,
             points: a.points || 0,
-            createTime: a.createTime ? new Date(a.createTime).toLocaleString() : ''
+            createTime: this.formatDateTime(a.createTime)
           }));
           this.setData({ detail: details });
         });
@@ -57,5 +57,18 @@ Page({
         });
       });
     });
+  },
+
+  formatDateTime(dateInput) {
+    if (!dateInput) return '';
+    const date = new Date(dateInput);
+    if (Number.isNaN(date.getTime())) return '';
+    const yyyy = date.getFullYear();
+    const mm = `${date.getMonth() + 1}`.padStart(2, '0');
+    const dd = `${date.getDate()}`.padStart(2, '0');
+    const hh = `${date.getHours()}`.padStart(2, '0');
+    const mi = `${date.getMinutes()}`.padStart(2, '0');
+    const ss = `${date.getSeconds()}`.padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
   }
 });
