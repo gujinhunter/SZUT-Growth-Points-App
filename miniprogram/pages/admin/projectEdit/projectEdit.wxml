@@ -16,8 +16,8 @@
 
     <view class="field">
       <view class="field-label">积分设置</view>
-      <view class="score-hint">支持单个数字或数组（如：10 或 10,20,30）</view>
-      <input class="field-input" value="{{formData.scoreText}}" bindinput="onScoreInput" placeholder="例如：10 或 10,20,30" />
+      <view class="score-hint">支持单个数字或多档积分（如：10 或 10/20/30）</view>
+      <input class="field-input" value="{{formData.scoreText}}" bindinput="onScoreInput" placeholder="例如：10 或 10/20/30" />
     </view>
 
     <view class="field">

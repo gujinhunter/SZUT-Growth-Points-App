@@ -50,16 +50,4 @@
     </view>
   </view>
 
-  <view class="filter-card">
-    <view class="card-title">按项目类别筛选</view>
-    <view class="category-row">
-      <block wx:for="{{categoryFilters}}" wx:key="value">
-        <view class="category-tag {{item.active ? 'active' : ''}}"
-              data-value="{{item.value}}"
-              bindtap="handleCategoryTap">
-          {{item.label}}
-        </view>
-      </block>
-    </view>
-  </view>
 </view>

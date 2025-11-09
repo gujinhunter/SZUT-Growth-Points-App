@@ -48,7 +48,9 @@ Page({
       db.collection('users').orderBy('totalPoints', 'desc').get().then(r => {
         const list = r.data;
         const avg = list.reduce((s, i) => s + (i.totalPoints || 0), 0) / Math.max(1, list.length);
-        const rank = list.findIndex(x => x._openid === openid) + 1;
+        const myPoints = list.find(x => x._openid === openid)?.totalPoints || 0;
+        const higherCount = list.filter(x => (x.totalPoints || 0) > myPoints).length;
+        const rank = higherCount + 1;
         this.setData({
           averagePoints: Math.round(avg),
           rank: rank || '-'

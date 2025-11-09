@@ -23,7 +23,7 @@ Page({
         isEdit: true,
         'formData.name': item.name || '',
         'formData.scoreText': Array.isArray(item.score) 
-          ? item.score.join(',') 
+          ? item.score.join('/')
           : String(item.score || '0'),
         'formData.remark': item.remark || '',
         'formData.categoryIndex': this.getCategoryIndex(item.category)
@@ -112,7 +112,7 @@ Page({
   parseScore(text) {
     const trimmed = (text || '').trim();
     if (!trimmed) return null; // 返回 null 表示无效
-    const parts = trimmed.split(',').map(s => s.trim()).filter(s => s);
+    const parts = trimmed.split(/[,/]/).map(s => s.trim()).filter(s => s);
     if (parts.length === 0) return null; // 返回 null 表示无效
     if (parts.length === 1) {
       const num = Number(parts[0]);

@@ -2,6 +2,10 @@
 const db = wx.cloud.database();
 const _ = db.command;
 
+const CATEGORY_BATCH = 100;
+const DETAIL_BATCH = 20;
+const PAGE_SIZE = 50;
+
 Page({
   data: {
     loading: true,
@@ -23,58 +27,53 @@ Page({
   },
 
   onLoad() {
-    this.loadFilters();
-    this.loadLogs();
+    this.refresh();
   },
 
   onPullDownRefresh() {
-    Promise.all([this.loadFilters(true), this.loadLogs(true)]).finally(() => wx.stopPullDownRefresh());
+    this.refresh().finally(() => wx.stopPullDownRefresh());
   },
 
-  async loadFilters(skipReload) {
+  async refresh() {
+    await Promise.all([this.loadFilters(true), this.loadLogs({ skipLoading: false })]);
+  },
+
+  async loadFilters(skipReload = false) {
     try {
-      const MAX_LIMIT = 100;
       const countRes = await db.collection('activities').count();
       const total = countRes.total || 0;
-
       if (total === 0) {
-        this.setData({
-          'filterOptions.categories': [{ label: '全部类别', value: '' }]
-        });
-        if (!skipReload) this.loadLogs();
+        this.setData({ 'filterOptions.categories': [{ label: '全部类别', value: '' }] });
+        if (!skipReload) await this.loadLogs({ skipLoading: true });
         return;
       }
 
       const tasks = [];
-      for (let i = 0; i < Math.ceil(total / MAX_LIMIT); i++) {
+      for (let i = 0; i < Math.ceil(total / CATEGORY_BATCH); i++) {
         tasks.push(
           db.collection('activities')
-            .skip(i * MAX_LIMIT)
-            .limit(MAX_LIMIT)
+            .skip(i * CATEGORY_BATCH)
+            .limit(CATEGORY_BATCH)
             .field({ category: true })
             .get()
         );
       }
-
       const results = await Promise.all(tasks);
-      const categories = new Set();
+      const set = new Set();
       results.forEach(res => {
         (res.data || []).forEach(item => {
           const text = (item.category || '').trim();
-          if (text) categories.add(text);
+          if (text) set.add(text);
         });
       });
 
-      const options = [{ label: '全部类别', value: '' }].concat(
-        Array.from(categories)
+      const categories = [{ label: '全部类别', value: '' }].concat(
+        Array.from(set)
           .sort()
           .map(text => ({ label: text, value: text }))
       );
-
-      this.setData({
-        'filterOptions.categories': options
-      });
-      if (!skipReload) this.loadLogs();
+      this.setData({ 'filterOptions.categories': categories });
+      if (!skipReload) await this.loadLogs({ skipLoading: true });
     } catch (err) {
       console.error('加载类别失败', err);
       wx.showToast({ title: '类别加载失败', icon: 'none' });
@@ -82,28 +81,27 @@ Page({
   },
 
   buildQuery() {
+    const { filters, filterOptions, keyword } = this.data;
     const conditions = [];
 
-    const statusValue = this.data.filterOptions.statuses[this.data.filters.statusIndex]?.value;
-    if (statusValue) {
-      conditions.push({ afterStatus: statusValue });
-    }
+    const status = filterOptions.statuses[filters.statusIndex]?.value;
+    if (status) conditions.push({ afterStatus: status });
 
-    const categoryValue = this.data.filterOptions.categories[this.data.filters.categoryIndex]?.value;
-    if (categoryValue) {
-      conditions.push({ projectCategory: categoryValue });
-    }
+    const category = filterOptions.categories[filters.categoryIndex]?.value;
+    if (category) conditions.push({ projectCategory: category });
 
-    const keyword = (this.data.keyword || '').trim();
-    if (keyword) {
-      const reg = db.RegExp({ pattern: keyword, options: 'i' });
-      conditions.push(_.or([
-        { studentName: reg },
-        { studentId: reg },
-        { projectName: reg },
-        { adminName: reg },
-        { remark: reg }
-      ]));
+    const kw = (keyword || '').trim();
+    if (kw) {
+      const reg = db.RegExp({ pattern: kw, options: 'i' });
+      conditions.push(
+        _.or([
+          { studentName: reg },
+          { studentId: reg },
+          { projectName: reg },
+          { adminName: reg },
+          { remark: reg }
+        ])
+      );
     }
 
     if (conditions.length === 0) return {};
@@ -111,27 +109,29 @@ Page({
     return _.and(conditions);
   },
 
-  async loadLogs(skipLoadingState = false) {
-    if (!skipLoadingState) this.setData({ loading: true });
+  async loadLogs({ skipLoading = false } = {}) {
+    if (!skipLoading) this.setData({ loading: true });
     try {
-      const MAX_LIMIT = 50;
       const query = this.buildQuery();
-
       const res = await db.collection('reviewLogs')
         .where(query)
         .orderBy('createTime', 'desc')
-        .limit(MAX_LIMIT)
+        .limit(PAGE_SIZE)
         .get();
 
-      const logs = res.data || [];
-      if (!logs.length) {
-        this.setData({ logs: [], emptyText: '暂无审核记录', loading: false });
+      const rawLogs = res.data || [];
+      if (!rawLogs.length) {
+        this.setData({
+          logs: [],
+          emptyText: '暂无审核记录',
+          loading: false
+        });
         return;
       }
 
-      const applicationIds = [...new Set(logs.map(item => item.applicationId).filter(Boolean))];
-      const projectIds = [...new Set(logs.map(item => item.projectId).filter(Boolean))];
-      const adminIds = [...new Set(logs.map(item => item.adminOpenId).filter(Boolean))];
+      const applicationIds = [...new Set(rawLogs.map(item => item.applicationId).filter(Boolean))];
+      const projectIds = [...new Set(rawLogs.map(item => item.projectId).filter(Boolean))];
+      const adminIds = [...new Set(rawLogs.map(item => item.adminOpenId).filter(Boolean))];
 
       const [applications, projects, admins] = await Promise.all([
         this.fetchApplications(applicationIds),
@@ -139,36 +139,35 @@ Page({
         this.fetchAdmins(adminIds)
       ]);
 
-      const enriched = logs.map(item => {
+      const logs = rawLogs.map(item => {
         const app = item.applicationId ? applications.get(item.applicationId) : null;
         const project = item.projectId ? projects.get(item.projectId) : null;
         const admin = item.adminOpenId ? admins.get(item.adminOpenId) : null;
 
-        const projectCategory = project?.category || app?.projectCategory || '—';
-        const studentName = app?.name || app?._openid || '未知申请人';
-        const studentId = app?.studentId || '—';
-        const projectName = project?.name || app?.projectName || '—';
-
         return {
-          ...item,
-          studentName,
-          studentId,
-          projectName,
-          projectCategory,
-          adminName: admin?.name || admin?.nickName || '管理员',
+          _id: item._id,
+          projectName: project?.name || app?.projectName || '—',
+          projectCategory: project?.category || app?.projectCategory || '—',
+          studentName: app?.name || app?._openid || '未知申请人',
+          studentId: app?.studentId || '—',
+          adminName: admin?.name || '管理员',
+          remark: item.remark || '',
+          afterStatus: item.afterStatus,
+          afterStatusText: item.afterStatus || '—',
+          createTime: item.createTime || null,
           createTimeFormatted: item.createTime ? new Date(item.createTime).toLocaleString() : '',
-          afterStatusText: item.afterStatus || '—'
+          action: item.action || ''
         };
       });
 
       this.setData({
-        logs: enriched,
+        logs,
         emptyText: '',
         loading: false
       });
     } catch (err) {
       console.error('加载审核日志失败', err);
-      wx.showToast({ title: '加载失败', icon: 'none' });
+      this.handleLoadError(err);
       this.setData({
         loading: false,
         logs: [],
@@ -180,22 +179,18 @@ Page({
   async fetchApplications(ids) {
     if (!ids.length) return new Map();
     const map = new Map();
-    const BATCH = 20;
-    for (let i = 0; i < ids.length; i += BATCH) {
-      const batchIds = ids.slice(i, i + BATCH);
+    for (let i = 0; i < ids.length; i += DETAIL_BATCH) {
+      const batch = ids.slice(i, i + DETAIL_BATCH);
       const res = await db.collection('applications')
-        .where({ _id: _.in(batchIds) })
+        .where({ _id: _.in(batch) })
         .field({
           name: true,
           studentId: true,
           projectName: true,
-          projectCategory: true,
-          points: true
+          projectCategory: true
         })
         .get();
-      (res.data || []).forEach(item => {
-        map.set(item._id, item);
-      });
+      (res.data || []).forEach(item => map.set(item._id, item));
     }
     return map;
   },
@@ -203,13 +198,17 @@ Page({
   async fetchProjects(ids) {
     if (!ids.length) return new Map();
     const map = new Map();
-    const BATCH = 20;
-    for (let i = 0; i < ids.length; i += BATCH) {
-      const batchIds = ids.slice(i, i + BATCH);
-      const tasks = batchIds.map(projectId => db.collection('activities').doc(projectId).get());
+    for (let i = 0; i < ids.length; i += DETAIL_BATCH) {
+      const batch = ids.slice(i, i + DETAIL_BATCH);
+      const tasks = batch.map(id => db.collection('activities').doc(id).get());
       const results = await Promise.all(tasks);
       results.forEach((res, index) => {
-        if (res.data) map.set(batchIds[index], { name: res.data.name || res.data.projectName || '', category: res.data.category || '' });
+        if (res.data) {
+          map.set(batch[index], {
+            name: res.data.name || res.data.projectName || '',
+            category: res.data.category || ''
+          });
+        }
       });
     }
     return map;
@@ -218,18 +217,31 @@ Page({
   async fetchAdmins(ids) {
     if (!ids.length) return new Map();
     const map = new Map();
-    const BATCH = 20;
-    for (let i = 0; i < ids.length; i += BATCH) {
-      const batchIds = ids.slice(i, i + BATCH);
-      const res = await db.collection('admins')
-        .where({ _openid: _.in(batchIds) })
-        .field({ name: true, nickName: true })
+    for (let i = 0; i < ids.length; i += DETAIL_BATCH) {
+      const batch = ids.slice(i, i + DETAIL_BATCH);
+      const res = await db.collection('users')
+        .where({ _openid: _.in(batch) })
+        .field({ name: true, realName: true, nickName: true, role: true })
         .get();
       (res.data || []).forEach(item => {
-        map.set(item._openid, item);
+        map.set(item._openid, {
+          name: item.name || item.realName || item.nickName || '管理员'
+        });
       });
     }
     return map;
+  },
+
+  handleLoadError(err) {
+    if (err && err.errCode === -502005) {
+      wx.showModal({
+        title: '缺少集合',
+        content: '当前环境未创建 reviewLogs 集合，请在云开发控制台创建后再试。',
+        showCancel: false
+      });
+    } else {
+      wx.showToast({ title: '加载失败', icon: 'none' });
+    }
   },
 
   onKeywordInput(e) {
@@ -237,22 +249,22 @@ Page({
   },
 
   onSearch() {
-    this.loadLogs();
+    this.loadLogs({ skipLoading: false });
   },
 
   onSearchConfirm() {
-    this.loadLogs();
+    this.loadLogs({ skipLoading: false });
   },
 
   onCategoryChange(e) {
     this.setData({ 'filters.categoryIndex': Number(e.detail.value) || 0 }, () => {
-      this.loadLogs();
+      this.loadLogs({ skipLoading: false });
     });
   },
 
   onStatusChange(e) {
     this.setData({ 'filters.statusIndex': Number(e.detail.value) || 0 }, () => {
-      this.loadLogs();
+      this.loadLogs({ skipLoading: false });
     });
   }
 });

@@ -9,10 +9,7 @@ Page({
       pendingToday: 0,
       totalProjects: 0,
       approvalRate: 0
-    },
-    categoryFilters: [
-      { label: '全部类别', value: '', active: true }
-    ]
+    }
   },
 
   onLoad() {
@@ -21,7 +18,6 @@ Page({
     });
     this.ensureAdminName();
     this.loadOverview();
-    this.loadCategories();
   },
 
   onShow() {
@@ -29,10 +25,7 @@ Page({
   },
 
   onPullDownRefresh() {
-    Promise.all([
-      this.loadOverview(),
-      this.loadCategories()
-    ]).finally(() => wx.stopPullDownRefresh());
+    this.loadOverview().finally(() => wx.stopPullDownRefresh());
   },
 
   async ensureAdminName() {
@@ -87,44 +80,6 @@ Page({
     const approvalRate = total > 0 ? (approved / total * 100) : 0;
   
     return { pendingToday, totalProjects, approvalRate };
-  },
-
-  async loadCategories() {
-    try {
-      const res = await db.collection('activities')
-        .field({ category: true })
-        .get();
-      const exists = new Set();
-      res.data.forEach(item => {
-        if (item.category) exists.add(item.category);
-      });
-      const list = Array.from(exists).map(text => ({
-        label: text,
-        value: text,
-        active: false
-      }));
-      this.setData({
-        categoryFilters: [
-          { label: '全部类别', value: '', active: true },
-          ...list
-        ]
-      });
-    } catch (err) {
-      console.error('加载类别失败', err);
-    }
-  },
-
-  handleCategoryTap(e) {
-    const value = e.currentTarget.dataset.value;
-    const updated = this.data.categoryFilters.map(item => ({
-      ...item,
-      active: item.value === value
-    }));
-    this.setData({ categoryFilters: updated });
-    const url = value
-      ? `/pages/admin/review/review?category=${encodeURIComponent(value)}`
-      : '/pages/admin/review/review';
-    wx.navigateTo({ url });
   },
 
   goPage(e) {

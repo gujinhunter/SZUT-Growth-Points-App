@@ -7,18 +7,18 @@
 
     <view class="search-area">
       <view class="search-box">
-        <icon type="search" size="16" color="#6480a0"/>
+        <icon type="search" size="16" color="#6480a0" />
         <input placeholder="搜索申请人 / 学号 / 项目 / 审核人"
                confirm-type="search"
                value="{{keyword}}"
                bindinput="onKeywordInput"
-               bindconfirm="onSearchConfirm"/>
+               bindconfirm="onSearchConfirm" />
       </view>
       <button class="search-btn" bindtap="onSearch">搜索</button>
     </view>
 
     <view class="filter-area">
-      <picker class="filter-picker"
+      <picker class="chip {{filterOptions.categories[filters.categoryIndex].value ? 'active' : ''}}"
               mode="selector"
               range="{{filterOptions.categories}}"
               range-key="label"
@@ -26,7 +26,7 @@
               bindchange="onCategoryChange">
         <view>{{filterOptions.categories[filters.categoryIndex].label}}</view>
       </picker>
-      <picker class="filter-picker"
+      <picker class="chip {{filterOptions.statuses[filters.statusIndex].value ? 'active' : ''}}"
               mode="selector"
               range="{{filterOptions.statuses}}"
               range-key="label"
@@ -55,7 +55,7 @@
           <view class="log-meta">
             <view class="meta-item">
               <text class="meta-label">申请人</text>
-              <text class="meta-value">{{item.studentName}}（{{item.studentId}}）</text>
+              <text class="meta-value">{{item.studentName}}</text>
             </view>
             <view class="meta-item">
               <text class="meta-label">类别</text>
@@ -75,7 +75,7 @@
     </scroll-view>
 
     <view wx:else class="empty">
-      <image src="/assets/empty.png" mode="aspectFit"></image>
+      <image src="/assets/empty.png" mode="widthFix"></image>
       <text>{{emptyText}}</text>
     </view>
   </view>

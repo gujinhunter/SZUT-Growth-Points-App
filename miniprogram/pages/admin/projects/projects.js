@@ -52,7 +52,7 @@ Page({
           .orderBy('createTime', 'desc')
           .get();
 
-        allProjects = allProjects.concat(res.data);
+      allProjects = allProjects.concat(res.data);
         skip += res.data.length;
         hasMore = res.data.length === MAX_LIMIT;
       }
@@ -60,6 +60,7 @@ Page({
       // 按类别分组
       const grouped = {};
       allProjects.forEach(project => {
+      project.displayScore = this.formatScore(project.score);
         const category = project.category || '未分类';
         if (!grouped[category]) {
           grouped[category] = [];
@@ -118,5 +119,11 @@ Page({
         }
       }
     });
+  },
+
+  formatScore(score) {
+    if (Array.isArray(score)) return score.join('/');
+    if (typeof score === 'string') return score.replace(/,/g, '/');
+    return score ?? '';
   }
 });

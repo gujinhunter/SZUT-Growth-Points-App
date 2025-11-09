@@ -23,7 +23,7 @@
               <view class="info">
                 <view class="name">{{project.name}}</view>
                 <view class="meta">
-                  <text class="score">积分：{{Array.isArray(project.score) ? project.score.join('/') : project.score}}</text>
+                  <text class="score">积分：{{project.displayScore}}</text>
                 </view>
                 <view class="remark" wx:if="{{project.remark}}">{{project.remark}}</view>
               </view>
