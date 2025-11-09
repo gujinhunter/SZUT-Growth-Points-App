@@ -2,7 +2,7 @@
   <view class="title">我的申请记录</view>
 
   <block wx:if="{{applications.length > 0}}">
-    <block wx:for="{{applications}}" wx:key="_id">
+    <block wx:for="{{applications}}" wx:key="_id" wx:for-index="appIndex">
       <view class="card">
         <view class="row">
           <text class="label">项目：</text>
@@ -20,9 +20,19 @@
           <text class="label">申请理由：</text>
           <text>{{item.reason}}</text>
         </view>
-        <view wx:if="{{item.fileID}}" class="row">
+        <view wx:if="{{item.fileIDs.length}}" class="row attachments">
           <text class="label">附件：</text>
-          <text class="file-link" bindtap="previewFile" data-fileid="{{item.fileID}}">查看附件</text>
+          <view class="files">
+            <block wx:for="{{item.fileIDs}}" wx:key="*this" wx:for-item="fileId" wx:for-index="fileIndex">
+              <text class="file-link"
+                    bindtap="previewFile"
+                    data-appindex="{{appIndex}}"
+                    data-fileindex="{{fileIndex}}"
+                    data-fileid="{{fileId}}">
+                {{item.fileNames[fileIndex] || ('附件' + (fileIndex + 1))}}
+              </text>
+            </block>
+          </view>
         </view>
            <view wx:if="{{item.status === '已驳回' && item.rejectRemark}}" class="row">
      <text class="label">驳回说明：</text>

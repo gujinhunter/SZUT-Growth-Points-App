@@ -164,8 +164,14 @@ textarea {
   line-height: 1.6;
 }
 
-.upload-file {
+.upload-files {
   margin-top: 12rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.upload-file {
   font-size: 24rpx;
   color: #2f3f64;
   font-weight: 500;

@@ -73,10 +73,5 @@
         </view>
       </block>
     </scroll-view>
-
-    <view wx:else class="empty">
-      <image src="/assets/empty.png" mode="widthFix"></image>
-      <text>{{emptyText}}</text>
-    </view>
   </view>
 </view>

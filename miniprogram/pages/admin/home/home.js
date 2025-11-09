@@ -30,8 +30,17 @@ Page({
 
   async ensureAdminName() {
     try {
-      const res = await wx.cloud.callFunction({ name: 'getAdminProfile' });
-      this.setData({ adminName: res.result?.name || '管理员' });
+      const openRes = await wx.cloud.callFunction({ name: 'getOpenId' });
+      const openid = openRes.result?.openid;
+      if (!openid) throw new Error('missing openid');
+
+      const userRes = await db.collection('users')
+        .where({ _openid: openid })
+        .field({ name: true, role: true })
+        .get();
+
+      const user = (userRes.data || []).find(item => item.role === 'admin') || userRes.data?.[0];
+      this.setData({ adminName: user?.name || '管理员' });
     } catch (err) {
       console.warn('获取管理员信息失败', err);
     }

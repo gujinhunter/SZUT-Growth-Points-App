@@ -21,11 +21,23 @@ Page({
           .orderBy('createTime', 'desc')
           .get({
             success: res => {
-              const formatted = res.data.map(item => ({
-                ...item,
-                createTimeFormatted: new Date(item.createTime).toLocaleString(),
-                statusClass: this.getStatusClass(item.status)
-              }));
+              const formatted = res.data.map(item => {
+                const fileIDs = Array.isArray(item.fileIDs)
+                  ? item.fileIDs
+                  : item.fileID
+                    ? [item.fileID]
+                    : [];
+                const fileNames = Array.isArray(item.fileNames) && item.fileNames.length
+                  ? item.fileNames
+                  : fileIDs.map((_, idx) => `附件${idx + 1}`);
+                return {
+                  ...item,
+                  fileIDs,
+                  fileNames,
+                  createTimeFormatted: new Date(item.createTime).toLocaleString(),
+                  statusClass: this.getStatusClass(item.status)
+                };
+              });
 
               const groupConfig = [
                 { status: '待审核', key: 'pending', label: '待审核' },
@@ -58,7 +70,11 @@ Page({
 
   // 查看上传文件
   previewFile(e) {
-    const fileID = e.currentTarget.dataset.fileid;
+    const appIndex = Number(e.currentTarget.dataset.appindex);
+    const fileIndex = Number(e.currentTarget.dataset.fileindex);
+    const app = this.data.applications?.[appIndex];
+    const fileIDs = app?.fileIDs || [];
+    const fileID = e.currentTarget.dataset.fileid || fileIDs[fileIndex] || fileIDs[0];
     if (!fileID) {
       wx.showToast({ title: '无附件', icon: 'none' });
       return;
@@ -68,8 +84,9 @@ Page({
       fileID,
       success: res => {
         wx.hideLoading();
+        const lower = (fileID || '').toLowerCase();
         const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
-        const isImage = imageExts.some(ext => fileID.toLowerCase().includes(ext));
+        const isImage = imageExts.some(ext => lower.includes(ext));
         if (isImage) {
           wx.previewImage({
             urls: [res.tempFilePath],

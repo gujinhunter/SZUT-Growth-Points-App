@@ -53,8 +53,16 @@
   .file-link {
     color: #007aff;
     text-decoration: underline;
+  display: inline-block;
+  margin-right: 16rpx;
   }
   
+.attachments .files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
   .empty {
     text-align: center;
     color: #888;
