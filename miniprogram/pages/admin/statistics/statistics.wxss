@@ -91,15 +91,18 @@
 }
 
 .export-btn {
-  height: 88rpx;
+  /* 导出按钮，保持较大尺寸和圆角，强调主操作 */
+  height: 78rpx;
   border-radius: 999rpx;
   background: linear-gradient(135deg, #2c4f86 0%, #345f9e 100%);
   color: #fff;
+  /* 字体偏大，提升按钮可视权重 */
   font-size: 28rpx;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* 纯背景渐变即可，无需边框 */
   border: none;
 }
 

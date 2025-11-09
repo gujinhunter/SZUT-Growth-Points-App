@@ -79,32 +79,26 @@ Page({
         name: 'adminStatisticsSimpleExport',
         data: {}
       });
-      wx.hideLoading();
       const fileID = res.result?.fileID;
       if (!fileID) {
-        wx.showToast({ title: '导出失败', icon: 'none' });
-        return;
+        throw new Error('empty fileID');
       }
-      wx.showModal({
-        title: '导出成功',
-        content: '是否立即下载报表？',
-        confirmText: '下载',
-        success: (modalRes) => {
-          if (modalRes.confirm) {
-            wx.cloud.downloadFile({ fileID })
-              .then(downloadRes => {
-                wx.openDocument({
-                  filePath: downloadRes.tempFilePath,
-                  fileType: 'xlsx'
-                });
-              })
-              .catch(err => {
-                console.error('下载报表失败', err);
-                wx.showToast({ title: '下载失败', icon: 'none' });
-              });
-          }
-        }
-      });
+
+      wx.showLoading({ title: '下载中...' });
+      const downloadRes = await wx.cloud.downloadFile({ fileID });
+      const tempFilePath = downloadRes.tempFilePath;
+
+      let savedFilePath = tempFilePath;
+      try {
+        const saveRes = await wx.saveFile({ tempFilePath });
+        savedFilePath = saveRes.savedFilePath;
+      } catch (saveErr) {
+        console.warn('保存报表失败，使用临时文件继续', saveErr);
+      }
+
+      wx.hideLoading();
+      wx.showToast({ title: '报表已生成', icon: 'success', duration: 1200 });
+      this.showExportActions(savedFilePath);
     } catch (err) {
       console.error('导出失败', err);
       wx.hideLoading();
@@ -112,5 +106,48 @@ Page({
     } finally {
       this.setData({ exporting: false });
     }
+  },
+
+  showExportActions(filePath) {
+    if (!filePath) return;
+    wx.showActionSheet({
+      itemList: ['打开预览', '分享文件'],
+      success: res => {
+        if (res.tapIndex === 0) {
+          this.openReport(filePath);
+        } else if (res.tapIndex === 1) {
+          this.shareReport(filePath);
+        }
+      }
+    });
+  },
+
+  openReport(filePath) {
+    wx.openDocument({
+      filePath,
+      fileType: 'xlsx',
+      fail: err => {
+        console.error('打开报表失败', err);
+        wx.showToast({ title: '无法打开文件', icon: 'none' });
+      }
+    });
+  },
+
+  shareReport(filePath) {
+    if (!wx.canIUse('shareFileMessage')) {
+      wx.showToast({ title: '当前版本不支持分享文件', icon: 'none' });
+      return;
+    }
+    wx.shareFileMessage({
+      filePath,
+      fileName: '积分统计.xlsx',
+      success: () => {
+        wx.showToast({ title: '已发送', icon: 'success' });
+      },
+      fail: err => {
+        console.error('分享报表失败', err);
+        wx.showToast({ title: '分享失败', icon: 'none' });
+      }
+    });
   }
 });
