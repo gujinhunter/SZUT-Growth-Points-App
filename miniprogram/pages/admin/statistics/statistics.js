@@ -23,12 +23,13 @@ Page({
     this.setData({ loading: true });
     try {
       const MAX_LIMIT = 100;
-      const countRes = await db.collection('users').count();
+      const baseQuery = db.collection('users').where({ role: _.neq('admin') });
+      const countRes = await baseQuery.count();
       const total = countRes.total || 0;
       const tasks = [];
       for (let i = 0; i < Math.ceil(total / MAX_LIMIT); i++) {
         tasks.push(
-          db.collection('users')
+          baseQuery
             .skip(i * MAX_LIMIT)
             .limit(MAX_LIMIT)
             .field({
@@ -36,13 +37,14 @@ Page({
               studentId: true,
               totalPoints: true,
               className: true,
-              academy: true
+              academy: true,
+              role: true
             })
             .get()
         );
       }
       const results = await Promise.all(tasks);
-      const list = results.flatMap(res => res.data || []);
+      const list = results.flatMap(res => res.data || []).filter(item => item.role !== 'admin');
       list.sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
       const ranked = list.map((item, index) => ({
         rank: index + 1,
