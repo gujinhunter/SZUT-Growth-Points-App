@@ -1,5 +1,7 @@
 const db = wx.cloud.database();
 
+const MAX_LIMIT = 100;
+
 Page({
   data: {
     applications: [],
@@ -11,57 +13,83 @@ Page({
   },
 
   // 加载当前用户申请记录
-  loadApplications() {
-    wx.cloud.callFunction({
-      name: 'getOpenId',
-      success: res => {
-        const openid = res.result.openid;
-        db.collection('applications')
-          .where({ _openid: openid })
-          .orderBy('createTime', 'desc')
-          .get({
-            success: res => {
-              const formatted = res.data.map(item => {
-                const fileIDs = Array.isArray(item.fileIDs)
-                  ? item.fileIDs
-                  : item.fileID
-                    ? [item.fileID]
-                    : [];
-                const fileNames = Array.isArray(item.fileNames) && item.fileNames.length
-                  ? item.fileNames
-                  : fileIDs.map((_, idx) => `附件${idx + 1}`);
-                return {
-                  ...item,
-                  pointsText: Array.isArray(item.points)
-                    ? item.points.join('/')
-                    : (item.points ?? 0),
-                  fileIDs,
-                  fileNames,
-                  createTimeFormatted: this.formatDateTime(item.createTime),
-                  statusClass: this.getStatusClass(item.status)
-                };
-              });
+  async loadApplications() {
+    try {
+      const openRes = await wx.cloud.callFunction({ name: 'getOpenId' });
+      const openid = openRes.result?.openid;
+      if (!openid) throw new Error('missing openid');
 
-              const groupConfig = [
-                { status: '待审核', key: 'pending', label: '待审核' },
-                { status: '已通过', key: 'approved', label: '已通过' },
-                { status: '已驳回', key: 'rejected', label: '已驳回' }
-              ];
-            
-              const grouped = groupConfig.map(cfg => ({
-                status: cfg.status,
-                label: cfg.label,
-                list: formatted.filter(item => item.status === cfg.status)
-              })).filter(group => group.list.length > 0);
+      const baseWhere = { _openid: openid };
+      const countRes = await db.collection('applications').where(baseWhere).count();
+      const total = countRes.total || 0;
 
-              this.setData({
-                applications: formatted,
-                applicationGroups: grouped
-              });
-            }
-          });
+      if (total === 0) {
+        this.setData({ applications: [], applicationGroups: [] });
+        return;
       }
-    });
+
+      const tasks = [];
+      const batches = Math.ceil(total / MAX_LIMIT);
+      for (let i = 0; i < batches; i++) {
+        tasks.push(
+          db.collection('applications')
+            .where(baseWhere)
+            .orderBy('createTime', 'desc')
+            .skip(i * MAX_LIMIT)
+            .limit(MAX_LIMIT)
+            .get()
+        );
+      }
+      const results = await Promise.all(tasks);
+      const allRecords = results.flatMap(res => res.data || []);
+      allRecords.sort((a, b) => {
+        const timeA = new Date(a.createTime || 0).getTime();
+        const timeB = new Date(b.createTime || 0).getTime();
+        return timeB - timeA;
+      });
+
+      const formatted = allRecords.map(item => {
+        const fileIDs = Array.isArray(item.fileIDs)
+          ? item.fileIDs
+          : item.fileID
+            ? [item.fileID]
+            : [];
+        const fileNames = Array.isArray(item.fileNames) && item.fileNames.length
+          ? item.fileNames
+          : fileIDs.map((_, idx) => `附件${idx + 1}`);
+        return {
+          ...item,
+          pointsText: Array.isArray(item.points)
+            ? item.points.join('/')
+            : (item.points ?? 0),
+          fileIDs,
+          fileNames,
+          createTimeFormatted: this.formatDateTime(item.createTime),
+          statusClass: this.getStatusClass(item.status)
+        };
+      });
+
+      const groupConfig = [
+        { status: '待审核', key: 'pending', label: '待审核' },
+        { status: '已通过', key: 'approved', label: '已通过' },
+        { status: '已驳回', key: 'rejected', label: '已驳回' }
+      ];
+
+      const grouped = groupConfig.map(cfg => ({
+        status: cfg.status,
+        label: cfg.label,
+        list: formatted.filter(item => item.status === cfg.status)
+      })).filter(group => group.list.length > 0);
+
+      this.setData({
+        applications: formatted,
+        applicationGroups: grouped
+      });
+    } catch (err) {
+      console.error('加载申请记录失败', err);
+      wx.showToast({ title: '加载失败', icon: 'none' });
+      this.setData({ applications: [], applicationGroups: [] });
+    }
   },
 
   // 根据状态返回样式类名

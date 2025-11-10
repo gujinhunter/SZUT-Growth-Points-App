@@ -69,8 +69,8 @@ Page({
 
   async loadOverviewDirectly() {
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const thirtyDaysAgo = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
   
     const pendingRes = await db.collection('applications')
       .where({ status: '待审核' })
@@ -80,11 +80,14 @@ Page({
     const projectsRes = await db.collection('activities').count();
     const totalProjects = projectsRes.total || 0;
   
-    const recentRes = await db.collection('applications')
+    const recentTotalRes = await db.collection('applications')
       .where({ createTime: _.gte(thirtyDaysAgo) })
-      .get();
-    const total = recentRes.data.length;
-    const approved = recentRes.data.filter(item => item.status === '已通过').length;
+      .count();
+    const recentApprovedRes = await db.collection('applications')
+      .where({ createTime: _.gte(thirtyDaysAgo), status: '已通过' })
+      .count();
+    const total = recentTotalRes.total || 0;
+    const approved = recentApprovedRes.total || 0;
     const approvalRate = total > 0 ? (approved / total * 100) : 0;
   
     return { pendingToday, totalProjects, approvalRate };

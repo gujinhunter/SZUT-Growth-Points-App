@@ -1,6 +1,8 @@
 // pages/myPoints/myPoints.js
 const db = wx.cloud.database();
 
+const _ = db.command;
+
 Page({
   data: {
     totalPoints: 0,
@@ -18,58 +20,132 @@ Page({
     this.loadData();
   },
 
-  loadData() {
-    wx.cloud.callFunction({ name: 'getOpenId' }).then(res => {
-      const openid = res.result.openid;
+  async loadData() {
+    try {
+      const res = await wx.cloud.callFunction({ name: 'getOpenId' });
+      const openid = res.result?.openid;
+      if (!openid) throw new Error('missing openid');
 
-      // 获取用户总积分
-      db.collection('users').where({ _openid: openid }).get().then(r => {
-        if (r.data.length) {
-          const u = r.data[0];
-          this.setData({ totalPoints: u.totalPoints || 0 });
-          this.currentUserRole = u.role || '';
-        } else {
-          this.currentUserRole = '';
-        }
+      const userInfo = await this.loadUserTotalPoints(openid);
+      await Promise.all([
+        this.loadApplicationDetails(openid),
+        this.loadAverageAndRank(openid, userInfo?.role || '')
+      ]);
+    } catch (err) {
+      console.error('积分数据加载失败', err);
+      wx.showToast({ title: '数据加载失败', icon: 'none' });
+    }
+  },
+
+  async loadUserTotalPoints(openid) {
+    try {
+      const res = await db.collection('users')
+        .where({ _openid: openid })
+        .field({ totalPoints: true, role: true })
+        .get();
+      const user = res.data?.[0];
+      this.setData({ totalPoints: user?.totalPoints || 0 });
+      return user || null;
+    } catch (err) {
+      console.error('加载用户积分失败', err);
+      this.setData({ totalPoints: 0 });
+      return null;
+    }
+  },
+
+  async loadApplicationDetails(openid) {
+    try {
+      const MAX_LIMIT = 100;
+      const where = { studentOpenId: openid, status: '已通过' };
+      const countRes = await db.collection('applications').where(where).count();
+      const total = countRes.total || 0;
+
+      if (total === 0) {
+        this.setData({ detail: [] });
+        return;
+      }
+
+      const tasks = [];
+      const batches = Math.ceil(total / MAX_LIMIT);
+      for (let i = 0; i < batches; i++) {
+        tasks.push(
+          db.collection('applications')
+            .where(where)
+            .orderBy('createTime', 'desc')
+            .skip(i * MAX_LIMIT)
+            .limit(MAX_LIMIT)
+            .get()
+        );
+      }
+      const results = await Promise.all(tasks);
+      const list = results.flatMap(r => r.data || []);
+      list.sort((a, b) => {
+        const timeA = new Date(a.createTime || 0).getTime();
+        const timeB = new Date(b.createTime || 0).getTime();
+        return timeB - timeA;
       });
 
-      // 获取积分明细（已通过的申请）
-      db.collection('applications')
-        .where({ studentOpenId: openid, status: '已通过' })
-        .orderBy('createTime', 'desc')
-        .get()
-        .then(r => {
-          const details = r.data.map(a => ({
-            projectName: a.projectName,
-            points: a.points || 0,
-            createTime: this.formatDateTime(a.createTime)
-          }));
-          this.setData({ detail: details });
-        });
+      const details = list.map(a => ({
+        projectName: a.projectName,
+        points: a.points || 0,
+        createTime: this.formatDateTime(a.createTime)
+      }));
+      this.setData({ detail: details });
+    } catch (err) {
+      console.error('加载积分明细失败', err);
+      this.setData({ detail: [] });
+    }
+  },
 
-      // 计算学院平均分与排名（剔除管理员）
-      db.collection('users').orderBy('totalPoints', 'desc').get().then(r => {
-        const allUsers = r.data || [];
-        const nonAdminList = allUsers.filter(item => item.role !== 'admin');
-        const totalPointsSum = nonAdminList.reduce((sum, item) => sum + (item.totalPoints || 0), 0);
-        const avg = nonAdminList.length ? totalPointsSum / nonAdminList.length : 0;
+  async loadAverageAndRank(openid, role) {
+    try {
+      const MAX_LIMIT = 100;
+      const baseQuery = db.collection('users').where({ role: _.neq('admin') });
+      const countRes = await baseQuery.count();
+      const total = countRes.total || 0;
 
-        const myRecord = allUsers.find(user => user._openid === openid);
-        const isAdmin = myRecord?.role === 'admin';
-        let rank = '-';
+      let nonAdminList = [];
+      if (total > 0) {
+        const tasks = [];
+        const batches = Math.ceil(total / MAX_LIMIT);
+        for (let i = 0; i < batches; i++) {
+          tasks.push(
+            baseQuery
+              .skip(i * MAX_LIMIT)
+              .limit(MAX_LIMIT)
+              .field({ totalPoints: true, _openid: true })
+              .get()
+          );
+        }
+        const results = await Promise.all(tasks);
+        nonAdminList = results.flatMap(res => res.data || []);
+      }
 
-        if (!isAdmin && myRecord) {
-          const myPoints = myRecord.totalPoints || 0;
-          const higherCount = nonAdminList.filter(x => (x.totalPoints || 0) > myPoints).length;
+      nonAdminList.sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
+      const totalPointsSum = nonAdminList.reduce((sum, item) => sum + (item.totalPoints || 0), 0);
+      const avg = nonAdminList.length ? totalPointsSum / nonAdminList.length : 0;
+
+      let rank = '-';
+      if (role !== 'admin') {
+        const myEntry = nonAdminList.find(item => item._openid === openid);
+        if (myEntry) {
+          const myPoints = myEntry.totalPoints || 0;
+          const higherCount = nonAdminList.filter(item => (item.totalPoints || 0) > myPoints).length;
           rank = higherCount + 1;
         }
+      }
 
-        this.setData({
-          averagePoints: Math.round(avg) || 0,
-          rank
-        });
+      this.setData({
+        averagePoints: Math.round(avg) || 0,
+        rank
       });
-    });
+    } catch (err) {
+      console.error('计算平均分和排名失败', err);
+      this.setData({
+        averagePoints: 0,
+        rank: '-'
+      });
+    }
   },
 
   formatDateTime(dateInput) {
