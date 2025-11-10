@@ -1,4 +1,5 @@
 <view class="apply-page">
+
   <view class="hero-card">
     <text class="hero-badge">申请项目</text>
     <view class="hero-title">{{projectName || '待选项目'}}</view>

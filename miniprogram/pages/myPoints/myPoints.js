@@ -27,6 +27,9 @@ Page({
         if (r.data.length) {
           const u = r.data[0];
           this.setData({ totalPoints: u.totalPoints || 0 });
+          this.currentUserRole = u.role || '';
+        } else {
+          this.currentUserRole = '';
         }
       });
 
@@ -44,16 +47,26 @@ Page({
           this.setData({ detail: details });
         });
 
-      // 计算学院平均分与排名
+      // 计算学院平均分与排名（剔除管理员）
       db.collection('users').orderBy('totalPoints', 'desc').get().then(r => {
-        const list = r.data;
-        const avg = list.reduce((s, i) => s + (i.totalPoints || 0), 0) / Math.max(1, list.length);
-        const myPoints = list.find(x => x._openid === openid)?.totalPoints || 0;
-        const higherCount = list.filter(x => (x.totalPoints || 0) > myPoints).length;
-        const rank = higherCount + 1;
+        const allUsers = r.data || [];
+        const nonAdminList = allUsers.filter(item => item.role !== 'admin');
+        const totalPointsSum = nonAdminList.reduce((sum, item) => sum + (item.totalPoints || 0), 0);
+        const avg = nonAdminList.length ? totalPointsSum / nonAdminList.length : 0;
+
+        const myRecord = allUsers.find(user => user._openid === openid);
+        const isAdmin = myRecord?.role === 'admin';
+        let rank = '-';
+
+        if (!isAdmin && myRecord) {
+          const myPoints = myRecord.totalPoints || 0;
+          const higherCount = nonAdminList.filter(x => (x.totalPoints || 0) > myPoints).length;
+          rank = higherCount + 1;
+        }
+
         this.setData({
-          averagePoints: Math.round(avg),
-          rank: rank || '-'
+          averagePoints: Math.round(avg) || 0,
+          rank
         });
       });
     });

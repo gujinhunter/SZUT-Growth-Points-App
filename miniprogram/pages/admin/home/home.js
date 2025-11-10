@@ -70,11 +70,10 @@ Page({
   async loadOverviewDirectly() {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
   
     const pendingRes = await db.collection('applications')
-      .where({ status: '待审核', createTime: _.gte(today).and(_.lt(tomorrow)) })
+      .where({ status: '待审核' })
       .count();
     const pendingToday = pendingRes.total || 0;
   

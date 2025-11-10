@@ -1,214 +1,221 @@
-
+/* ====================== 页面整体容器 ====================== */
 .apply-page {
-  min-height: 100vh;
-  padding: 48rpx 32rpx 80rpx;
-  box-sizing: border-box;
-  background-color: #f3f5f9;
+  min-height: 100vh;        /* 页面至少与视口等高，避免底部空白 */
+  padding: 48rpx 32rpx 80rpx; /* 上内距 48rpx、左右 32rpx、下方 80rpx，保证留白 */
+  box-sizing: border-box;   /* 内边距计入盒模型，防止布局错位 */
+  background-color: #f3f5f9; /* 浅灰蓝底色，营造柔和背景 */
 }
 
+/* ====================== 顶部宣传卡片 ====================== */
 .hero-card {
-  padding: 48rpx 40rpx;
-  border-radius: 28rpx;
-  color: #fff;
-  background: linear-gradient(135deg, #1f4e9d 0%, #2f6fd2 100%);
-  box-shadow: 0 24rpx 48rpx rgba(31, 79, 163, 0.25);
+  padding: 48rpx 40rpx;                     /* 保证内容与边缘留足空间 */
+  border-radius: 28rpx;                     /* 圆角增强卡片感 */
+  color: #fff;                              /* 文本颜色统一为白色 */
+  background: linear-gradient(135deg, #1f4e9d 0%, #2f6fd2 100%); /* 蓝色渐变吸引注意 */
+  box-shadow: 0 24rpx 48rpx rgba(31, 79, 163, 0.25);            /* 加入阴影营造悬浮效果 */
 }
 
+/* ====================== 顶部徽章标签 ====================== */
 .hero-badge {
-  display: inline-block;
-  padding: 10rpx 24rpx;
-  border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.25);
-  font-size: 24rpx;
-  margin-bottom: 24rpx;
+  display: inline-block;            /* 行内块便于设置尺寸与间距 */
+  padding: 10rpx 24rpx;             /* 控制徽章内部留白 */
+  border-radius: 999rpx;            /* 胶囊圆角造型 */
+  background: rgba(255, 255, 255, 0.25); /* 半透明白底提升可读性 */
+  font-size: 24rpx;                 /* 较小字号突出标签属性 */
+  margin-bottom: 24rpx;             /* 与下方内容保持距离 */
 }
 
+/* ====================== 宣传标题与描述 ====================== */
 .hero-title {
-  font-size: 42rpx;
-  font-weight: 600;
-  margin-bottom: 12rpx;
+  font-size: 42rpx;       /* 大字号提升视觉层级 */
+  font-weight: 600;       /* 半粗字重强调重点 */
+  margin-bottom: 12rpx;   /* 与描述文本保持间距 */
 }
-
 .hero-desc {
-  font-size: 26rpx;
-  line-height: 1.6;
-  opacity: 0.9;
+  font-size: 26rpx;       /* 中等字号便于阅读 */
+  line-height: 1.6;       /* 增加行高提升舒适度 */
+  opacity: 0.9;           /* 略降不透明度柔化视觉 */
 }
 
+/* ====================== 表单主体卡片 ====================== */
 .form-card {
-  margin-top: -60rpx;
-  padding: 48rpx 40rpx;
-  border-radius: 36rpx;
-  background: #fff;
-  box-shadow: 0 16rpx 40rpx rgba(71, 89, 255, 0.08);
+  margin-top: -60rpx;                        /* 向上偏移，营造层叠效果 */
+  padding: 48rpx 40rpx;                      /* 内部内容留白 */
+  border-radius: 36rpx;                      /* 大圆角提升质感 */
+  background: #fff;                          /* 白色背景凸显内容 */
+  box-shadow: 0 16rpx 40rpx rgba(71, 89, 255, 0.08); /* 柔和阴影增强层次 */
 }
 
+/* ====================== 表单分组容器 ====================== */
 .section {
-  background: #ffffff;
-  border-radius: 24rpx;
-  padding: 36rpx 32rpx;
-  box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.05);
-  margin-bottom: 28rpx;
+  background: #ffffff;                       /* 白底区分分组 */
+  border-radius: 24rpx;                      /* 圆角柔化边界 */
+  padding: 36rpx 32rpx;                      /* 分组内部留白 */
+  box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.05); /* 轻量阴影突出模块 */
+  margin-bottom: 28rpx;                      /* 分组之间保持距离 */
 }
-
 .section:last-child {
-  margin-bottom: 0;
+  margin-bottom: 0;                           /* 最后一个分组去掉底部间距 */
 }
 
+/* ====================== 分组标题 ====================== */
 .section-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #1f4e9d;
-  margin-bottom: 28rpx;
-  position: relative;
-  padding-left: 20rpx;
+  font-size: 30rpx;            /* 标题字号略大突出层级 */
+  font-weight: 600;            /* 半粗字重增强识别度 */
+  color: #1f4e9d;              /* 使用品牌主色 */
+  margin-bottom: 28rpx;        /* 标题与内容间距 */
+  position: relative;          /* 为伪元素定位做准备 */
+  padding-left: 20rpx;         /* 左侧预留竖线位置 */
 }
-
 .section-title::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 6rpx;
-  height: 32rpx;
-  border-radius: 999rpx;
-  background: linear-gradient(180deg, #1f4e9d 0%, #2f6fd2 100%);
+  content: '';                 /* 插入装饰竖线 */
+  position: absolute;          /* 绝对定位到标题内部 */
+  left: 0;                     /* 靠左对齐 */
+  top: 50%;                    /* 垂直居中 */
+  transform: translateY(-50%); /* 精准居中伪元素 */
+  width: 6rpx;                 /* 竖线宽度 */
+  height: 32rpx;               /* 竖线高度 */
+  border-radius: 999rpx;       /* 圆角让竖线更柔和 */
+  background: linear-gradient(180deg, #1f4e9d 0%, #2f6fd2 100%); /* 渐变提升视觉 */
 }
 
+/* ====================== 表单字段容器 ====================== */
 .field {
-  margin-bottom: 32rpx;
+  margin-bottom: 32rpx;        /* 字段之间保持垂直间距 */
 }
-
 .field:last-child {
-  margin-bottom: 0;
+  margin-bottom: 0;            /* 末尾字段去掉多余空白 */
 }
 
+/* ====================== 字段标签与提示 ====================== */
 .field-label {
-  font-size: 28rpx;
-  color: #2f3f64;
-  font-weight: 500;
-  margin-bottom: 16rpx;
+  font-size: 28rpx;            /* 标签字号与输入框匹配 */
+  color: #2f3f64;              /* 深蓝灰增强可读性 */
+  font-weight: 500;            /* 半粗凸显标签 */
+  margin-bottom: 16rpx;        /* 标签与输入控件间距 */
 }
-
 .field-hint,
 .word-limit {
-  font-size: 22rpx;
-  color: #7d88a4;
-  margin-top: 12rpx;
+  font-size: 22rpx;            /* 辅助文字较小 */
+  color: #7d88a4;              /* 中灰色降低视觉权重 */
+  margin-top: 12rpx;           /* 与输入控件保持距离 */
 }
 
+/* ====================== 输入控件基础样式 ====================== */
 input,
 textarea {
-  width: 100%;
-  background-color: rgba(255, 255, 255, 0.96);
-  border-radius: 20rpx;
-  padding: 26rpx 28rpx;
-  border: 2rpx solid rgba(31, 79, 163, 0.18);
-  box-sizing: border-box;
-  font-size: 28rpx;
-  line-height: 1.6;
-  transition: all 0.25s ease;
-  box-shadow: inset 0 0 0 rgba(0, 0, 0, 0);
+  width: 100%;                              /* 控件宽度铺满容器 */
+  background-color: rgba(255, 255, 255, 0.96); /* 半透明白底与卡片呼应 */
+  border-radius: 20rpx;                     /* 圆角提升触感 */
+  padding: 26rpx 28rpx;                     /* 内部文字留白 */
+  border: 2rpx solid rgba(31, 79, 163, 0.18); /* 淡色描边区分背景 */
+  box-sizing: border-box;                   /* 内边距参与尺寸计算 */
+  font-size: 28rpx;                         /* 字号与标签协调 */
+  line-height: 1.6;                         /* 多行文本更易读 */
+  transition: all 0.25s ease;               /* 添加过渡提升交互体验 */
+  box-shadow: inset 0 0 0 rgba(0, 0, 0, 0); /* 去掉内阴影保持简洁 */
 }
-
 input {
-  height: 92rpx;
-  line-height: 92rpx;
-  padding: 0 28rpx;
+  height: 92rpx;                            /* 固定高度利于对齐 */
+  line-height: 92rpx;                       /* 行高与高度一致保持垂直居中 */
+  padding: 0 28rpx;                         /* 保留左右内边距，避免双重留白 */
 }
 
+/* ====================== 选择器展示区域 ====================== */
 .picker-display {
-  width: 100%;
-  height: 92rpx;
-  line-height: 92rpx;
-  background-color: rgba(255, 255, 255, 0.96);
-  border-radius: 20rpx;
-  padding: 0 28rpx;
-  border: 2rpx solid rgba(31, 79, 163, 0.18);
-  box-sizing: border-box;
-  font-size: 28rpx;
-  color: #2f3f64;
+  width: 100%;                              /* 与输入框保持一致宽度 */
+  height: 92rpx;                            /* 统一高度方便排版 */
+  line-height: 92rpx;                       /* 文本垂直居中 */
+  background-color: rgba(255, 255, 255, 0.96); /* 与输入框统一底色 */
+  border-radius: 20rpx;                     /* 圆角一致 */
+  padding: 0 28rpx;                         /* 左右留白展示文本 */
+  border: 2rpx solid rgba(31, 79, 163, 0.18); /* 描边保持一致风格 */
+  box-sizing: border-box;                   /* 避免内边距影响整体尺寸 */
+  font-size: 28rpx;                         /* 字号统一 */
+  color: #2f3f64;                           /* 深色文字提高可读性 */
 }
 
+/* ====================== 输入焦点态 ====================== */
 input:focus,
 textarea:focus {
-  border-color: #2f6fd2;
-  background-color: #fff;
-  box-shadow: 0 12rpx 30rpx rgba(47, 111, 210, 0.18);
+  border-color: #2f6fd2;                    /* 焦点时高亮描边 */
+  background-color: #fff;                   /* 改为纯白增强对比 */
+  box-shadow: 0 12rpx 30rpx rgba(47, 111, 210, 0.18); /* 外阴影突出当前控件 */
 }
 
+/* ====================== 多行文本域 ====================== */
 textarea {
-  min-height: 200rpx;
-  padding: 26rpx 28rpx;
+  min-height: 200rpx;                       /* 设置最小高度确保输入空间 */
+  padding: 26rpx 28rpx;                     /* 保持与通用样式一致的内边距 */
 }
 
+/* ====================== 占位符文本 ====================== */
 .placeholder {
-  color: #9aa1c7;
-  font-size: 28rpx;
+  color: #9aa1c7;                           /* 使用偏灰色降低权重 */
+  font-size: 28rpx;                         /* 字号与正文一致保持统一 */
 }
 
+/* ====================== 上传模块容器 ====================== */
 .upload-panel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 28rpx 32rpx;
-  border-radius: 24rpx;
-  background: rgba(31, 79, 163, 0.08);
-  border: 2rpx dashed rgba(31, 79, 163, 0.45);
+  display: flex;                            /* 使用弹性布局 */
+  align-items: center;                      /* 垂直居中内部元素 */
+  justify-content: space-between;           /* 两端对齐，按钮与文本分布 */
+  padding: 28rpx 32rpx;                     /* 面板内留白方便操作 */
+  border-radius: 24rpx;                     /* 圆角营造卡片感 */
+  background: rgba(31, 79, 163, 0.08);      /* 浅蓝底提示可交互 */
+  border: 2rpx dashed rgba(31, 79, 163, 0.45); /* 虚线边框强调上传区域 */
 }
 
+/* ====================== 上传说明与文件列表 ====================== */
 .upload-desc {
-  font-size: 24rpx;
-  color: #5f6b8a;
-  line-height: 1.6;
+  font-size: 24rpx;                         /* 辅助文字采用较小字号 */
+  color: #5f6b8a;                           /* 中灰蓝色搭配整体配色 */
+  line-height: 1.6;                         /* 多行说明更易读 */
 }
-
 .upload-files {
-  margin-top: 12rpx;
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
+  margin-top: 12rpx;                        /* 与说明文字保持距离 */
+  display: flex;                            /* 使用列布局 */
+  flex-direction: column;                   /* 垂直排列文件条目 */
+  gap: 12rpx;                               /* 条目之间统一间距 */
 }
-
 .upload-file {
-  font-size: 24rpx;
-  color: #2f3f64;
-  font-weight: 500;
-  word-break: break-all;
+  font-size: 24rpx;                         /* 文件名字号与说明一致 */
+  color: #2f3f64;                           /* 深色提升可读性 */
+  font-weight: 500;                         /* 半粗强调文件名称 */
+  word-break: break-all;                    /* 长文件名自动换行 */
 }
 
+/* ====================== 上传按钮 ====================== */
 .upload-btn {
-  padding: 0 32rpx;
-  height: 72rpx;
-  line-height: 72rpx;
-  border-radius: 999rpx;
-  border: 2rpx solid rgba(31, 79, 163, 0.55);
-  background: rgba(255, 255, 255, 0.6);
-  color: #1f4e9d;
-  font-size: 26rpx;
+  padding: 0 32rpx;                         /* 左右留白扩大点击范围 */
+  height: 72rpx;                            /* 固定按钮高度 */
+  line-height: 72rpx;                       /* 文本垂直居中 */
+  border-radius: 999rpx;                    /* 胶囊形状与整体一致 */
+  border: 2rpx solid rgba(31, 79, 163, 0.55); /* 较深描边突出按钮 */
+  background: rgba(255, 255, 255, 0.6);     /* 半透明白底保持轻盈 */
+  color: #1f4e9d;                           /* 文字使用品牌色 */
+  font-size: 26rpx;                         /* 字号略小与按钮尺寸匹配 */
 }
-
 .upload-btn::after {
-  border: none;
+  border: none;                             /* 去除默认点击态边框 */
 }
 
+/* ====================== 提交按钮 ====================== */
 .submit-btn {
-  margin-top: 40rpx;
-  height: 96rpx;
-  border-radius: 999rpx;
-  background: linear-gradient(135deg, #1f4e9d 0%, #2f6fd2 100%);
-  color: #fff;
-  font-size: 32rpx;
-  font-weight: 600;
-  box-shadow: 0 16rpx 32rpx rgba(31, 79, 163, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  line-height: 1;
+  margin-top: 40rpx;                        /* 与上方内容保持距离 */
+  height: 96rpx;                            /* 固定高度突出主操作 */
+  border-radius: 999rpx;                    /* 胶囊造型形成视觉统一 */
+  background: linear-gradient(135deg, #1f4e9d 0%, #2f6fd2 100%); /* 渐变突出主要 CTA */
+  color: #fff;                              /* 白色文字对比强烈 */
+  font-size: 32rpx;                         /* 大字号强调主按钮 */
+  font-weight: 600;                         /* 半粗字体提升点击感 */
+  box-shadow: 0 16rpx 32rpx rgba(31, 79, 163, 0.35); /* 阴影增强存在感 */
+  display: flex;                            /* 弹性布局居中内容 */
+  align-items: center;                      /* 垂直居中按钮文字 */
+  justify-content: center;                  /* 水平居中按钮文字 */
+  padding: 0;                               /* 移除默认水平内边距 */
+  line-height: 1;                           /* 防止文字垂直偏移 */
 }
-
 .submit-btn::after {
-  border: none;
+  border: none;                             /* 移除默认点击态边框 */
 }
