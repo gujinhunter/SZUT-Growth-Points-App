@@ -156,26 +156,52 @@ Page({
         this.fetchAdmins(adminIds)
       ]);
 
+      const studentOpenIds = [...new Set(
+        Array.from(applications.values())
+          .map(app => app?.studentOpenId || app?._openid)
+          .filter(Boolean)
+      )];
+      const students = await this.fetchStudents(studentOpenIds);
+
       let logs = rawLogs.map(item => {
         const app = item.applicationId ? applications.get(item.applicationId) : null;
         const project = item.projectId ? projects.get(item.projectId) : null;
         const admin = item.adminOpenId ? admins.get(item.adminOpenId) : null;
+        const studentKey = app?.studentOpenId || app?._openid;
+        const studentInfo = studentKey ? students.get(studentKey) : null;
+
+        const projectName = project?.name || app?.projectName || '—';
+        const projectCategory = project?.category || app?.projectCategory || '—';
+        const studentName = studentInfo?.name || app?.name || app?._openid || '未知申请人';
+        const studentId = studentInfo?.studentId || app?.studentId || '—';
+        const adminName = admin?.name || '管理员';
+        const remark = item.remark || '';
+
+        const searchText = [
+          projectName,
+          projectCategory,
+          studentName,
+          studentId,
+          adminName,
+          remark
+        ].map(val => (val || '').toString().toLowerCase()).join(' ');
 
         return {
           _id: item._id,
-          projectName: project?.name || app?.projectName || '—',
-          projectCategory: project?.category || app?.projectCategory || '—',
-          studentName: app?.name || app?._openid || '未知申请人',
-          studentId: app?.studentId || '—',
+          projectName,
+          projectCategory,
+          studentName,
+          studentId,
           applicationTime: app?.createTime || item.createTime || null,
           applicationTimeFormatted: this.formatDateTime(app?.createTime || item.createTime),
-          adminName: admin?.name || '管理员',
-          remark: item.remark || '',
+          adminName,
+          remark,
           afterStatus: item.afterStatus,
           afterStatusText: item.afterStatus || '—',
           createTime: item.createTime || null,
           createTimeFormatted: this.formatDateTime(item.createTime),
-          action: item.action || ''
+          action: item.action || '',
+          _searchText: searchText
         };
       });
 
@@ -186,19 +212,7 @@ Page({
 
       const keywordValue = (this.data.keyword || '').trim().toLowerCase();
       if (keywordValue) {
-        logs = logs.filter(item => {
-          const fields = [
-            item.projectName,
-            item.projectCategory,
-            item.studentName,
-            item.studentId,
-            item.adminName,
-            item.remark
-          ];
-          return fields.some(field =>
-            (field || '').toString().toLowerCase().includes(keywordValue)
-          );
-        });
+        logs = logs.filter(item => item._searchText.includes(keywordValue));
       }
 
       this.setData({
@@ -227,8 +241,10 @@ Page({
         .field({
           name: true,
           studentId: true,
+          studentOpenId: true,
           projectName: true,
-          projectCategory: true
+          projectCategory: true,
+          _openid: true
         })
         .get();
       (res.data || []).forEach(item => map.set(item._id, item));
@@ -267,6 +283,36 @@ Page({
       (res.data || []).forEach(item => {
         map.set(item._openid, {
           name: item.name || item.realName || item.nickName || '管理员'
+        });
+      });
+    }
+    return map;
+  },
+
+  async fetchStudents(openIds) {
+    if (!openIds.length) return new Map();
+    const map = new Map();
+    const BATCH = 20;
+    for (let i = 0; i < openIds.length; i += BATCH) {
+      const batch = openIds.slice(i, i + BATCH);
+      const res = await db.collection('users')
+        .where({ _openid: _.in(batch) })
+        .field({
+          _openid: true,
+          name: true,
+          realName: true,
+          nickName: true,
+          studentId: true,
+          studentID: true,
+          studentNo: true
+        })
+        .get();
+      (res.data || []).forEach(item => {
+        const key = item._openid;
+        if (!key) return;
+        map.set(key, {
+          name: item.name || item.realName || item.nickName || '',
+          studentId: item.studentId || item.studentID || item.studentNo || ''
         });
       });
     }

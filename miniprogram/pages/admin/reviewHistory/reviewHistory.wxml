@@ -59,6 +59,10 @@
               <text class="meta-value">{{item.studentName}}</text>
             </view>
             <view class="meta-item">
+              <text class="meta-label">学号</text>
+              <text class="meta-value">{{item.studentId || '—'}}</text>
+            </view>
+            <view class="meta-item">
               <text class="meta-label">类别</text>
               <text class="meta-value">{{item.projectCategory}}</text>
             </view>
