@@ -244,6 +244,7 @@ Page({
           studentOpenId: true,
           projectName: true,
           projectCategory: true,
+          createTime: true,
           _openid: true
         })
         .get();

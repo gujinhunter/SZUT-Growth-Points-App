@@ -63,6 +63,10 @@
               <text class="meta-value">{{item.studentId || '—'}}</text>
             </view>
             <view class="meta-item">
+              <text class="meta-label">申请时间</text>
+              <text class="meta-value">{{item.applicationTimeFormatted || '—'}}</text>
+            </view>
+            <view class="meta-item">
               <text class="meta-label">类别</text>
               <text class="meta-value">{{item.projectCategory}}</text>
             </view>
