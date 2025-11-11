@@ -76,9 +76,9 @@
 
 .chip {
   flex: none;
-  min-width: 180rpx;
-  padding: 0 28rpx;
-  height: 64rpx;
+  min-width: 150rpx;
+  padding: 0 22rpx;
+  height: 60rpx;
   border-radius: 999rpx;
   background: rgba(47, 111, 210, 0.08);
   border: 2rpx solid rgba(47, 111, 210, 0.12);

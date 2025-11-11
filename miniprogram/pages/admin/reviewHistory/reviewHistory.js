@@ -2,7 +2,7 @@
 const db = wx.cloud.database();
 const _ = db.command;
 
-const CATEGORY_BATCH = 100;
+const CATEGORY_BATCH = 20;
 const DETAIL_BATCH = 20;
 const LOG_BATCH_LIMIT = 20; // 云数据库单次最大返回量
 const MAX_LOG_FETCH = 200;  // 最多拉取 200 条审核记录
@@ -63,8 +63,12 @@ Page({
       const set = new Set();
       results.forEach(res => {
         (res.data || []).forEach(item => {
-          const text = (item.category || '').trim();
-          if (text) set.add(text);
+          const raw = item?.category;
+          const list = Array.isArray(raw) ? raw : [raw];
+          list.forEach(value => {
+            const text = (value ?? '').toString().trim();
+            if (text) set.add(text);
+          });
         });
       });
 
@@ -82,18 +86,17 @@ Page({
   },
 
   buildQuery() {
-    const { filters, filterOptions, keyword } = this.data;
+    const { filters = {}, filterOptions = {}, keyword = '' } = this.data;
     const conditions = [];
 
-    const status = filterOptions.statuses[filters.statusIndex]?.value;
-    if (status) conditions.push({ afterStatus: status });
-
-    const category = filterOptions.categories[filters.categoryIndex]?.value;
-    if (category) conditions.push({ projectCategory: category });
+    const statusIndex = Number(filters.statusIndex || 0);
+    const statusOption = (filterOptions.statuses || [])[statusIndex];
+    const statusValue = statusOption ? statusOption.value : '';
+    if (statusValue) conditions.push({ afterStatus: statusValue });
 
     const kw = (keyword || '').trim();
     if (kw) {
-      const reg = db.RegExp({ pattern: kw, options: 'i' });
+      const reg = db.RegExp({ regexp: kw, options: 'i' });
       conditions.push(
         _.or([
           { studentName: reg },
@@ -160,7 +163,7 @@ Page({
         this.fetchAdmins(adminIds)
       ]);
 
-      const logs = rawLogs.map(item => {
+      let logs = rawLogs.map(item => {
         const app = item.applicationId ? applications.get(item.applicationId) : null;
         const project = item.projectId ? projects.get(item.projectId) : null;
         const admin = item.adminOpenId ? admins.get(item.adminOpenId) : null;
@@ -180,6 +183,11 @@ Page({
           action: item.action || ''
         };
       });
+
+      const categoryValue = this.data.filterOptions.categories[this.data.filters.categoryIndex]?.value;
+      if (categoryValue) {
+        logs = logs.filter(item => item.projectCategory === categoryValue);
+      }
 
       this.setData({
         logs,
