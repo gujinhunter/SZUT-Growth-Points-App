@@ -317,29 +317,47 @@ Page({
       return;
     }
     wx.showLoading({ title: '打开附件...' });
-    wx.cloud.downloadFile({ fileID })
-      .then(res => {
+    wx.cloud.callFunction({
+      name: 'getFileTempUrl',
+      data: { fileIDs: [fileID] }
+    }).then(async res => {
+      const fileList = res.result?.data;
+      const info = Array.isArray(fileList) ? fileList[0] : null;
+      const tempUrl = info?.tempFileURL;
+      if (!tempUrl) {
+        throw new Error(info?.errMsg || 'empty temp url');
+      }
+
+      const lower = (fileID || '').toLowerCase();
+      const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+      const isImage = imageExts.some(ext => lower.includes(ext));
+
+      if (isImage) {
         wx.hideLoading();
-        const lower = (fileID || '').toLowerCase();
-        const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
-        const isImage = imageExts.some(ext => lower.includes(ext));
-        
-        if (isImage) {
-          wx.previewImage({
-            urls: [res.tempFilePath],
-            current: res.tempFilePath
-          });
-        } else {
-          wx.openDocument({
-            filePath: res.tempFilePath
-          });
+        wx.previewImage({
+          urls: [tempUrl],
+          current: tempUrl
+        });
+        return;
+      }
+
+      const downloadRes = await wx.downloadFile({ url: tempUrl });
+      wx.hideLoading();
+      if (downloadRes.statusCode !== 200) {
+        throw new Error(`download fail: ${downloadRes.statusCode}`);
+      }
+      wx.openDocument({
+        filePath: downloadRes.tempFilePath,
+        fail: err => {
+          console.error('打开附件失败', err);
+          wx.showToast({ title: '无法打开文件', icon: 'none' });
         }
-      })
-      .catch(err => {
-        wx.hideLoading();
-        console.error('附件打开失败', err);
-        wx.showToast({ title: '打开失败', icon: 'none' });
       });
+    }).catch(err => {
+      wx.hideLoading();
+      console.error('附件打开失败', err);
+      wx.showToast({ title: '打开失败', icon: 'none' });
+    });
   },
 
   formatDateTime(dateInput) {
