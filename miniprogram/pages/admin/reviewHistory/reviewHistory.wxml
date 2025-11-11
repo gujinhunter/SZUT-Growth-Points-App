@@ -13,6 +13,7 @@
                value="{{keyword}}"
                bindinput="onKeywordInput"
                bindconfirm="onSearchConfirm" />
+        <view wx:if="{{keyword}}" class="clear-btn" bindtap="onKeywordClear">✕</view>
       </view>
       <button class="search-btn" bindtap="onSearch">搜索</button>
     </view>

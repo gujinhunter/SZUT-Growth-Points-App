@@ -27,12 +27,21 @@ Page({
     emptyText: '暂无审核记录'
   },
 
+  keywordTimer: null,
+
   onLoad() {
     this.refresh();
   },
 
   onPullDownRefresh() {
     this.refresh().finally(() => wx.stopPullDownRefresh());
+  },
+
+  onUnload() {
+    if (this.keywordTimer) {
+      clearTimeout(this.keywordTimer);
+      this.keywordTimer = null;
+    }
   },
 
   async refresh() {
@@ -86,31 +95,15 @@ Page({
   },
 
   buildQuery() {
-    const { filters = {}, filterOptions = {}, keyword = '' } = this.data;
-    const conditions = [];
-
+    const { filters = {}, filterOptions = {} } = this.data;
     const statusIndex = Number(filters.statusIndex || 0);
     const statusOption = (filterOptions.statuses || [])[statusIndex];
     const statusValue = statusOption ? statusOption.value : '';
-    if (statusValue) conditions.push({ afterStatus: statusValue });
 
-    const kw = (keyword || '').trim();
-    if (kw) {
-      const reg = db.RegExp({ regexp: kw, options: 'i' });
-      conditions.push(
-        _.or([
-          { studentName: reg },
-          { studentId: reg },
-          { projectName: reg },
-          { adminName: reg },
-          { remark: reg }
-        ])
-      );
+    if (statusValue) {
+      return { afterStatus: statusValue };
     }
-
-    if (conditions.length === 0) return {};
-    if (conditions.length === 1) return conditions[0];
-    return _.and(conditions);
+    return {};
   },
 
   async loadLogs({ skipLoading = false } = {}) {
@@ -174,6 +167,8 @@ Page({
           projectCategory: project?.category || app?.projectCategory || '—',
           studentName: app?.name || app?._openid || '未知申请人',
           studentId: app?.studentId || '—',
+          applicationTime: app?.createTime || item.createTime || null,
+          applicationTimeFormatted: this.formatDateTime(app?.createTime || item.createTime),
           adminName: admin?.name || '管理员',
           remark: item.remark || '',
           afterStatus: item.afterStatus,
@@ -189,9 +184,26 @@ Page({
         logs = logs.filter(item => item.projectCategory === categoryValue);
       }
 
+      const keywordValue = (this.data.keyword || '').trim().toLowerCase();
+      if (keywordValue) {
+        logs = logs.filter(item => {
+          const fields = [
+            item.projectName,
+            item.projectCategory,
+            item.studentName,
+            item.studentId,
+            item.adminName,
+            item.remark
+          ];
+          return fields.some(field =>
+            (field || '').toString().toLowerCase().includes(keywordValue)
+          );
+        });
+      }
+
       this.setData({
         logs,
-        emptyText: '',
+        emptyText: logs.length ? '' : '暂无审核记录',
         loading: false
       });
     } catch (err) {
@@ -274,7 +286,24 @@ Page({
   },
 
   onKeywordInput(e) {
-    this.setData({ keyword: e.detail.value || '' });
+    const value = e.detail.value || '';
+    this.setData({ keyword: value });
+    if (this.keywordTimer) {
+      clearTimeout(this.keywordTimer);
+    }
+    this.keywordTimer = setTimeout(() => {
+      this.loadLogs({ skipLoading: false });
+    }, 400);
+  },
+
+  onKeywordClear() {
+    if (this.keywordTimer) {
+      clearTimeout(this.keywordTimer);
+      this.keywordTimer = null;
+    }
+    this.setData({ keyword: '' }, () => {
+      this.loadLogs({ skipLoading: false });
+    });
   },
 
   onSearch() {
