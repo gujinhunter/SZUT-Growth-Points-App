@@ -38,13 +38,13 @@
 
 .search-box {
   flex: 1;
-  background: #f2f5fb;
-  border-radius: 999rpx;
-  padding: 0 34rpx 0 30rpx;
   display: flex;
   align-items: center;
   gap: 12rpx;
+  padding: 0 34rpx 0 30rpx;
   height: 72rpx;
+  border-radius: 999rpx;
+  background: #f2f5fb;
   border: 2rpx solid rgba(50, 92, 149, 0.12);
 }
 
@@ -67,10 +67,10 @@
 }
 
 .search-btn {
-  padding: 0 22rpx;
-  min-width: 120rpx;
+  flex: 0 0 140rpx;
   height: 64rpx;
   border-radius: 999rpx;
+  padding: 0 20rpx;
   background: linear-gradient(135deg, #2360c4 0%, #3b7df0 100%);
   color: #fff;
   font-size: 24rpx;
