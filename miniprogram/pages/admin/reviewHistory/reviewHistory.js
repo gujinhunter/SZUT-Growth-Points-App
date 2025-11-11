@@ -4,7 +4,8 @@ const _ = db.command;
 
 const CATEGORY_BATCH = 100;
 const DETAIL_BATCH = 20;
-const PAGE_SIZE = 50;
+const LOG_BATCH_LIMIT = 20; // 云数据库单次最大返回量
+const MAX_LOG_FETCH = 200;  // 最多拉取 200 条审核记录
 
 Page({
   data: {
@@ -113,14 +114,12 @@ Page({
     if (!skipLoading) this.setData({ loading: true });
     try {
       const query = this.buildQuery();
-      const res = await db.collection('reviewLogs')
+      const countRes = await db.collection('reviewLogs')
         .where(query)
-        .orderBy('createTime', 'desc')
-        .limit(PAGE_SIZE)
-        .get();
+        .count();
+      const totalCount = Math.min(countRes.total || 0, MAX_LOG_FETCH);
 
-      const rawLogs = res.data || [];
-      if (!rawLogs.length) {
+      if (totalCount === 0) {
         this.setData({
           logs: [],
           emptyText: '暂无审核记录',
@@ -128,6 +127,28 @@ Page({
         });
         return;
       }
+
+      const batches = Math.ceil(totalCount / LOG_BATCH_LIMIT);
+      const tasks = [];
+      for (let i = 0; i < batches; i++) {
+        tasks.push(
+          db.collection('reviewLogs')
+            .where(query)
+            .orderBy('createTime', 'desc')
+            .skip(i * LOG_BATCH_LIMIT)
+            .limit(LOG_BATCH_LIMIT)
+            .get()
+        );
+      }
+
+      const results = await Promise.all(tasks);
+      let rawLogs = results.flatMap(res => res.data || []);
+      rawLogs.sort((a, b) => {
+        const timeA = new Date(a.createTime || 0).getTime();
+        const timeB = new Date(b.createTime || 0).getTime();
+        return timeB - timeA;
+      });
+      rawLogs = rawLogs.slice(0, totalCount);
 
       const applicationIds = [...new Set(rawLogs.map(item => item.applicationId).filter(Boolean))];
       const projectIds = [...new Set(rawLogs.map(item => item.projectId).filter(Boolean))];

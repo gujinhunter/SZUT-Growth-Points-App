@@ -39,8 +39,9 @@
           <view class="card-info">
             <view class="project">{{item.projectName || '未命名项目'}}</view>
             <view class="meta">申请人：{{item.name || item._openid}}</view>
-            <view class="meta">学号：{{item.studentId || '—'}}</view>
-            <view class="meta">类别：{{item.projectCategory || '未分类'}}</view>
+          <view class="meta">学号：{{item.studentId || '—'}}</view>
+          <view class="meta">类别：{{item.projectCategory || '未分类'}}</view>
+          <view class="meta">申请积分：{{item.pointsDisplay}}</view>
             <view class="meta">提交时间：{{item.createTimeFormatted}}</view>
             <view class="meta reason">申请理由：{{item.reason || '—'}}</view>
           </view>
@@ -70,5 +71,22 @@
     </block>
 
     <view wx:else class="empty">暂无符合条件的申请</view>
+  </view>
+
+  <view wx:if="{{rejectDialogVisible}}" class="reject-mask" catchtouchmove="noop">
+    <view class="reject-panel">
+      <view class="reject-title">驳回原因</view>
+      <textarea class="reject-textarea"
+                value="{{rejectRemark}}"
+                placeholder="请填写驳回说明"
+                maxlength="200"
+                auto-height
+                bindinput="onRejectInput" />
+      <view class="reject-tip">该说明将展示给申请人，最多 200 字</view>
+      <view class="reject-actions">
+        <button class="reject-btn ghost" bindtap="closeRejectDialog">取消</button>
+        <button class="reject-btn primary" bindtap="confirmReject" loading="{{rejectSubmitting}}">提交</button>
+      </view>
+    </view>
   </view>
 </view>

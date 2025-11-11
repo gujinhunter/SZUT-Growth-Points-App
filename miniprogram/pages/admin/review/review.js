@@ -12,7 +12,11 @@ Page({
     },
     filterOptions: {
       categories: [{ label: '全部类别', value: '' }]
-    }
+    },
+    rejectDialogVisible: false,
+    rejectRemark: '',
+    rejectTarget: null,
+    rejectSubmitting: false
   },
 
   async onLoad() {
@@ -119,7 +123,7 @@ Page({
     // 关键词搜索（姓名、项目名称）
     const keyword = (this.data.keyword || '').trim();
     if (keyword) {
-      const reg = db.RegExp({ pattern: keyword, options: 'i' });
+      const reg = db.RegExp({ regexp: keyword, options: 'i' });
       conditions.push(_.or([
         { name: reg },
         { projectName: reg }
@@ -158,23 +162,7 @@ Page({
           hasMore = batchRes.data.length === MAX_LIMIT;
         }
 
-        // 应用筛选条件（类别和关键词）
-        const categoryValue = this.data.filterOptions.categories[this.data.filters.categoryIndex]?.value;
-        const keywordLower = keyword.toLowerCase();
-
-        let filtered = allData.filter(item => {
-          // 关键词匹配（姓名、项目名称）
-          const matchKeyword = 
-            (item.name && item.name.toLowerCase().includes(keywordLower)) ||
-            (item.projectName && item.projectName.toLowerCase().includes(keywordLower));
-
-          // 类别匹配（先不过滤，后面会从 activities 获取）
-          const matchCategory = !categoryValue || true; // 暂时不在这里过滤，因为类别需要从 activities 获取
-
-          return matchKeyword && matchCategory;
-        });
-
-        res = { data: filtered };
+        res = { data: allData };
       } else {
         // 无关键词时，直接使用数据库查询
         const query = this.buildQuery();
@@ -239,22 +227,46 @@ Page({
           : item.fileID
             ? [item.fileID]
             : [];
+        const hasNumberPoints = typeof item.points === 'number' && !Number.isNaN(item.points);
+        const pointsDisplay = hasNumberPoints
+          ? item.points
+          : (Array.isArray(item.points) && item.points.length
+              ? item.points.join('/')
+              : (item.points === 0 ? 0 : (item.points || '—')));
         
         return {
           ...item,
           studentId: studentId, // 从 users 集合获取的学号
           projectCategory: projectCategory, // 从 activities 集合获取的类别
           fileIDs,
+          pointsDisplay,
           createTimeFormatted: this.formatDateTime(item.createTime),
           statusClass: 'pending'
         };
       });
 
-      // 如果有类别筛选，在这里过滤
+      let filteredApps = apps;
+
+      const keywordLower = (this.data.keyword || '').trim().toLowerCase();
+      if (keywordLower) {
+        filteredApps = filteredApps.filter(item => {
+          const fields = [
+            item.name,
+            item.projectName,
+            item.studentId,
+            item.projectCategory,
+            item.reason
+          ];
+          return fields.some(field =>
+            (field || '').toString().toLowerCase().includes(keywordLower)
+          );
+        });
+      }
+
       const categoryValue = this.data.filterOptions.categories[this.data.filters.categoryIndex]?.value;
-      const filteredApps = categoryValue 
-        ? apps.filter(item => item.projectCategory === categoryValue)
-        : apps;
+      if (categoryValue) {
+        filteredApps = filteredApps.filter(item => item.projectCategory === categoryValue);
+      }
       
       this.setData({ applications: filteredApps });
     } catch (err) {
@@ -283,6 +295,8 @@ Page({
       this.loadApplications();
     });
   },
+
+  noop() {},
 
   goDetail(e) {
     const id = e.currentTarget.dataset.id;
@@ -434,49 +448,71 @@ Page({
     const appId = e.currentTarget.dataset.id;
     if (!appId) return;
 
-    const target = this.data.applications.find(item => item._id === appId);
-    wx.showModal({
-      title: '驳回原因',
-      editable: true,                 // 需要基础库 ≥ 2.13.0
-      placeholderText: '请填写驳回说明',
-      confirmText: '提交',
-      cancelText: '取消',
-      success: async (res) => {
-        if (!res.confirm) return;
-        const remark = (res.content || '').trim();
-        if (!remark) {
-          wx.showToast({ title: '请填写驳回原因', icon: 'none' });
-          return;
-        }
-        wx.showLoading({ title: '处理中...' });
-        try {
-          await db.collection('applications').doc(appId).update({
-            data: {
-              status: '已驳回',
-              reviewTime: new Date(),
-              rejectRemark: remark      // 保存给申请者查看
-            }
-          });
- 
-          await this.logReviewAction({
-            applicationId: appId,
-            action: 'rejected',
-            projectId: target?.projectId || null,
-            beforeStatus: target?.status || '',
-            afterStatus: '已驳回',
-            remark                               // 记录在审核日志里
-          });
- 
-          wx.hideLoading();
-          wx.showToast({ title: '已驳回', icon: 'success' });
-          this.loadApplications();
-        } catch (error) {
-          wx.hideLoading();
-          wx.showToast({ title: '驳回失败', icon: 'none' });
-          console.error('handleReject error', error);
-        }
-      }
+    const target = this.data.applications.find(item => item._id === appId) || null;
+    this.setData({
+      rejectDialogVisible: true,
+      rejectRemark: '',
+      rejectTarget: target ? { ...target } : { _id: appId }
     });
+  },
+
+  closeRejectDialog() {
+    this.setData({
+      rejectDialogVisible: false,
+      rejectRemark: '',
+      rejectTarget: null
+    });
+  },
+
+  onRejectInput(e) {
+    this.setData({ rejectRemark: e.detail.value || '' });
+  },
+
+  async confirmReject() {
+    if (this.data.rejectSubmitting) return;
+    const remark = (this.data.rejectRemark || '').trim();
+    const target = this.data.rejectTarget;
+    const appId = target?._id;
+    if (!appId) {
+      this.closeRejectDialog();
+      return;
+    }
+    if (!remark) {
+      wx.showToast({ title: '请填写驳回原因', icon: 'none' });
+      return;
+    }
+
+    this.setData({ rejectSubmitting: true });
+    wx.showLoading({ title: '处理中...' });
+    try {
+      await db.collection('applications').doc(appId).update({
+        data: {
+          status: '已驳回',
+          reviewTime: new Date(),
+          rejectRemark: remark
+        }
+      });
+
+      await this.logReviewAction({
+        applicationId: appId,
+        action: 'rejected',
+        projectId: target?.projectId || null,
+        beforeStatus: target?.status || '',
+        afterStatus: '已驳回',
+        remark
+      });
+
+      wx.hideLoading();
+      wx.showToast({ title: '已驳回', icon: 'success' });
+      this.closeRejectDialog();
+      this.loadApplications();
+    } catch (error) {
+      wx.hideLoading();
+      wx.showToast({ title: '驳回失败', icon: 'none' });
+      console.error('confirmReject error', error);
+    } finally {
+      this.setData({ rejectSubmitting: false });
+    }
   },
 
   async logReviewAction({ applicationId, action, remark = '', projectId, beforeStatus = '', afterStatus = '' }) {

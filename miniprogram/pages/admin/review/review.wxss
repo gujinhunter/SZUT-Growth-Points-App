@@ -228,3 +228,92 @@
 .action-btn:active {
   opacity: 0.88;
 }
+
+.reject-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 28, 55, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.reject-panel {
+  width: 620rpx;
+  max-width: 90%;
+  background: #ffffff;
+  border-radius: 28rpx;
+  padding: 48rpx 40rpx 36rpx;
+  box-shadow: 0 24rpx 48rpx rgba(26, 52, 100, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 28rpx;
+}
+
+.reject-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1f2f55;
+  text-align: center;
+}
+
+.reject-textarea {
+  min-height: 180rpx;
+  border-radius: 20rpx;
+  border: 2rpx solid rgba(31, 79, 163, 0.18);
+  padding: 24rpx 28rpx;
+  font-size: 28rpx;
+  color: #33496a;
+  background: #f7f9ff;
+  box-sizing: border-box;
+}
+
+.reject-textarea::placeholder {
+  color: #94a0bb;
+}
+
+.reject-tip {
+  font-size: 24rpx;
+  color: #8b98b4;
+}
+
+.reject-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 24rpx;
+}
+
+.reject-btn {
+  flex: 1;
+  height: 72rpx;
+  border-radius: 999rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.reject-btn::after {
+  border: none;
+}
+
+.reject-btn.ghost {
+  background: rgba(31, 79, 163, 0.08);
+  color: #1f4e9d;
+}
+
+.reject-btn.primary {
+  background: linear-gradient(135deg, #1f4e9d 0%, #2f6fd2 100%);
+  color: #ffffff;
+  box-shadow: 0 12rpx 26rpx rgba(31, 79, 163, 0.25);
+}
+
+.reject-btn:active {
+  opacity: 0.9;
+}
