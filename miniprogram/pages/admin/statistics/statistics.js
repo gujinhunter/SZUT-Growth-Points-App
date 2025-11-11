@@ -46,14 +46,27 @@ Page({
       const results = await Promise.all(tasks);
       const list = results.flatMap(res => res.data || []).filter(item => item.role !== 'admin');
       list.sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
-      const ranked = list.map((item, index) => ({
-        rank: index + 1,
-        name: item.name || '未填写姓名',
-        studentId: item.studentId || '—',
-        academy: item.academy || '',
-        className: item.className || '',
-        totalPoints: item.totalPoints || 0
-      }));
+
+      let prevPoints = null;
+      let currentRank = 0;
+      const ranked = list.map((item, index) => {
+        const points = item.totalPoints || 0;
+        if (prevPoints === null) {
+          currentRank = 1;
+        } else if (points !== prevPoints) {
+          currentRank = index + 1;
+        }
+        prevPoints = points;
+
+        return {
+          rank: currentRank,
+          name: item.name || '未填写姓名',
+          studentId: item.studentId || '—',
+          academy: item.academy || '',
+          className: item.className || '',
+          totalPoints: points
+        };
+      });
       const now = new Date();
       this.setData({
         students: ranked,
