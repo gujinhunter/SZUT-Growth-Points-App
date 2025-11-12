@@ -38,10 +38,12 @@
 .field-input {
   height: 88rpx;
   padding: 0 28rpx;
-  /* 使用 Flex 确保垂直居中 */
-  display: flex;
-  align-items: center;
-  line-height: normal;
+  line-height: 88rpx;
+  display: block;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .field-textarea {
