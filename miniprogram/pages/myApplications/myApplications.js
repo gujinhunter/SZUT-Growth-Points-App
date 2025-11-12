@@ -1,9 +1,8 @@
-const db = wx.cloud.database();
-
-const MAX_LIMIT = 100;
+const APPLICATION_SERVICE = 'studentApplicationsService';
 
 Page({
   data: {
+    loading: true,
     applications: [],
     applicationGroups: []
   },
@@ -12,87 +11,32 @@ Page({
     this.loadApplications();
   },
 
-  // 加载当前用户申请记录
   async loadApplications() {
+    this.setData({ loading: true });
+    wx.showLoading({ title: '加载中...' });
     try {
-      const openRes = await wx.cloud.callFunction({ name: 'getOpenId' });
-      const openid = openRes.result?.openid;
-      if (!openid) throw new Error('missing openid');
-
-      const baseWhere = { _openid: openid };
-      const countRes = await db.collection('applications').where(baseWhere).count();
-      const total = countRes.total || 0;
-
-      if (total === 0) {
-        this.setData({ applications: [], applicationGroups: [] });
-        return;
-      }
-
-      const tasks = [];
-      const batches = Math.ceil(total / MAX_LIMIT);
-      for (let i = 0; i < batches; i++) {
-        tasks.push(
-          db.collection('applications')
-            .where(baseWhere)
-            .orderBy('createTime', 'desc')
-            .skip(i * MAX_LIMIT)
-            .limit(MAX_LIMIT)
-            .get()
-        );
-      }
-      const results = await Promise.all(tasks);
-      const allRecords = results.flatMap(res => res.data || []);
-      allRecords.sort((a, b) => {
-        const timeA = new Date(a.createTime || 0).getTime();
-        const timeB = new Date(b.createTime || 0).getTime();
-        return timeB - timeA;
-      });
-
-      const formatted = allRecords.map(item => {
-        const fileIDs = Array.isArray(item.fileIDs)
-          ? item.fileIDs
-          : item.fileID
-            ? [item.fileID]
-            : [];
-        const fileNames = Array.isArray(item.fileNames) && item.fileNames.length
-          ? item.fileNames
-          : fileIDs.map((_, idx) => `附件${idx + 1}`);
-        return {
-          ...item,
-          pointsText: Array.isArray(item.points)
-            ? item.points.join('/')
-            : (item.points ?? 0),
-          fileIDs,
-          fileNames,
-          createTimeFormatted: this.formatDateTime(item.createTime),
-          statusClass: this.getStatusClass(item.status)
-        };
-      });
-
-      const groupConfig = [
-        { status: '待审核', key: 'pending', label: '待审核' },
-        { status: '已通过', key: 'approved', label: '已通过' },
-        { status: '已驳回', key: 'rejected', label: '已驳回' }
-      ];
-
-      const grouped = groupConfig.map(cfg => ({
-        status: cfg.status,
-        label: cfg.label,
-        list: formatted.filter(item => item.status === cfg.status)
-      })).filter(group => group.list.length > 0);
+      const res = await callApplicationService('listApplications', { page: 1, pageSize: 200 });
+      const list = res?.list || [];
+      const groups = res?.groups || [];
 
       this.setData({
-        applications: formatted,
-        applicationGroups: grouped
+        applications: list,
+        applicationGroups: groups,
+        loading: false
       });
     } catch (err) {
       console.error('加载申请记录失败', err);
-      wx.showToast({ title: '加载失败', icon: 'none' });
-      this.setData({ applications: [], applicationGroups: [] });
+      wx.showToast({ title: err.message || '加载失败', icon: 'none' });
+      this.setData({
+        applications: [],
+        applicationGroups: [],
+        loading: false
+      });
+    } finally {
+      wx.hideLoading();
     }
   },
 
-  // 根据状态返回样式类名
   getStatusClass(status) {
     if (status === '已通过') return 'approved';
     if (status === '已驳回') return 'rejected';
@@ -112,62 +56,77 @@ Page({
     return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
   },
 
-  // 查看上传文件
   previewFile(e) {
     const appIndex = Number(e.currentTarget.dataset.appindex);
     const app = this.data.applications?.[appIndex];
     const fileIDs = app?.fileIDs || [];
-    const fileNames = app?.fileNames || [];
+    const fileNames = app?.fileNames || fileIDs.map((_, idx) => `附件${idx + 1}`);
 
     if (!fileIDs.length) {
       wx.showToast({ title: '无附件', icon: 'none' });
       return;
     }
 
-    const fileList = fileIDs.map((id, idx) => ({
-      fileID: id,
-      fileName: fileNames[idx] || `附件${idx + 1}`
-    }));
+    const options = fileIDs.map((id, idx) => ({ id, name: fileNames[idx] || `附件${idx + 1}` }));
 
     wx.showActionSheet({
-      itemList: fileList.map(item => item.fileName),
+      itemList: options.map(opt => opt.name),
       success: res => {
-        const selected = fileList[res.tapIndex];
+        const selected = options[res.tapIndex];
         if (!selected) return;
-        this.openFile(selected.fileID);
+        this.openFile(selected.id);
       }
     });
   },
 
-  openFile(fileID) {
+  async openFile(fileID) {
     if (!fileID) {
       wx.showToast({ title: '无附件', icon: 'none' });
       return;
     }
-    wx.showLoading({ title: '打开附件...' });
-    wx.cloud.downloadFile({
-      fileID,
-      success: res => {
-        wx.hideLoading();
-        const lower = (fileID || '').toLowerCase();
-        const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
-        const isImage = imageExts.some(ext => lower.includes(ext));
-        if (isImage) {
-          wx.previewImage({
-            urls: [res.tempFilePath],
-            current: res.tempFilePath
-          });
-        } else {
-          wx.openDocument({
-            filePath: res.tempFilePath
-          });
-        }
-      },
-      fail: err => {
-        wx.hideLoading();
-        console.error('附件下载失败', err);
-        wx.showToast({ title: '文件无法打开', icon: 'none' });
+
+    wx.showLoading({ title: '获取附件...' });
+    try {
+      const data = await callApplicationService('getFileUrl', { fileID });
+      const tempUrl = data?.tempFileURL;
+      if (!tempUrl) {
+        throw new Error('无法获取附件链接');
       }
-    });
+
+      wx.hideLoading();
+      const lower = fileID.toLowerCase();
+      const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+      const isImage = imageExts.some(ext => lower.includes(ext));
+      if (isImage) {
+        wx.previewImage({ urls: [tempUrl], current: tempUrl });
+      } else {
+        wx.downloadFile({
+          url: tempUrl,
+          success: res => {
+            wx.openDocument({ filePath: res.tempFilePath });
+          },
+          fail: err => {
+            console.error('下载附件失败', err);
+            wx.showToast({ title: '文件无法打开', icon: 'none' });
+          }
+        });
+      }
+    } catch (err) {
+      wx.hideLoading();
+      console.error('获取附件失败', err);
+      wx.showToast({ title: err.message || '附件获取失败', icon: 'none' });
+    }
   }
 });
+
+async function callApplicationService(action, payload = {}) {
+  const res = await wx.cloud.callFunction({
+    name: APPLICATION_SERVICE,
+    data: { action, payload }
+  });
+  const result = res.result || {};
+  if (!result.success) {
+    throw new Error(result.message || '云函数调用失败');
+  }
+  return result.data;
+}
