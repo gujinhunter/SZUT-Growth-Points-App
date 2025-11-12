@@ -5,7 +5,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const db = cloud.database();
 const _ = db.command;
-const DETAIL_BATCH = 20;
+const BATCH_SIZE = 20;
 
 class AuthError extends Error {
   constructor(message, code = 'AUTH_DENIED') {
@@ -64,15 +64,19 @@ async function listPending({ page = 1, pageSize = 20, keyword = '', category = '
 async function listHistory({ page = 1, pageSize = 20, keyword = '', category = '', status = '' }) {
   const match = {};
   if (status) match.afterStatus = status;
-  if (category) match.projectCategory = category;
 
   const query = db.collection('reviewLogs').where(match).orderBy('createTime', 'desc');
-  const [logs, applications, students] = await fetchLogsWithApplications(query, page, pageSize);
+  const logs = await fetchLogsWithApplications(query, page, pageSize);
+
+  let filtered = logs;
+  if (category) {
+    filtered = filtered.filter(item => (item.projectCategory || '') === category);
+  }
 
   const keywordValue = (keyword || '').trim().toLowerCase();
-  const filtered = keywordValue
-    ? logs.filter(item => item._searchText.includes(keywordValue))
-    : logs;
+  if (keywordValue) {
+    filtered = filtered.filter(item => item._searchText.includes(keywordValue));
+  }
 
   return {
     page,
@@ -270,6 +274,13 @@ async function fetchLogsWithApplications(query, page, pageSize) {
 
   const applicationIds = [...new Set(logs.map(item => item.applicationId).filter(Boolean))];
   const applications = await fetchApplicationsByIds(applicationIds);
+  const projectIds = [...new Set([
+    ...logs.map(item => item.projectId).filter(Boolean),
+    ...Array.from(applications.values()).map(app => app?.projectId).filter(Boolean)
+  ])];
+  const projects = await fetchProjectsByIds(projectIds);
+  const adminIds = [...new Set(logs.map(item => item.adminOpenId).filter(Boolean))];
+  const admins = await fetchAdminsByIds(adminIds);
   const students = await fetchStudents(
     [...new Set(Array.from(applications.values()).map(app => app.studentOpenId || app._openid).filter(Boolean))]
   );
@@ -278,20 +289,28 @@ async function fetchLogsWithApplications(query, page, pageSize) {
     const app = applications.get(item.applicationId);
     const studentKey = app?.studentOpenId || app?._openid;
     const studentInfo = studentKey ? students.get(studentKey) : null;
+    const projectInfo = (app?.projectId && projects.get(app.projectId))
+      || (item.projectId && projects.get(item.projectId))
+      || null;
 
     const studentName = studentInfo?.name || app?.name || item.studentName || '未知申请人';
     const studentId = studentInfo?.studentId || app?.studentId || item.studentId || '—';
-    const projectName = app?.projectName || item.projectName || '—';
-    const projectCategory = app?.projectCategory || item.projectCategory || '—';
+    const projectName = projectInfo?.name || app?.projectName || item.projectName || '—';
+    const projectCategory = projectInfo?.category || app?.projectCategory || item.projectCategory || '—';
+    const adminInfo = admins.get(item.adminOpenId);
+    const adminName = adminInfo?.name || item.adminName || '管理员';
 
     const searchText = [
       projectName,
       projectCategory,
       studentName,
       studentId,
-      item.adminName || '',
+      adminName,
       item.remark || ''
     ].map(val => (val || '').toString().toLowerCase()).join(' ');
+
+    const applicationTime = normalizeDate(app?.createTime) || normalizeDate(item.applicationTime);
+    const reviewTime = normalizeDate(app?.reviewTime) || normalizeDate(item.reviewTime) || normalizeDate(item.createTime);
 
     return {
       _id: item._id,
@@ -299,26 +318,26 @@ async function fetchLogsWithApplications(query, page, pageSize) {
       projectCategory,
       studentName,
       studentId,
-      adminName: item.adminName || '管理员',
+      adminName,
       remark: item.remark || '',
       afterStatus: item.afterStatus,
       afterStatusText: item.afterStatus || '—',
-      createTime: item.createTime || null,
-      createTimeFormatted: formatDateTime(item.createTime),
-      applicationTime: app?.createTime || item.createTime || null,
-      applicationTimeFormatted: formatDateTime(app?.createTime || item.createTime),
+      createTime: reviewTime ? reviewTime.getTime() : null,
+      createTimeFormatted: null,
+      applicationTime: applicationTime ? applicationTime.getTime() : null,
+      applicationTimeFormatted: null,
       _searchText: searchText
     };
   });
 
-  return [enrichedLogs, applications, students];
+  return enrichedLogs;
 }
 
 async function fetchApplicationsByIds(ids) {
   const map = new Map();
   if (!ids.length) return map;
-  for (let i = 0; i < ids.length; i += DETAIL_BATCH) {
-    const batch = ids.slice(i, i + DETAIL_BATCH);
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batch = ids.slice(i, i + BATCH_SIZE);
     const res = await db.collection('applications')
       .where({ _id: _.in(batch) })
       .field({
@@ -328,7 +347,9 @@ async function fetchApplicationsByIds(ids) {
         projectName: true,
         projectCategory: true,
         createTime: true,
-        _openid: true
+        reviewTime: true,
+        _openid: true,
+        projectId: true
       })
       .get();
     (res.data || []).forEach(item => map.set(item._id, item));
@@ -339,8 +360,8 @@ async function fetchApplicationsByIds(ids) {
 async function fetchApplications(ids) {
   const map = new Map();
   if (!ids.length) return map;
-  for (let i = 0; i < ids.length; i += DETAIL_BATCH) {
-    const batch = ids.slice(i, i + DETAIL_BATCH);
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batch = ids.slice(i, i + BATCH_SIZE);
     const res = await db.collection('applications')
       .where({ _id: _.in(batch) })
       .field({
@@ -350,10 +371,12 @@ async function fetchApplications(ids) {
         projectName: true,
         projectCategory: true,
         createTime: true,
+        reviewTime: true,
         points: true,
         reason: true,
         fileIDs: true,
-        _openid: true
+        _openid: true,
+        projectId: true
       })
       .get();
     (res.data || []).forEach(item => map.set(item._id, item));
@@ -364,9 +387,8 @@ async function fetchApplications(ids) {
 async function fetchStudents(openIds) {
   if (!openIds.length) return new Map();
   const map = new Map();
-  const BATCH = 20;
-  for (let i = 0; i < openIds.length; i += BATCH) {
-    const batch = openIds.slice(i, i + BATCH);
+  for (let i = 0; i < openIds.length; i += BATCH_SIZE) {
+    const batch = openIds.slice(i, i + BATCH_SIZE);
     const res = await db.collection('users')
       .where({ _openid: _.in(batch) })
       .field({
@@ -391,9 +413,72 @@ async function fetchStudents(openIds) {
   return map;
 }
 
-function formatDateTime(dateInput) {
-  if (!dateInput) return '';
-  const date = new Date(dateInput);
+async function fetchProjectsByIds(ids) {
+  const map = new Map();
+  if (!ids.length) return map;
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batch = ids.slice(i, i + BATCH_SIZE);
+    const res = await db.collection('activities')
+      .where({ _id: _.in(batch) })
+      .field({ name: true, category: true })
+      .get();
+    (res.data || []).forEach(item => map.set(item._id, {
+      name: item.name || '',
+      category: item.category || ''
+    }));
+  }
+  return map;
+}
+
+async function fetchAdminsByIds(openIds) {
+  if (!openIds.length) return new Map();
+  const map = new Map();
+  for (let i = 0; i < openIds.length; i += BATCH_SIZE) {
+    const batch = openIds.slice(i, i + BATCH_SIZE);
+    const res = await db.collection('users')
+      .where({ _openid: _.in(batch) })
+      .field({
+        _openid: true,
+        name: true,
+        realName: true,
+        nickName: true
+      })
+      .get();
+    (res.data || []).forEach(item => {
+      if (!item._openid) return;
+      map.set(item._openid, {
+        name: item.name || item.realName || item.nickName || '管理员'
+      });
+    });
+  }
+  return map;
+}
+
+function normalizeDate(input) {
+  if (!input) return null;
+  if (input instanceof Date) {
+    return Number.isNaN(input.getTime()) ? null : input;
+  }
+  if (typeof input === 'number') {
+    const parsed = new Date(input);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  if (typeof input === 'string') {
+    const str = input.replace(/\//g, '-').replace(/\./g, '-');
+    // 如果字符串没有时区信息，默认按 UTC 解析并手动补 +08:00
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(str)) {
+      const iso = `${str.replace(' ', 'T')}+08:00`;
+      const parsed = new Date(iso);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    const parsed = new Date(str);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  return null;
+}
+
+function formatDateTime(date) {
+  if (!date) return '';
   if (Number.isNaN(date.getTime())) return '';
   const yyyy = date.getFullYear();
   const mm = `${date.getMonth() + 1}`.padStart(2, '0');

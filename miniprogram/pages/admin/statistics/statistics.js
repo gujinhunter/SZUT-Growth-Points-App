@@ -1,55 +1,82 @@
 // miniprogram/pages/admin/statistics/statistics.js
-const db = wx.cloud.database();
-const _ = db.command;
+const AUTH_SERVICE = 'adminAuthService';
+const STAT_SERVICE = 'adminStatisticsService';
+
+const PAGE_SIZE = 100;
 
 Page({
   data: {
     loading: true,
     exporting: false,
+    isAdmin: false,
     students: [],
     lastRefresh: '',
     emptyText: '暂无学生数据'
   },
 
-  onLoad() {
-    this.loadStudents();
+  async onLoad() {
+    const ok = await this.ensureAdmin();
+    if (ok) {
+      this.loadStudents();
+    }
   },
 
   onPullDownRefresh() {
     this.loadStudents().finally(() => wx.stopPullDownRefresh());
   },
 
+  async ensureAdmin() {
+    if (this.data.isAdmin) return true;
+    try {
+      const res = await wx.cloud.callFunction({
+        name: AUTH_SERVICE,
+        data: { action: 'ensureAdmin' }
+      });
+      const result = res.result || {};
+      if (!result.success) {
+        throw new Error(result.message || '无管理员权限');
+      }
+      this.setData({ isAdmin: true });
+      return true;
+    } catch (err) {
+      console.error('管理员校验失败', err);
+      wx.showModal({
+        title: '无权限',
+        content: err.message || '当前帐号没有管理员权限',
+        showCancel: false,
+        success: () => wx.navigateBack()
+      });
+      return false;
+    }
+  },
+
   async loadStudents() {
+    if (!this.data.isAdmin) return;
     this.setData({ loading: true });
     try {
-      const MAX_LIMIT = 100;
-      const baseQuery = db.collection('users').where({ role: _.neq('admin') });
-      const countRes = await baseQuery.count();
-      const total = countRes.total || 0;
-      const tasks = [];
-      for (let i = 0; i < Math.ceil(total / MAX_LIMIT); i++) {
-        tasks.push(
-          baseQuery
-            .skip(i * MAX_LIMIT)
-            .limit(MAX_LIMIT)
-            .field({
-              name: true,
-              studentId: true,
-              totalPoints: true,
-              className: true,
-              academy: true,
-              role: true
-            })
-            .get()
-        );
-      }
-      const results = await Promise.all(tasks);
-      const list = results.flatMap(res => res.data || []).filter(item => item.role !== 'admin');
-      list.sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
+      let page = 1;
+      let total = 0;
+      let collected = [];
+      do {
+        const data = await callStatisticsService('listStudents', {
+          page,
+          pageSize: PAGE_SIZE,
+          order: 'desc'
+        });
+        const list = data.list || [];
+        total = data.total || 0;
+        collected = collected.concat(list);
+        if (collected.length >= total || list.length < PAGE_SIZE) {
+          break;
+        }
+        page += 1;
+      } while (true);
+
+      collected.sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
 
       let prevPoints = null;
       let currentRank = 0;
-      const ranked = list.map((item, index) => {
+      const ranked = collected.map((item, index) => {
         const points = item.totalPoints || 0;
         if (prevPoints === null) {
           currentRank = 1;
@@ -57,7 +84,6 @@ Page({
           currentRank = index + 1;
         }
         prevPoints = points;
-
         return {
           rank: currentRank,
           name: item.name || '未填写姓名',
@@ -67,16 +93,25 @@ Page({
           totalPoints: points
         };
       });
+
       const now = new Date();
+      const lastRefresh = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now
+        .getDate()
+        .toString()
+        .padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now
+        .getMinutes()
+        .toString()
+        .padStart(2, '0')}`;
+
       this.setData({
         students: ranked,
-        lastRefresh: `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
+        lastRefresh,
         loading: false,
         emptyText: ranked.length ? '' : '暂无学生数据'
       });
     } catch (err) {
       console.error('加载学生积分失败', err);
-      wx.showToast({ title: '加载失败', icon: 'none' });
+      wx.showToast({ title: err.message || '加载失败', icon: 'none' });
       this.setData({
         loading: false,
         students: [],
@@ -87,6 +122,8 @@ Page({
 
   async handleExport() {
     if (this.data.exporting) return;
+    const ok = await this.ensureAdmin();
+    if (!ok) return;
     this.setData({ exporting: true });
     try {
       wx.showLoading({ title: '生成报表...' });
@@ -166,3 +203,15 @@ Page({
     });
   }
 });
+
+async function callStatisticsService(action, payload = {}) {
+  const res = await wx.cloud.callFunction({
+    name: STAT_SERVICE,
+    data: { action, payload }
+  });
+  const result = res.result || {};
+  if (!result.success) {
+    throw new Error(result.message || '云函数调用失败');
+  }
+  return result.data;
+}
