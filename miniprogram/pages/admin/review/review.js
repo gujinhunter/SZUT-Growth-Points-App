@@ -1,12 +1,13 @@
-const db = wx.cloud.database();
-const _ = db.command;
+const AUTH_SERVICE = 'adminAuthService';
+const REVIEW_SERVICE = 'adminReviewService';
+const FILE_SERVICE = 'getFileTempUrl';
 
 Page({
   data: {
     loading: true,
+    isAdmin: false,
     applications: [],
     keyword: '',
-    currentAdminOpenId: '',
     filters: {
       categoryIndex: 0
     },
@@ -20,7 +21,8 @@ Page({
   },
 
   async onLoad() {
-    await this.ensureAdminOpenId();
+    const ok = await this.ensureAdmin();
+    if (!ok) return;
     await this.loadFilterOptions();
     this.loadApplications();
   },
@@ -29,249 +31,70 @@ Page({
     this.loadApplications().finally(() => wx.stopPullDownRefresh());
   },
 
-  async ensureAdminOpenId() {
-    if (this.data.currentAdminOpenId) return;
+  async ensureAdmin() {
     try {
-      const res = await wx.cloud.callFunction({ name: 'getOpenId' });
-      this.setData({ currentAdminOpenId: res.result.openid || '' });
+      const res = await wx.cloud.callFunction({
+        name: AUTH_SERVICE,
+        data: { action: 'ensureAdmin' }
+      });
+      const result = res.result || {};
+      if (!result.success) {
+        throw new Error(result.message || '无管理员权限');
+      }
+      this.setData({ isAdmin: true });
+      return true;
     } catch (err) {
-      console.error('获取管理员 openid 失败', err);
-      wx.showToast({ title: '无法识别身份', icon: 'none' });
+      console.error('管理员校验失败', err);
+      wx.showModal({
+        title: '无权限',
+        content: err.message || '当前帐号没有管理员权限',
+        showCancel: false,
+        success: () => wx.navigateBack()
+      });
+      return false;
     }
   },
 
-   async loadFilterOptions() {
+  async loadFilterOptions() {
     try {
-      // 从 activities 集合中获取所有独特的项目类别
-      const MAX_LIMIT = 100;
-      
-      // 先获取总数
-      const countRes = await db.collection('activities').count();
-      const total = countRes.total || 0;
-      
-      if (total === 0) {
-        this.setData({
-          'filterOptions.categories': [{ label: '全部类别', value: '' }]
-        });
-        return;
-      }
-      
-      // 计算需要分几次查询
-      const batchTimes = Math.ceil(total / MAX_LIMIT);
-      
-      // 并行发起所有查询
-      const tasks = [];
-      for (let i = 0; i < batchTimes; i++) {
-        tasks.push(
-          db.collection('activities')
-            .skip(i * MAX_LIMIT)
-            .limit(MAX_LIMIT)
-            .field({ category: true })
-            .get()
-        );
-      }
-      
-      // 等待所有查询完成
-      const results = await Promise.all(tasks);
-      
-      // 合并所有结果并去重
-      const categories = new Set();
-      results.forEach(result => {
-        if (result && result.data) {
-          result.data.forEach(item => {
-            if (item && item.category && typeof item.category === 'string') {
-              const trimmed = item.category.trim();
-              if (trimmed) {
-                categories.add(trimmed);
-              }
-            }
-          });
-        }
-      });
-
-      // 将类别转换为选项数组，并添加"全部类别"选项
-      const sortedCategories = Array.from(categories).sort();
-      const categoryOptions = [{ label: '全部类别', value: '' }].concat(
-        sortedCategories.map(text => ({ label: text, value: text }))
+      const data = await callReviewService('listFilters');
+      const categories = [{ label: '全部类别', value: '' }].concat(
+        (data.categories || []).map(text => ({ label: text, value: text }))
       );
-
-      this.setData({
-        'filterOptions.categories': categoryOptions
-      });
-      
-      // 调试信息
-      console.log('成功加载类别数量:', sortedCategories.length, '总记录数:', total);
+      this.setData({ 'filterOptions.categories': categories });
     } catch (err) {
       console.error('加载筛选项失败', err);
       wx.showToast({ title: '筛选数据加载失败', icon: 'none' });
-      // 设置默认值
-      this.setData({
-        'filterOptions.categories': [{ label: '全部类别', value: '' }]
-      });
+      this.setData({ 'filterOptions.categories': [{ label: '全部类别', value: '' }] });
     }
-  },
-
-  buildQuery() {
-    const conditions = [];
-
-    // 固定只查询待审核状态
-    conditions.push({ status: '待审核' });
-
-    // 注意：类别筛选不在数据库查询中处理，因为类别需要从 activities 集合获取
-    // 类别筛选在 loadApplications 方法中获取完数据后处理
-
-    // 关键词搜索（姓名、项目名称）
-    const keyword = (this.data.keyword || '').trim();
-    if (keyword) {
-      const reg = db.RegExp({ regexp: keyword, options: 'i' });
-      conditions.push(_.or([
-        { name: reg },
-        { projectName: reg }
-      ]));
-    }
-
-    if (conditions.length === 1) {
-      return conditions[0];
-    }
-    return _.and(conditions);
   },
 
   async loadApplications() {
+    if (!this.data.isAdmin) return;
     this.setData({ loading: true });
     try {
-      const keyword = (this.data.keyword || '').trim();
-      let res;
-
-      // 如果有关键词搜索，需要分页获取所有待审核数据在内存中过滤
-      if (keyword) {
-        let allData = [];
-        const MAX_LIMIT = 20;
-        let skip = 0;
-        let hasMore = true;
-
-        while (hasMore) {
-          const batchRes = await db.collection('applications')
-            .where({ status: '待审核' })
-            .skip(skip)
-            .limit(MAX_LIMIT)
-            .orderBy('createTime', 'desc')
-            .get();
-
-          allData = allData.concat(batchRes.data || []);
-          skip += batchRes.data.length;
-          hasMore = batchRes.data.length === MAX_LIMIT;
-        }
-
-        res = { data: allData };
-      } else {
-        // 无关键词时，直接使用数据库查询
-        const query = this.buildQuery();
-        res = await db.collection('applications')
-          .where(query)
-          .orderBy('createTime', 'desc')
-          .get();
-      }
-
-      // 获取所有申请对应的学号信息和项目类别信息
-      const studentOpenIds = [...new Set((res.data || []).map(item => item.studentOpenId).filter(id => id))];
-      const projectIds = [...new Set((res.data || []).map(item => item.projectId).filter(id => id))];
-      
-      // 批量查询用户信息
-      const userMap = new Map();
-      if (studentOpenIds.length > 0) {
-        // 分批查询用户（每次最多20个）
-        const BATCH_SIZE = 20;
-        for (let i = 0; i < studentOpenIds.length; i += BATCH_SIZE) {
-          const batch = studentOpenIds.slice(i, i + BATCH_SIZE);
-          const userQueries = batch.map(openId => 
-            db.collection('users').where({ _openid: openId }).get()
-          );
-          const userResults = await Promise.all(userQueries);
-          
-          userResults.forEach((userRes, index) => {
-            if (userRes.data && userRes.data.length > 0) {
-              const user = userRes.data[0];
-              userMap.set(batch[index], user.studentId || '');
-            }
-          });
-        }
-      }
-
-      // 批量查询项目信息（获取类别）
-      const projectMap = new Map();
-      if (projectIds.length > 0) {
-        // 分批查询项目（每次最多20个）
-        const BATCH_SIZE = 20;
-        for (let i = 0; i < projectIds.length; i += BATCH_SIZE) {
-          const batch = projectIds.slice(i, i + BATCH_SIZE);
-          const projectQueries = batch.map(projectId => 
-            db.collection('activities').doc(projectId).get()
-          );
-          const projectResults = await Promise.all(projectQueries);
-          
-          projectResults.forEach((projectRes, index) => {
-            if (projectRes.data) {
-              const project = projectRes.data;
-              projectMap.set(batch[index], project.category || '未分类');
-            }
-          });
-        }
-      }
-
-      // 合并申请数据、用户数据和项目数据
-      const apps = (res.data || []).map(item => {
-        const studentId = item.studentOpenId ? (userMap.get(item.studentOpenId) || '') : '';
-        const projectCategory = item.projectId ? (projectMap.get(item.projectId) || '未分类') : '未分类';
-        const fileIDs = Array.isArray(item.fileIDs)
-          ? item.fileIDs
-          : item.fileID
-            ? [item.fileID]
-            : [];
-        const hasNumberPoints = typeof item.points === 'number' && !Number.isNaN(item.points);
-        const pointsDisplay = hasNumberPoints
-          ? item.points
-          : (Array.isArray(item.points) && item.points.length
-              ? item.points.join('/')
-              : (item.points === 0 ? 0 : (item.points || '—')));
-        
-        return {
-          ...item,
-          studentId: studentId, // 从 users 集合获取的学号
-          projectCategory: projectCategory, // 从 activities 集合获取的类别
-          fileIDs,
-          pointsDisplay,
-          createTimeFormatted: this.formatDateTime(item.createTime),
-          statusClass: 'pending'
-        };
+      const { keyword, filters, filterOptions } = this.data;
+      const category = filterOptions.categories[filters.categoryIndex]?.value || '';
+      const data = await callReviewService('listPending', {
+        keyword: keyword.trim(),
+        category,
+        page: 1,
+        pageSize: 50
       });
 
-      let filteredApps = apps;
+      const list = (data.list || []).map(item => ({
+        ...item,
+        createTimeFormatted: this.formatDateTime(item.createTime),
+        statusClass: 'pending',
+        pointsDisplay: Array.isArray(item.points)
+          ? item.points.join('/')
+          : (item.points === 0 ? 0 : (item.points ?? '—'))
+      }));
 
-      const keywordLower = (this.data.keyword || '').trim().toLowerCase();
-      if (keywordLower) {
-        filteredApps = filteredApps.filter(item => {
-          const fields = [
-            item.name,
-            item.projectName,
-            item.studentId,
-            item.projectCategory,
-            item.reason
-          ];
-          return fields.some(field =>
-            (field || '').toString().toLowerCase().includes(keywordLower)
-          );
-        });
-      }
-
-      const categoryValue = this.data.filterOptions.categories[this.data.filters.categoryIndex]?.value;
-      if (categoryValue) {
-        filteredApps = filteredApps.filter(item => item.projectCategory === categoryValue);
-      }
-      
-      this.setData({ applications: filteredApps });
+      this.setData({ applications: list });
     } catch (err) {
       console.error('加载申请失败', err);
-      wx.showToast({ title: '加载失败', icon: 'none' });
+      wx.showToast({ title: err.message || '加载失败', icon: 'none' });
       this.setData({ applications: [] });
     } finally {
       this.setData({ loading: false });
@@ -332,7 +155,7 @@ Page({
     }
     wx.showLoading({ title: '打开附件...' });
     wx.cloud.callFunction({
-      name: 'getFileTempUrl',
+      name: FILE_SERVICE,
       data: { fileIDs: [fileID] }
     }).then(async res => {
       const fileList = res.result?.data;
@@ -348,10 +171,7 @@ Page({
 
       if (isImage) {
         wx.hideLoading();
-        wx.previewImage({
-          urls: [tempUrl],
-          current: tempUrl
-        });
+        wx.previewImage({ urls: [tempUrl], current: tempUrl });
         return;
       }
 
@@ -391,53 +211,22 @@ Page({
     e.stopPropagation?.();
     const appId = e.currentTarget.dataset.id;
     if (!appId) return;
-  
-    const target = this.data.applications.find(item => item._id === appId);
+
     wx.showModal({
       title: '确认通过',
       content: '确认将该申请设置为"已通过"并发放积分吗？',
-      success: async (res) => {
+      success: async res => {
         if (!res.confirm) return;
         wx.showLoading({ title: '处理中...' });
         try {
-          const appDoc = await db.collection('applications').doc(appId).get();
-          const studentOpenId = appDoc.data?.studentOpenId;
-          const pointsToAdd = appDoc.data?.points || 0;
-  
-          await db.collection('applications').doc(appId).update({
-            data: {
-              status: '已通过',
-              reviewTime: new Date()
-            }
-          });
-  
-          if (studentOpenId && pointsToAdd > 0) {
-            const userQuery = await db.collection('users').where({ _openid: studentOpenId }).get();
-            if (userQuery.data && userQuery.data.length > 0) {
-              const userDoc = userQuery.data[0];
-              const newTotal = (userDoc.totalPoints || 0) + pointsToAdd;
-              await db.collection('users').doc(userDoc._id).update({
-                data: { totalPoints: newTotal }
-              });
-            }
-          }
-  
-          await this.logReviewAction({
-            applicationId: appId,
-            action: 'approved',
-            projectId: target?.projectId || null,
-            beforeStatus: target?.status || '',
-            afterStatus: '已通过',
-            remark: ''
-          });
-  
-          wx.hideLoading();
+          await callReviewService('approveApplication', { applicationId: appId });
           wx.showToast({ title: '已通过并发放积分', icon: 'success' });
           this.loadApplications();
-        } catch (error) {
-          console.error('handleApprove error', error);
+        } catch (err) {
+          console.error('审批通过失败', err);
+          wx.showToast({ title: err.message || '处理失败', icon: 'none' });
+        } finally {
           wx.hideLoading();
-          wx.showToast({ title: '处理失败', icon: 'none' });
         }
       }
     });
@@ -485,54 +274,28 @@ Page({
     this.setData({ rejectSubmitting: true });
     wx.showLoading({ title: '处理中...' });
     try {
-      await db.collection('applications').doc(appId).update({
-        data: {
-          status: '已驳回',
-          reviewTime: new Date(),
-          rejectRemark: remark
-        }
-      });
-
-      await this.logReviewAction({
-        applicationId: appId,
-        action: 'rejected',
-        projectId: target?.projectId || null,
-        beforeStatus: target?.status || '',
-        afterStatus: '已驳回',
-        remark
-      });
-
-      wx.hideLoading();
+      await callReviewService('rejectApplication', { applicationId: appId, remark });
       wx.showToast({ title: '已驳回', icon: 'success' });
       this.closeRejectDialog();
       this.loadApplications();
-    } catch (error) {
-      wx.hideLoading();
-      wx.showToast({ title: '驳回失败', icon: 'none' });
-      console.error('confirmReject error', error);
-    } finally {
-      this.setData({ rejectSubmitting: false });
-    }
-  },
-
-  async logReviewAction({ applicationId, action, remark = '', projectId, beforeStatus = '', afterStatus = '' }) {
-    await this.ensureAdminOpenId();
-    if (!applicationId) return;
-    try {
-      await db.collection('reviewLogs').add({
-        data: {
-          applicationId,
-          projectId: projectId || null,
-          action,
-          beforeStatus,
-          afterStatus,
-          remark,
-          adminOpenId: this.data.currentAdminOpenId || '',
-          createTime: new Date()
-        }
-      });
     } catch (err) {
-      console.error('写入审核日志失败', err);
+      console.error('驳回失败', err);
+      wx.showToast({ title: err.message || '驳回失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+      this.setData({ rejectSubmitting: false });
     }
   }
 });
+
+async function callReviewService(action, payload = {}) {
+  const res = await wx.cloud.callFunction({
+    name: REVIEW_SERVICE,
+    data: { action, payload }
+  });
+  const result = res.result || {};
+  if (!result.success) {
+    throw new Error(result.message || '云函数调用失败');
+  }
+  return result.data;
+}

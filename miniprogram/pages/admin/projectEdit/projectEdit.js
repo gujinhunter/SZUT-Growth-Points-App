@@ -1,9 +1,11 @@
-const db = wx.cloud.database();
+const AUTH_SERVICE = 'adminAuthService';
+const PROJECT_SERVICE = 'adminProjectService';
 
 Page({
   data: {
     projectId: '',
     isEdit: false,
+    loading: false,
     categoryOptions: ['其他'],
     formData: {
       name: '',
@@ -14,15 +16,20 @@ Page({
   },
 
   async onLoad(options) {
+    const ok = await this.ensureAdmin();
+    if (!ok) {
+      return;
+    }
+
     await this.loadCategories();
-    
+
     if (options.item) {
       const item = JSON.parse(decodeURIComponent(options.item));
       this.setData({
         projectId: item._id,
         isEdit: true,
         'formData.name': item.name || '',
-        'formData.scoreText': Array.isArray(item.score) 
+        'formData.scoreText': Array.isArray(item.score)
           ? item.score.join('/')
           : String(item.score || '0'),
         'formData.remark': item.remark || '',
@@ -34,56 +41,38 @@ Page({
     }
   },
 
+  async ensureAdmin() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: AUTH_SERVICE,
+        data: { action: 'ensureAdmin' }
+      });
+      const result = res.result || {};
+      if (!result.success) {
+        throw new Error(result.message || '无权限');
+      }
+      return true;
+    } catch (err) {
+      console.error('管理员校验失败', err);
+      wx.showModal({
+        title: '无权限',
+        content: err.message || '当前帐号没有管理员权限',
+        showCancel: false,
+        success: () => wx.navigateBack()
+      });
+      return false;
+    }
+  },
+
   async loadCategories() {
     try {
-      const MAX_LIMIT = 20;
-      // 先获取总数
-      const countRes = await db.collection('activities').count();
-      const total = countRes.total || 0;
-      
-      if (total === 0) {
-        this.setData({ categoryOptions: ['其他'] });
-        return;
-      }
-      
-      // 计算需要分几次查询
-      const batchTimes = Math.ceil(total / MAX_LIMIT);
-      
-      // 并行发起所有查询
-      const tasks = [];
-      for (let i = 0; i < batchTimes; i++) {
-        tasks.push(
-          db.collection('activities')
-            .skip(i * MAX_LIMIT)
-            .limit(MAX_LIMIT)
-            .field({ category: true })
-            .get()
-        );
-      }
-      
-      // 等待所有查询完成
-      const results = await Promise.all(tasks);
-      
-      // 合并所有结果并去重
-      const allData = results.reduce((acc, cur) => acc.concat(cur.data), []);
-      const exists = new Set();
-      allData.forEach(item => {
-        if (item && item.category) {
-          exists.add(item.category);
-        }
+      const data = await callProjectService('listCategories');
+      this.setData({
+        categoryOptions: Array.isArray(data) && data.length ? data : ['其他']
       });
-      
-      // 转换为数组并排序
-      const categories = Array.from(exists).sort();
-      if (categories.length === 0) {
-        categories.push('其他');
-      }
-      
-      this.setData({ categoryOptions: categories });
     } catch (err) {
       console.error('加载类别失败', err);
       wx.showToast({ title: '加载类别失败', icon: 'none' });
-      // 失败时使用默认值
       this.setData({ categoryOptions: ['其他'] });
     }
   },
@@ -111,63 +100,56 @@ Page({
 
   parseScore(text) {
     const trimmed = (text || '').trim();
-    if (!trimmed) return null; // 返回 null 表示无效
-    const parts = trimmed.split(/[,/]/).map(s => s.trim()).filter(s => s);
-    if (parts.length === 0) return null; // 返回 null 表示无效
+    if (!trimmed) return null;
+    const parts = trimmed.split(/[,/]/).map(s => s.trim()).filter(Boolean);
+    if (!parts.length) return null;
     if (parts.length === 1) {
       const num = Number(parts[0]);
-      return isNaN(num) || num <= 0 ? null : num; // 必须大于 0
+      return Number.isFinite(num) && num > 0 ? num : null;
     }
-    const nums = parts.map(s => {
-      const num = Number(s);
-      return isNaN(num) || num <= 0 ? null : num; // 无效值设为 null
-    }).filter(n => n !== null); // 过滤掉无效值
-    return nums.length === 0 ? null : nums; // 至少需要一个有效值
+    const nums = parts
+      .map(s => Number(s))
+      .filter(num => Number.isFinite(num) && num > 0);
+    return nums.length ? nums : null;
   },
-  
+
   async saveProject() {
+    if (this.data.loading) return;
+
     const { formData, categoryOptions, projectId, isEdit } = this.data;
-    
+
     if (!formData.name.trim()) {
       wx.showToast({ title: '请输入项目名称', icon: 'none' });
       return;
     }
-  
-    // 验证积分
+
     const score = this.parseScore(formData.scoreText);
     if (score === null || score === 0 || (Array.isArray(score) && score.length === 0)) {
       wx.showToast({ title: '请输入有效的积分值（必须大于0）', icon: 'none' });
       return;
     }
-  
+
     const category = categoryOptions[formData.categoryIndex] || '其他';
-  
+
+    this.setData({ loading: true });
     wx.showLoading({ title: '保存中...' });
-  
+
     try {
-      const data = {
+      await callProjectService('saveProject', {
+        projectId: isEdit ? projectId : '',
         name: formData.name.trim(),
         category,
         score,
         remark: formData.remark.trim()
-      };
-  
-      if (isEdit) {
-        await db.collection('activities').doc(projectId).update({ data });
-        wx.showToast({ title: '修改成功', icon: 'success' });
-      } else {
-        data.createTime = new Date();
-        await db.collection('activities').add({ data });
-        wx.showToast({ title: '添加成功', icon: 'success' });
-      }
-  
-      setTimeout(() => {
-        wx.navigateBack();
-      }, 1500);
+      });
+      wx.showToast({ title: isEdit ? '修改成功' : '添加成功', icon: 'success' });
+      setTimeout(() => wx.navigateBack(), 1000);
     } catch (err) {
+      console.error('保存项目失败', err);
+      wx.showToast({ title: err.message || '保存失败', icon: 'none' });
+    } finally {
       wx.hideLoading();
-      console.error('保存失败', err);
-      wx.showToast({ title: '保存失败', icon: 'none' });
+      this.setData({ loading: false });
     }
   },
 
@@ -175,3 +157,15 @@ Page({
     wx.navigateBack();
   }
 });
+
+async function callProjectService(action, payload = {}) {
+  const res = await wx.cloud.callFunction({
+    name: PROJECT_SERVICE,
+    data: { action, payload }
+  });
+  const result = res.result || {};
+  if (!result.success) {
+    throw new Error(result.message || '云函数调用失败');
+  }
+  return result.data;
+}

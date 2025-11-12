@@ -11,7 +11,7 @@
     <view class="metrics-row">
       <view class="metric-card primary">
         <view class="metric-label">今日待审</view>
-        <view class="metric-value">{{metrics.pendingToday}}</view>
+        <view class="metric-value">{{metrics.pendingTotal}}</view>
         <view class="metric-desc">待处理申请</view>
       </view>
       <view class="metric-card secondary">
@@ -33,7 +33,7 @@
       <view class="grid-item" data-url="/pages/admin/review/review" bindtap="goPage">
         <image class="grid-icon" src="/assets/admin/icon-review.png" mode="aspectFit"></image>
         <view class="grid-text">待审核申请</view>
-        <view class="badge" wx:if="{{metrics.pendingToday}}">{{metrics.pendingToday}}</view>
+        <view class="badge" wx:if="{{metrics.pendingTotal}}">{{metrics.pendingTotal}}</view>
       </view>
       <view class="grid-item" data-url="/pages/admin/projects/projects" bindtap="goPage">
         <image class="grid-icon" src="/assets/admin/icon-projects.png" mode="aspectFit"></image>

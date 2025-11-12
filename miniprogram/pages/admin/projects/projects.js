@@ -1,97 +1,111 @@
-const db = wx.cloud.database();
+const AUTH_SERVICE = 'adminAuthService';
+const PROJECT_SERVICE = 'adminProjectService';
 
 Page({
   data: {
-    projects: [],
+    loading: false,
+    isAdmin: false,
+    categories: [],
     groupedProjects: [],
-    categories: []
+    keyword: ''
   },
 
   async onLoad() {
-    await this.loadCategories();
-    this.loadProjects();
+    const ok = await this.ensureAdmin();
+    if (ok) {
+      await this.loadCategories();
+      this.loadProjects();
+    }
   },
 
   onShow() {
-    this.loadProjects();
+    if (this.data.isAdmin) {
+      this.loadProjects();
+    }
+  },
+
+  async ensureAdmin() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: AUTH_SERVICE,
+        data: { action: 'ensureAdmin' }
+      });
+      const result = res.result || {};
+      if (!result.success) {
+        throw new Error(result.message || '无管理员权限');
+      }
+      this.setData({ isAdmin: true });
+      return true;
+    } catch (err) {
+      console.error('管理员校验失败', err);
+      wx.showModal({
+        title: '无权限',
+        content: err.message || '当前帐号没有管理员权限',
+        showCancel: false,
+        success: () => wx.navigateBack()
+      });
+      return false;
+    }
   },
 
   async loadCategories() {
     try {
-      const res = await db.collection('activities')
-        .field({ category: true })
-        .get();
-      const exists = new Set();
-      res.data.forEach(item => {
-        if (item.category) exists.add(item.category);
-      });
-      const categories = Array.from(exists);
-      if (categories.length === 0) {
-        categories.push('其他');
-      }
-      this.setData({ categories });
+      const data = await callProjectService('listCategories');
+      this.setData({ categories: data });
     } catch (err) {
       console.error('加载类别失败', err);
+      wx.showToast({ title: '加载类别失败', icon: 'none' });
       this.setData({ categories: ['其他'] });
     }
   },
 
   async loadProjects() {
+    if (!this.data.isAdmin) return;
+    this.setData({ loading: true });
     wx.showLoading({ title: '加载中...' });
     try {
-      const MAX_LIMIT = 20;
-      let allProjects = [];
-      let hasMore = true;
-      let skip = 0;
-
-      while (hasMore) {
-        const res = await db.collection('activities')
-          .skip(skip)
-          .limit(MAX_LIMIT)
-          .orderBy('category', 'asc')
-          .orderBy('createTime', 'desc')
-          .get();
-
-      allProjects = allProjects.concat(res.data);
-        skip += res.data.length;
-        hasMore = res.data.length === MAX_LIMIT;
-      }
-
-      // 按类别分组
-      const grouped = {};
-      allProjects.forEach(project => {
-      project.displayScore = this.formatScore(project.score);
-        const category = project.category || '未分类';
-        if (!grouped[category]) {
-          grouped[category] = [];
-        }
-        grouped[category].push(project);
+      const { keyword } = this.data;
+      const data = await callProjectService('listProjects', {
+        page: 1,
+        pageSize: 200,
+        keyword: keyword.trim()
       });
 
-      // 转换为数组格式，按类别名排序
+      const grouped = {};
+      (data.list || []).forEach(item => {
+        const category = item.category || '未分类';
+        if (!grouped[category]) grouped[category] = [];
+        grouped[category].push({
+          ...item,
+          displayScore: this.formatScore(item.score)
+        });
+      });
+
       const groupedProjects = Object.keys(grouped)
         .sort()
-        .map(category => ({
-          category,
-          projects: grouped[category]
-        }));
+        .map(category => ({ category, projects: grouped[category] }));
 
-      this.setData({ 
-        projects: allProjects,
-        groupedProjects: groupedProjects
-      });
-      wx.hideLoading();
+      this.setData({ groupedProjects });
     } catch (err) {
-      wx.hideLoading();
       console.error('加载项目失败', err);
-      wx.showToast({ title: '加载失败', icon: 'none' });
+      wx.showToast({ title: err.message || '加载失败', icon: 'none' });
+      this.setData({ groupedProjects: [] });
+    } finally {
+      this.setData({ loading: false });
+      wx.hideLoading();
     }
   },
 
+  onKeywordInput(e) {
+    this.setData({ keyword: e.detail.value || '' });
+  },
+
+  onSearch() {
+    this.loadProjects();
+  },
+
   addProject() {
-    wx.navigateTo({
-      url: '/pages/admin/projectEdit/projectEdit'
-    });
+    wx.navigateTo({ url: '/pages/admin/projectEdit/projectEdit' });
   },
 
   editProject(e) {
@@ -104,18 +118,22 @@ Page({
 
   deleteProject(e) {
     const id = e.currentTarget.dataset.id;
+    if (!id) return;
     wx.showModal({
       title: '确认删除',
       content: '是否确认删除该项目？',
-      success: res => {
-        if (res.confirm) {
-          db.collection('activities').doc(id).remove().then(() => {
-            wx.showToast({ title: '已删除' });
-            this.loadProjects();
-          }).catch(err => {
-            wx.showToast({ title: '删除失败', icon: 'none' });
-            console.error(err);
-          });
+      success: async res => {
+        if (!res.confirm) return;
+        wx.showLoading({ title: '删除中...' });
+        try {
+          await callProjectService('deleteProject', { projectId: id });
+          wx.showToast({ title: '已删除' });
+          this.loadProjects();
+        } catch (err) {
+          console.error('删除项目失败', err);
+          wx.showToast({ title: err.message || '删除失败', icon: 'none' });
+        } finally {
+          wx.hideLoading();
         }
       }
     });
@@ -124,6 +142,19 @@ Page({
   formatScore(score) {
     if (Array.isArray(score)) return score.join('/');
     if (typeof score === 'string') return score.replace(/,/g, '/');
+    if (typeof score === 'number') return score.toString();
     return score ?? '';
   }
 });
+
+async function callProjectService(action, payload = {}) {
+  const res = await wx.cloud.callFunction({
+    name: PROJECT_SERVICE,
+    data: { action, payload }
+  });
+  const result = res.result || {};
+  if (!result.success) {
+    throw new Error(result.message || '云函数调用失败');
+  }
+  return result.data;
+}
