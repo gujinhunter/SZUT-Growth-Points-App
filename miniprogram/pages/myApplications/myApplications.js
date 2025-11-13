@@ -37,12 +37,6 @@ Page({
     }
   },
 
-  getStatusClass(status) {
-    if (status === '已通过') return 'approved';
-    if (status === '已驳回') return 'rejected';
-    return 'pending';
-  },
-
   formatDateTime(dateInput) {
     if (!dateInput) return '';
     const date = new Date(dateInput);

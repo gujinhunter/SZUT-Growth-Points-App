@@ -26,8 +26,3 @@ App({
                    // onLaunch() 内赋值 初始化内容
                    // 其他页面调用 不会因为未定义而报错
 });
-
-
-
-// 1. 这是入口文件，有了这里的cloud.init()，
-// 整个小程序后续的 wx.cloud.callFunction()、wx.cloud.database() 都会自动使用这个环境。

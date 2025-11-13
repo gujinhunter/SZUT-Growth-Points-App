@@ -12,8 +12,8 @@
     <view class="title">欢迎使用助学信息平台</view>
 
     <!-- 微信授权登录按钮 -->
-    <!-- 点击后会触发 handleLogin() 函数，用于检查 openid 并判断是否需要绑定 -->
-    <button wx:if="{{!needBind}}" type="primary" class="login-btn" bindtap="handleLogin">
+    <!-- 点击后会触发 checkProfile() 函数，用于检查 openid 并判断是否需要绑定 -->
+    <button wx:if="{{!needBind}}" type="primary" class="login-btn" bindtap="checkProfile">
   微信一键登录并绑定
     </button>
 

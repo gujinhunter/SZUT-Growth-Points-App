@@ -16,6 +16,8 @@ exports.main = async (event) => {
     switch (action) {
       case 'getUploadToken':
         return { success: true, data: await getUploadToken(OPENID, payload) };
+      case 'getTempFileURL':
+        return { success: true, data: await getTempFileURL(OPENID, payload) };
       default:
         throw new Error(`未知操作: ${action}`);
     }
@@ -48,6 +50,23 @@ async function getUploadToken(openid, { fileExt = '.jpg' }) {
     cloudPath,
     maxSize: 5 * 1024 * 1024
   };
+}
+
+async function getTempFileURL(openid, { fileIDs = [] }) {
+  if (!Array.isArray(fileIDs) || fileIDs.length === 0) {
+    throw new Error('fileIDs 不能为空');
+  }
+
+  try {
+    const res = await cloud.getTempFileURL({
+      fileList: fileIDs
+    });
+
+    return res.fileList || [];
+  } catch (err) {
+    console.error('getTempFileURL error', err);
+    throw new Error(err.message || '获取临时链接失败');
+  }
 }
 
 function sanitizeExt(ext) {

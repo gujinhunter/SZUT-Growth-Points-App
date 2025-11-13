@@ -1,6 +1,6 @@
 const AUTH_SERVICE = 'adminAuthService';
 const REVIEW_SERVICE = 'adminReviewService';
-const FILE_SERVICE = 'getFileTempUrl';
+const FILE_SERVICE = 'studentFileService';
 
 Page({
   data: {
@@ -156,13 +156,20 @@ Page({
     wx.showLoading({ title: '打开附件...' });
     wx.cloud.callFunction({
       name: FILE_SERVICE,
-      data: { fileIDs: [fileID] }
+      data: { 
+        action: 'getTempFileURL',
+        payload: { fileIDs: [fileID] }
+      }
     }).then(async res => {
-      const fileList = res.result?.data;
+      const result = res.result || {};
+      if (!result.success) {
+        throw new Error(result.message || '获取临时链接失败');
+      }
+      const fileList = result.data || [];
       const info = Array.isArray(fileList) ? fileList[0] : null;
       const tempUrl = info?.tempFileURL;
       if (!tempUrl) {
-        throw new Error(info?.errMsg || 'empty temp url');
+        throw new Error(info?.errMsg || '获取临时链接失败');
       }
 
       const lower = (fileID || '').toLowerCase();
