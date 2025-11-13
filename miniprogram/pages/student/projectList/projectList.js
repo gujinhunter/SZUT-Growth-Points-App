@@ -45,7 +45,7 @@ Page({
   goToApply(e) {
     const item = e.currentTarget.dataset.item;
     wx.navigateTo({
-      url: `/pages/apply/apply?projectId=${item._id}&projectName=${item.name}`
+      url: `/pages/student/apply/apply?projectId=${item._id}&projectName=${item.name}`
     });
   }
 });

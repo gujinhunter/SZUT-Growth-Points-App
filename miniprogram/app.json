@@ -1,10 +1,10 @@
 {
   "pages": [
-    "pages/login/login",
-    "pages/projectList/projectList",
-    "pages/apply/apply",
-    "pages/myApplications/myApplications",
-    "pages/myPoints/myPoints",
+    "pages/student/login/login",
+    "pages/student/projectList/projectList",
+    "pages/student/apply/apply",
+    "pages/student/myApplications/myApplications",
+    "pages/student/myPoints/myPoints",
     "pages/admin/home/home",
     "pages/admin/review/review",
     "pages/admin/projects/projects",
@@ -26,19 +26,19 @@
     "borderStyle": "black",
     "list": [
       {
-        "pagePath": "pages/projectList/projectList",
+        "pagePath": "pages/student/projectList/projectList",
         "text": "积分项目",
         "iconPath": "assets/icons/project_active.png",
         "selectedIconPath": "assets/icons/project_active.png"
       },
       {
-        "pagePath": "pages/myApplications/myApplications",
+        "pagePath": "pages/student/myApplications/myApplications",
         "text": "我的申请",
         "iconPath": "assets/icons/apply_active.png",
         "selectedIconPath": "assets/icons/apply_active.png"
       },
       {
-        "pagePath": "pages/myPoints/myPoints",
+        "pagePath": "pages/student/myPoints/myPoints",
         "text": "我的积分",
         "iconPath": "assets/icons/points_active.png",
         "selectedIconPath": "assets/icons/points_active.png"

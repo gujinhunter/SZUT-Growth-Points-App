@@ -29,7 +29,7 @@ Page({
       } else if (profile.role === 'admin') {
         wx.reLaunch({ url: '/pages/admin/home/home' });
       } else {
-        wx.reLaunch({ url: '/pages/projectList/projectList' });
+        wx.reLaunch({ url: '/pages/student/projectList/projectList' });
       }
     } catch (err) {
       console.error('检查用户信息失败', err);
@@ -58,7 +58,7 @@ Page({
       }
       wx.showToast({ title: '绑定成功', icon: 'success' });
       setTimeout(() => {
-        wx.reLaunch({ url: '/pages/projectList/projectList' });
+        wx.reLaunch({ url: '/pages/student/projectList/projectList' });
       }, 800);
     } catch (err) {
       console.error('绑定失败', err);
