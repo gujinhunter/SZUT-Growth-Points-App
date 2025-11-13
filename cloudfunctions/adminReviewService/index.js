@@ -249,6 +249,7 @@ async function listApplications({ status = '待审核', page = 1, pageSize = 20,
 
     return {
       _id: item._id,
+      name: studentName,  // 添加 name 字段，兼容前端使用
       studentName,
       studentId,
       projectName: item.projectName || '—',

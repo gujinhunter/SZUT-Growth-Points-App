@@ -19,9 +19,27 @@ Page({
       const list = res?.list || [];
       const groups = res?.groups || [];
 
+      // 前端格式化时间，确保使用本地时区
+      const formattedList = list.map(item => ({
+        ...item,
+        createTimeFormatted: item.createTime ? this.formatDateTime(item.createTime) : '',
+        reviewTimeFormatted: item.reviewTime ? this.formatDateTime(item.reviewTime) : '',
+        latestTimeFormatted: item.latestTime ? this.formatDateTime(item.latestTime) : ''
+      }));
+
+      const formattedGroups = groups.map(group => ({
+        ...group,
+        list: group.list.map(item => ({
+          ...item,
+          createTimeFormatted: item.createTime ? this.formatDateTime(item.createTime) : '',
+          reviewTimeFormatted: item.reviewTime ? this.formatDateTime(item.reviewTime) : '',
+          latestTimeFormatted: item.latestTime ? this.formatDateTime(item.latestTime) : ''
+        }))
+      }));
+
       this.setData({
-        applications: list,
-        applicationGroups: groups,
+        applications: formattedList,
+        applicationGroups: formattedGroups,
         loading: false
       });
     } catch (err) {

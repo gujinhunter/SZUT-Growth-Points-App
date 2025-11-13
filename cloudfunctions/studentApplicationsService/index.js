@@ -144,6 +144,11 @@ async function listApplications(openid, { page = 1, pageSize = 50 }) {
 
     const latestTime = normalizeDate(item.reviewTime) || normalizeDate(item.createTime);
 
+    // 返回时间戳，让前端根据本地时区格式化（避免时区问题）
+    const createTimeTimestamp = normalizeDate(item.createTime)?.getTime() || null;
+    const reviewTimeTimestamp = normalizeDate(item.reviewTime)?.getTime() || null;
+    const latestTimeTimestamp = latestTime?.getTime() || null;
+
     return {
       projectName: item.projectName || '—',
       projectCategory: item.projectCategory || '',
@@ -154,11 +159,10 @@ async function listApplications(openid, { page = 1, pageSize = 50 }) {
       rejectRemark: item.rejectRemark || '',
       fileIDs,
       fileNames,
-      createTime: normalizeDate(item.createTime)?.getTime() || null,
-      reviewTime: normalizeDate(item.reviewTime)?.getTime() || null,
-      latestTime: latestTime?.getTime() || null,
-      latestTimeFormatted: formatDateTime(latestTime),
-      createTimeFormatted: formatDateTime(normalizeDate(item.createTime))
+      createTime: createTimeTimestamp,
+      reviewTime: reviewTimeTimestamp,
+      latestTime: latestTimeTimestamp
+      // 注意：createTimeFormatted 由前端根据时间戳格式化，确保使用本地时区
     };
   });
 
