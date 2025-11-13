@@ -39,11 +39,22 @@ exports.main = async (event) => {
 };
 
 async function listApplications(openid, { page = 1, pageSize = 50 }) {
+  // 严格验证 openid，确保不为空且是有效字符串
+  if (!openid || typeof openid !== 'string' || openid.trim() === '') {
+    console.error('listApplications: 无效的 openid', openid);
+    throw new Error('用户身份验证失败');
+  }
+
   page = Math.max(Number(page) || 1, 1);
   pageSize = Math.min(Math.max(Number(pageSize) || 20, 1), 100);
 
   const applicationsCollection = db.collection('applications');
-  const where = { studentOpenId: openid };
+  // 使用严格匹配，确保 studentOpenId 字段存在且等于当前用户的 openid
+  const where = { 
+    studentOpenId: openid.trim()
+  };
+
+  console.log('listApplications: 查询条件', { openid: openid.trim(), where });
 
   const countRes = await applicationsCollection.where(where).count();
   const total = countRes.total || 0;
@@ -77,7 +88,8 @@ async function listApplications(openid, { page = 1, pageSize = 50 }) {
           fileNames: true,
           createTime: true,
           reviewTime: true,
-          rejectRemark: true
+          rejectRemark: true,
+          studentOpenId: true  // 包含此字段用于二次验证
         })
         .get()
     );
@@ -85,7 +97,25 @@ async function listApplications(openid, { page = 1, pageSize = 50 }) {
 
   const results = await Promise.all(tasks);
   const all = results.flatMap(res => res.data || []);
-  all.sort((a, b) => {
+  
+  // 二次验证：确保所有记录都属于当前用户（防止数据泄露）
+  const validOpenId = openid.trim();
+  const filtered = all.filter(item => {
+    const itemOpenId = item.studentOpenId || '';
+    const isValid = itemOpenId === validOpenId;
+    if (!isValid) {
+      console.warn('listApplications: 发现不属于当前用户的记录', {
+        itemId: item._id,
+        itemStudentOpenId: itemOpenId,
+        currentOpenId: validOpenId
+      });
+    }
+    return isValid;
+  });
+  
+  console.log(`listApplications: 查询到 ${all.length} 条记录，过滤后 ${filtered.length} 条属于当前用户`);
+  
+  filtered.sort((a, b) => {
     const timeA = normalizeDate(a.createTime)?.getTime() || 0;
     const timeB = normalizeDate(b.createTime)?.getTime() || 0;
     return timeB - timeA;
@@ -102,7 +132,7 @@ async function listApplications(openid, { page = 1, pageSize = 50 }) {
     '已驳回': 'rejected'
   };
 
-  const formatted = all.map(item => {
+  const formatted = filtered.map(item => {
     const fileIDs = Array.isArray(item.fileIDs)
       ? item.fileIDs
       : item.fileID
@@ -149,10 +179,13 @@ async function listApplications(openid, { page = 1, pageSize = 50 }) {
     }))
     .filter(group => group.list.length > 0);
 
+  // 使用过滤后的实际数量作为 total
+  const actualTotal = filtered.length;
+  
   return {
     page,
     pageSize,
-    total,
+    total: actualTotal,
     list: pageList,
     groups
   };
@@ -198,6 +231,17 @@ async function createApplication(openid, payload) {
     .get();
   const user = userRes.data?.[0] || {};
 
+  // 确保申请人信息完整，如果用户信息不完整则抛出错误
+  const applicantName = user.name || '';
+  const applicantStudentId = user.studentId || '';
+  
+  if (!applicantName) {
+    throw new Error('无法获取申请人姓名，请先完成用户绑定');
+  }
+  if (!applicantStudentId) {
+    throw new Error('无法获取学号，请先完成用户绑定');
+  }
+
   const formattedFileNames = Array.isArray(fileNames) && fileNames.length
     ? fileNames.slice(0, 3)
     : safeFiles.map((_, idx) => `附件${idx + 1}`);
@@ -207,8 +251,8 @@ async function createApplication(openid, payload) {
       projectId,
       projectName: projectRes.data.name || projectName,
       projectCategory: projectRes.data.category || '',
-      name: user.name || '',
-      studentId: user.studentId || '',
+      name: applicantName,
+      studentId: applicantStudentId,
       phone,
       reason,
       fileIDs: safeFiles,
@@ -258,21 +302,26 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
     throw new Error('请填写完整信息');
   }
 
+  // 验证学号格式（可选，根据实际需求调整）
+  if (!/^\d+$/.test(studentId.trim())) {
+    throw new Error('学号格式不正确，请输入数字');
+  }
+
   const usersCollection = db.collection('users');
   const existing = await usersCollection.where({ _openid: openid }).get();
   if (existing.data && existing.data.length) {
     await usersCollection.doc(existing.data[0]._id).update({
       data: {
-        name,
-        studentId
+        name: name.trim(),
+        studentId: studentId.trim()
       }
     });
   } else {
     await usersCollection.add({
       data: {
         _openid: openid,
-        name,
-        studentId,
+        name: name.trim(),
+        studentId: studentId.trim(),
         role: 'student',
         totalPoints: 0,
         createdAt: new Date()

@@ -20,14 +20,16 @@ Page({
         throw new Error(result.message || '获取用户信息失败');
       }
       const profile = result.data || {};
-      if (profile.role) {
-        wx.reLaunch({
-          url: profile.role === 'admin'
-            ? '/pages/admin/home/home'
-            : '/pages/projectList/projectList'
-        });
-      } else {
+      
+      // 如果用户不存在（name 和 studentId 都为空）或没有 role，显示绑定界面
+      const needsBind = !profile.role || (!profile.name && !profile.studentId);
+      
+      if (needsBind) {
         this.setData({ needBind: true });
+      } else if (profile.role === 'admin') {
+        wx.reLaunch({ url: '/pages/admin/home/home' });
+      } else {
+        wx.reLaunch({ url: '/pages/projectList/projectList' });
       }
     } catch (err) {
       console.error('检查用户信息失败', err);

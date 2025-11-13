@@ -36,13 +36,27 @@ async function getProfile(openid) {
     .limit(1)
     .get();
   const user = res.data?.[0] || null;
+  
+  // 如果用户不存在，返回 role 为空字符串，前端据此判断需要绑定
+  if (!user) {
+    return {
+      openid,
+      name: '',
+      studentId: '',
+      phone: '',
+      academy: '',
+      className: '',
+      role: ''
+    };
+  }
+  
   return {
     openid,
-    name: user?.name || '',
-    studentId: user?.studentId || '',
-    phone: user?.phone || '',
-    academy: user?.academy || '',
-    className: user?.className || '',
-    role: user?.role || 'student'
+    name: user.name || '',
+    studentId: user.studentId || '',
+    phone: user.phone || '',
+    academy: user.academy || '',
+    className: user.className || '',
+    role: user.role || ''
   };
 }
