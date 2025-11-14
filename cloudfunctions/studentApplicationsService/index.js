@@ -312,20 +312,37 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
   }
 
   const usersCollection = db.collection('users');
+  const trimmedName = name.trim();
+  const trimmedStudentId = studentId.trim();
+
+  // 检查是否已有其他账号使用同一姓名+学号
+  const conflict = await usersCollection
+    .where({
+      name: trimmedName,
+      studentId: trimmedStudentId,
+      _openid: _.neq(openid)
+    })
+    .field({ _id: true })
+    .limit(1)
+    .get();
+  if (conflict.data && conflict.data.length) {
+    throw new Error('该姓名和学号已绑定其他微信账号，如需更换请联系管理员解绑');
+  }
+
   const existing = await usersCollection.where({ _openid: openid }).get();
   if (existing.data && existing.data.length) {
     await usersCollection.doc(existing.data[0]._id).update({
       data: {
-        name: name.trim(),
-        studentId: studentId.trim()
+        name: trimmedName,
+        studentId: trimmedStudentId
       }
     });
   } else {
     await usersCollection.add({
       data: {
         _openid: openid,
-        name: name.trim(),
-        studentId: studentId.trim(),
+        name: trimmedName,
+        studentId: trimmedStudentId,
         role: 'student',
         totalPoints: 0,
         createdAt: new Date()

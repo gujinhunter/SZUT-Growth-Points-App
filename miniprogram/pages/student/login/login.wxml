@@ -34,6 +34,13 @@
         <!-- 双向绑定输入值到 data.studentId -->
         <input value="{{studentId}}" bindinput="onIdInput" placeholder="请输入学号" />
       </view>
+
+      <view class="bind-tip">
+        同一姓名与学号只能绑定一个微信账号，如需更换请联系管理员解绑。
+      </view>
+      <view wx:if="{{errorMessage}}" class="bind-error">
+        {{errorMessage}}
+      </view>
       <!-- 绑定按钮 -->
       <!-- 点击后调用 bindUser()，将填写的姓名与学号保存到数据库 -->
       <button class="bind-btn" bindtap="bindUser">确认绑定</button>

@@ -5,7 +5,8 @@ Page({
   data: {
     needBind: false,
     name: '',
-    studentId: ''
+    studentId: '',
+    errorMessage: ''
   },
 
   async onLoad() {
@@ -37,8 +38,12 @@ Page({
     }
   },
 
-  onNameInput(e) { this.setData({ name: e.detail.value }); },
-  onIdInput(e) { this.setData({ studentId: e.detail.value }); },
+  onNameInput(e) {
+    this.setData({ name: e.detail.value, errorMessage: '' });
+  },
+  onIdInput(e) {
+    this.setData({ studentId: e.detail.value, errorMessage: '' });
+  },
 
   async bindUser() {
     const { name, studentId } = this.data;
@@ -46,6 +51,7 @@ Page({
       wx.showToast({ title: '请填写完整', icon: 'none' });
       return;
     }
+    this.setData({ errorMessage: '' });
     try {
       wx.showLoading({ title: '绑定中...', mask: true });
       const res = await wx.cloud.callFunction({
@@ -56,13 +62,16 @@ Page({
       if (!result.success) {
         throw new Error(result.message || '绑定失败');
       }
+      this.setData({ errorMessage: '' });
       wx.showToast({ title: '绑定成功', icon: 'success' });
       setTimeout(() => {
         wx.reLaunch({ url: '/pages/student/projectList/projectList' });
       }, 800);
     } catch (err) {
       console.error('绑定失败', err);
-      wx.showToast({ title: err.message || '绑定失败', icon: 'none' });
+      const message = err?.message || '绑定失败';
+      this.setData({ errorMessage: message });
+      wx.showToast({ title: message, icon: 'none' });
     } finally {
       wx.hideLoading();
     }
