@@ -5,6 +5,7 @@
     "pages/student/apply/apply",
     "pages/student/myApplications/myApplications",
     "pages/student/myPoints/myPoints",
+    "pages/student/profile/profile",
     "pages/admin/home/home",
     "pages/admin/users/users",
     "pages/admin/review/review",
@@ -43,6 +44,12 @@
         "text": "我的积分",
         "iconPath": "assets/icons/points_active.png",
         "selectedIconPath": "assets/icons/points_active.png"
+      },
+      {
+        "pagePath": "pages/student/profile/profile",
+        "text": "我的信息",
+        "iconPath": "assets/icons/profile_active.png",
+        "selectedIconPath": "assets/icons/profile_active.png"
       }
     ]
   },

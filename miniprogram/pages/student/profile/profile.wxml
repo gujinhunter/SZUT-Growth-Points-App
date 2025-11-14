@@ -1,0 +1,35 @@
+<view class="profile-page">
+  <view class="hero-card">
+    <view class="hero-left">
+      <view class="hero-title">{{profile.name || '未绑定'}}</view>
+      <view class="hero-sub">学号：{{profile.studentId || '—'}}</view>
+    </view>
+    <view class="hero-tag {{profile.role === 'admin' ? 'tag-admin' : 'tag-student'}}">
+      {{roleText}}
+    </view>
+  </view>
+
+  <view class="info-card">
+    <view class="card-title">基础信息</view>
+    <block wx:for="{{infoList}}" wx:key="label">
+      <view class="info-row">
+        <text class="info-label">{{item.label}}</text>
+        <text class="info-value">{{item.value || '—'}}</text>
+      </view>
+    </block>
+  </view>
+
+  <view class="info-card">
+    <view class="card-title">账户说明</view>
+    <view class="hint-text">
+      姓名 + 学号仅允许绑定一个微信账号。如需更换或校正信息，请联系管理员执行解绑后再重新绑定。
+    </view>
+    <button class="refresh-btn" size="mini" bindtap="loadProfile">刷新信息</button>
+  </view>
+
+  <view class="bind-tip" wx:if="{{needBind}}">
+    <view>未检测到完整的个人资料，请先完成绑定。</view>
+    <button class="bind-btn" size="mini" bindtap="goBind">前往绑定</button>
+  </view>
+</view>
+
