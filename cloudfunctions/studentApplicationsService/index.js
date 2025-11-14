@@ -329,30 +329,59 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
     throw new Error('该姓名和学号已绑定其他微信账号，如需更换请联系管理员解绑');
   }
 
-  const existing = await usersCollection.where({ _openid: openid }).get();
+  const existing = await usersCollection.where({ _openid: openid }).limit(1).get();
+  const now = new Date();
   if (existing.data && existing.data.length) {
     await usersCollection.doc(existing.data[0]._id).update({
       data: {
         name: trimmedName,
         studentId: trimmedStudentId,
-        updatedAt: new Date()
+        updatedAt: now
       }
     });
   } else {
+    const archiveSnapshot = await fetchArchivedSnapshot(trimmedName, trimmedStudentId);
+    const restoredPoints = Number(archiveSnapshot?.totalPoints);
+    const newUserData = {
+      _openid: openid,
+      name: trimmedName,
+      studentId: trimmedStudentId,
+      role: 'student',
+      totalPoints: Number.isFinite(restoredPoints) ? restoredPoints : 0,
+      phone: archiveSnapshot?.phone || '',
+      academy: archiveSnapshot?.academy || '',
+      className: archiveSnapshot?.className || '',
+      createdAt: now,
+      updatedAt: now
+    };
     await usersCollection.add({
-      data: {
-        _openid: openid,
-        name: trimmedName,
-        studentId: trimmedStudentId,
-        role: 'student',
-        totalPoints: 0,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
+      data: newUserData
     });
   }
 
   return { bound: true };
+}
+
+async function fetchArchivedSnapshot(name, studentId) {
+  try {
+    const res = await db.collection('userArchives')
+      .where({
+        'snapshot.name': name,
+        'snapshot.studentId': studentId
+      })
+      .orderBy('archivedAt', 'desc')
+      .limit(1)
+      .field({ snapshot: true })
+      .get();
+    return res.data?.[0]?.snapshot || null;
+  } catch (err) {
+    if (err?.errCode === -502005 || err?.code === 'DATABASE_COLLECTION_NOT_EXIST') {
+      console.warn('userArchives collection missing, skip restore');
+      return null;
+    }
+    console.error('fetchArchivedSnapshot error', err);
+    return null;
+  }
 }
 
 function normalizeDate(input) {

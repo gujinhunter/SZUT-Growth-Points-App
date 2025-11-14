@@ -138,6 +138,9 @@ async function removeUserRecord(admin, payload = {}, options = {}) {
   }
   const user = { ...docRes.data, _id: userId };
 
+  const targetOpenId = user._openid || '';
+
+  let cleanupStats = null;
   if (options.archive) {
     await db.collection(ARCHIVE_COLLECTION).add({
       data: {
@@ -157,10 +160,25 @@ async function removeUserRecord(admin, payload = {}, options = {}) {
         archivedAt: new Date()
       }
     });
+  } else if (targetOpenId) {
+    if (user.name && user.studentId) {
+      await deleteArchiveSnapshot(user.name, user.studentId);
+    }
+    const removedApplications = await cleanupUserAssociations(targetOpenId, admin);
+    cleanupStats = { removedApplications };
   }
 
   await db.collection(USERS_COLLECTION).doc(userId).remove();
-  await recordOperation(admin, options.action || 'UNBIND_USER', user, {});
+  await recordOperation(
+    admin,
+    options.action || 'UNBIND_USER',
+    user,
+    {
+      cleanupMode: options.archive ? 'archive' : 'delete',
+      removedOpenId: targetOpenId,
+      cleanupStats
+    }
+  );
   return { userId };
 }
 
@@ -244,5 +262,54 @@ function normalizeDate(input) {
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
   return null;
+}
+
+async function cleanupUserAssociations(targetOpenId, admin) {
+  const applicationsCollection = db.collection('applications');
+  const where = { studentOpenId: targetOpenId };
+  const batchSize = 100;
+  let processed = 0;
+  const updateData = {
+    studentOpenId: _.remove(),
+    name: _.remove(),
+    studentId: _.remove(),
+    phone: _.remove(),
+    ownerStatus: 'deleted',
+    deletedAt: new Date(),
+    deletedBy: admin.openid,
+    deletedByName: admin.name || '管理员'
+  };
+
+  while (true) {
+    const res = await applicationsCollection.where(where).limit(batchSize).get();
+    const list = res.data || [];
+    if (!list.length) break;
+    await Promise.all(
+      list.map(item => applicationsCollection.doc(item._id).update({ data: updateData }))
+    );
+    processed += list.length;
+    if (list.length < batchSize) {
+      break;
+    }
+  }
+
+  return processed;
+}
+
+async function deleteArchiveSnapshot(name, studentId) {
+  try {
+    await db.collection(ARCHIVE_COLLECTION)
+      .where({
+        'snapshot.name': name,
+        'snapshot.studentId': studentId
+      })
+      .remove();
+  } catch (err) {
+    if (err?.errCode === -502005 || err?.code === 'DATABASE_COLLECTION_NOT_EXIST') {
+      console.warn('userArchives collection missing, skip snapshot removal');
+      return;
+    }
+    console.error('deleteArchiveSnapshot error', err);
+  }
 }
 
