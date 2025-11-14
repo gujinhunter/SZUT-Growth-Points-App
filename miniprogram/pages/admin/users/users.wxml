@@ -1,0 +1,108 @@
+<view class="user-page">
+  <view class="search-card">
+    <view class="search-row">
+      <input
+        class="search-input"
+        type="text"
+        placeholder="搜索姓名 / 学号 / 手机号"
+        value="{{keyword}}"
+        confirm-type="search"
+        bindinput="onKeywordChange"
+        bindconfirm="onSearch"
+      />
+      <button class="search-btn" size="mini" type="primary" bindtap="onSearch">查询</button>
+    </view>
+    <view class="filter-row">
+      <picker
+        mode="selector"
+        range="{{rolePickerList}}"
+        range-key="label"
+        value="{{rolePickerIndex}}"
+        bindchange="onRoleChange"
+      >
+        <view class="picker-display">
+          角色：{{rolePickerList[rolePickerIndex].label}}
+        </view>
+      </picker>
+      <view class="filter-actions">
+        <button size="mini" class="plain-btn" bindtap="onResetFilters">重置</button>
+        <button size="mini" class="plain-btn" bindtap="refreshList">刷新</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="hint-card">
+    <view class="hint-title">解绑提示</view>
+    <view class="hint-text">
+      每个姓名+学号仅能绑定一个微信账号。如需转移，可先解除绑定并通知学生重新登录绑定。
+    </view>
+  </view>
+
+  <view class="user-list">
+    <block wx:for="{{list}}" wx:key="_id">
+      <view class="user-card">
+        <view class="card-header">
+          <view class="card-left">
+            <view class="user-name">{{item.name || '未填写'}}</view>
+            <view class="user-id">学号：{{item.studentId || '—'}}</view>
+          </view>
+          <view class="role-tag {{item.role === 'admin' ? 'role-admin' : 'role-student'}}">
+            {{item.role === 'admin' ? '管理员' : '学生'}}
+          </view>
+        </view>
+        <view class="info-line">
+          <text class="info-label">绑定微信</text>
+          <text class="info-value">{{item.openidDisplay}}</text>
+        </view>
+        <view class="info-line">
+          <text class="info-label">联系电话</text>
+          <text class="info-value">{{item.phone || '—'}}</text>
+        </view>
+        <view class="info-line">
+          <text class="info-label">学院班级</text>
+          <text class="info-value">{{item.academy || '—'}} {{item.className || ''}}</text>
+        </view>
+        <view class="info-line">
+          <text class="info-label">当前积分</text>
+          <text class="info-value">{{item.totalPoints || 0}}</text>
+        </view>
+        <view class="info-line">
+          <text class="info-label">创建时间</text>
+          <text class="info-value">{{item.createdAtText}}</text>
+        </view>
+        <view class="card-actions">
+          <button
+            class="action-btn"
+            size="mini"
+            bindtap="toggleRole"
+            data-id="{{item._id}}"
+            data-role="{{item.role}}"
+          >
+            {{item.role === 'admin' ? '降为学生' : '设为管理员'}}
+          </button>
+          <button
+            class="action-btn warn"
+            size="mini"
+            bindtap="openActionSheet"
+            data-index="{{index}}"
+          >
+            更多操作
+          </button>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty" wx:if="{{!loading && !list.length}}">
+      暂无用户记录
+    </view>
+
+    <view class="load-more" wx:if="{{loading}}">
+      加载中...
+    </view>
+
+    <view class="load-more" wx:if="{{!loading && hasMore}}">
+      <button size="mini" bindtap="loadMore">加载更多</button>
+    </view>
+  </view>
+</view>
+

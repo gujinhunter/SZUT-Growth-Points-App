@@ -47,6 +47,10 @@
         <image class="grid-icon" src="/assets/admin/icon-history.png" mode="aspectFit"></image>
         <view class="grid-text">审核历史</view>
       </view>
+      <view class="grid-item" data-url="/pages/admin/users/users" bindtap="goPage">
+        <image class="grid-icon" src="/assets/admin/icon-users.png" mode="aspectFit"></image>
+        <view class="grid-text">账户管理</view>
+      </view>
     </view>
   </view>
 

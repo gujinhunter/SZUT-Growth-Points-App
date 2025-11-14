@@ -6,6 +6,7 @@
     "pages/student/myApplications/myApplications",
     "pages/student/myPoints/myPoints",
     "pages/admin/home/home",
+    "pages/admin/users/users",
     "pages/admin/review/review",
     "pages/admin/projects/projects",
     "pages/admin/statistics/statistics",

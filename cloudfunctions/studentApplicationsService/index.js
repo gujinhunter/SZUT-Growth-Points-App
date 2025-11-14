@@ -334,7 +334,8 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
     await usersCollection.doc(existing.data[0]._id).update({
       data: {
         name: trimmedName,
-        studentId: trimmedStudentId
+        studentId: trimmedStudentId,
+        updatedAt: new Date()
       }
     });
   } else {
@@ -345,7 +346,8 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
         studentId: trimmedStudentId,
         role: 'student',
         totalPoints: 0,
-        createdAt: new Date()
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     });
   }
