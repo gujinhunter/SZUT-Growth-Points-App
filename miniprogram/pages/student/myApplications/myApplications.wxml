@@ -39,11 +39,11 @@
         <view wx:if="{{item.rejectHistoryFormatted && item.rejectHistoryFormatted.length}}" class="row history-row">
           <text class="label">驳回历史：</text>
           <view class="history-list">
-            <block wx:for="{{item.rejectHistoryFormatted}}" wx:key="index">
+            <block wx:for="{{item.rejectHistoryFormatted}}" wx:key="idx" wx:for-item="history">
               <view class="history-item">
-                <text class="history-time">{{historyItem.timeFormatted || '—'}}</text>
+                <text class="history-time">{{history.timeFormatted || '—'}}</text>
                 <text class="history-dot">·</text>
-                <text class="history-remark">{{historyItem.remark || '无驳回说明'}}</text>
+                <text class="history-remark">{{history.remark || '无驳回说明'}}</text>
               </view>
             </block>
           </view>
