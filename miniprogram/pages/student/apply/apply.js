@@ -141,11 +141,11 @@ Page({
 
   async submitForm(e) {
     if (this.data.submitting) return;
-    const { phone, reason } = e.detail.value;
+    const { reason } = e.detail.value;
     const { projectId, projectName, fileIDs, fileNames, selectedScore, profile } = this.data;
 
-    if (!phone || !reason) {
-      wx.showToast({ title: '请填写完整信息', icon: 'none' });
+    if (!reason) {
+      wx.showToast({ title: '请填写申请理由', icon: 'none' });
       return;
     }
     if (!fileIDs.length) {
@@ -163,7 +163,6 @@ Page({
           payload: {
             projectId,
             projectName,
-            phone,
             reason,
             fileIDs,
             fileNames,

@@ -89,6 +89,16 @@
   max-width: 60%;
 }
 
+.edit-phone-btn {
+  margin-top: 24rpx;
+  width: 100%;
+  height: 72rpx;
+  line-height: 72rpx;
+  background: #1f4e9d;
+  color: #fff;
+  border-radius: 20rpx;
+}
+
 .hint-text {
   font-size: 26rpx;
   color: #4c5879;

@@ -199,7 +199,6 @@ async function createApplication(openid, payload) {
   const {
     projectId = '',
     projectName = '',
-    phone = '',
     reason = '',
     fileIDs = [],
     fileNames = [],
@@ -209,8 +208,8 @@ async function createApplication(openid, payload) {
   if (!projectId || !projectName) {
     throw new Error('缺少项目信息');
   }
-  if (!phone || !reason) {
-    throw new Error('请填写完整信息');
+  if (!reason) {
+    throw new Error('请填写申请理由');
   }
   const safeFiles = Array.isArray(fileIDs) ? fileIDs.slice(0, 3) : [];
   if (!safeFiles.length) {
@@ -238,6 +237,7 @@ async function createApplication(openid, payload) {
   // 确保申请人信息完整，如果用户信息不完整则抛出错误
   const applicantName = user.name || '';
   const applicantStudentId = user.studentId || '';
+  const applicantPhone = user.phone || '';
   
   if (!applicantName) {
     throw new Error('无法获取申请人姓名，请先完成用户绑定');
@@ -257,7 +257,7 @@ async function createApplication(openid, payload) {
       projectCategory: projectRes.data.category || '',
       name: applicantName,
       studentId: applicantStudentId,
-      phone,
+      phone: applicantPhone,
       reason,
       fileIDs: safeFiles,
       fileNames: formattedFileNames,

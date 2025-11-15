@@ -17,6 +17,13 @@
         <text class="info-value">{{item.value || '—'}}</text>
       </view>
     </block>
+    <view class="info-row">
+      <text class="info-label">联系电话</text>
+      <text class="info-value">{{profile.phone || '未填写'}}</text>
+    </view>
+    <button class="edit-phone-btn" size="mini" bindtap="editPhone" disabled="{{needBind}}">
+      编辑联系电话
+    </button>
   </view>
 
   <view class="info-card">

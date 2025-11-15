@@ -54,9 +54,58 @@ Page({
       { label: '学号', value: profile.studentId || '' },
       { label: '学院', value: profile.academy || '' },
       { label: '班级', value: profile.className || '' },
-      { label: '联系电话', value: profile.phone || '' },
       { label: '当前角色', value: roleText }
     ];
+  },
+
+  editPhone() {
+    if (this.data.needBind) {
+      wx.showToast({ title: '请先完成绑定', icon: 'none' });
+      return;
+    }
+    const defaultPhone = this.data.profile.phone || '';
+    wx.showModal({
+      title: '修改联系电话',
+      content: defaultPhone,
+      editable: true,
+      placeholderText: '请输入联系电话',
+      confirmText: '保存',
+      success: async (res) => {
+        if (!res.confirm) return;
+        const newPhone = (res.content || '').trim();
+        if (!newPhone) {
+          wx.showToast({ title: '请输入联系电话', icon: 'none' });
+          return;
+        }
+        if (!/^[\d+\-]{5,20}$/.test(newPhone)) {
+          wx.showToast({ title: '联系电话格式不正确', icon: 'none' });
+          return;
+        }
+        await this.savePhone(newPhone);
+      }
+    });
+  },
+
+  async savePhone(phone) {
+    try {
+      wx.showLoading({ title: '保存中...', mask: true });
+      const res = await wx.cloud.callFunction({
+        name: AUTH_SERVICE,
+        data: { action: 'updatePhone', payload: { phone } }
+      });
+      const result = res.result || {};
+      if (!result.success) {
+        throw new Error(result.message || '保存失败');
+      }
+      const savedPhone = result.data?.phone || phone;
+      this.setData({ 'profile.phone': savedPhone });
+      wx.showToast({ title: '已更新', icon: 'success' });
+    } catch (err) {
+      console.error('更新联系电话失败', err);
+      wx.showToast({ title: err.message || '保存失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
   },
 
   goBind() {

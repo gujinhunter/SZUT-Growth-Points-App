@@ -10,13 +10,6 @@
   <view class="section">
     <view class="section-title">基本信息</view>
 
-    <view class="field">
-      <view class="field-label">联系方式</view>
-      <input name="phone" 
-      type="number" placeholder="请输入手机号" 
-      placeholder-style="color:#6c78a5;font-size:28rpx;" />
-    </view>
-
     <view class="field" wx:if="{{scoreOptions.length > 0}}">
       <view class="field-label">申请积分</view>
       <picker mode="selector" 
