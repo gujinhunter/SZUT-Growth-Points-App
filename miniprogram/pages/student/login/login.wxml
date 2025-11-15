@@ -8,42 +8,51 @@
 <view class="container">
   <!-- 卡片区域：包含标题、登录按钮、绑定表单 -->
   <view class="card">
-    <!-- 标题文字 -->
-    <view class="title">欢迎使用助学信息平台</view>
+    <view class="card-header">
+      <view class="title">欢迎使用助学信息平台</view>
+      <button class="link-btn" size="mini" wx:if="{{!showAdminForm}}" bindtap="toggleAdminForm">管理员入口</button>
+      <button class="link-btn" size="mini" wx:if="{{showAdminForm}}" bindtap="toggleAdminForm">返回学生入口</button>
+    </view>
 
-    <!-- 微信授权登录按钮 -->
-    <!-- 点击后会触发 checkProfile() 函数，用于检查 openid 并判断是否需要绑定 -->
-    <button wx:if="{{!needBind}}" type="primary" class="login-btn" bindtap="checkProfile">
-  微信一键登录并绑定
-    </button>
+    <!-- 学生模式 -->
+    <view wx:if="{{!showAdminForm}}">
+      <button wx:if="{{!needBind}}" type="primary" class="login-btn" bindtap="checkProfile">
+        微信一键登录并绑定
+      </button>
 
-    <!-- 绑定表单：当 needBind = true 时才显示 -->
-    <!-- 用户填写姓名和学号后才能进行绑定 -->
-    <view wx:if="{{needBind}}" class="bind-form">
+      <view wx:if="{{needBind}}" class="bind-form">
+        <view class="input-group">
+          <text>姓名</text>
+          <input value="{{name}}" bindinput="onNameInput" placeholder="请输入姓名" />
+        </view>
+        <view class="input-group">
+          <text>学号</text>
+          <input value="{{studentId}}" bindinput="onIdInput" placeholder="请输入学号" />
+        </view>
+        <view class="bind-tip">
+          同一姓名与学号只能绑定一个微信账号，如需更换请联系管理员解绑。
+        </view>
+        <view wx:if="{{errorMessage}}" class="bind-error">
+          {{errorMessage}}
+        </view>
+        <button class="bind-btn" bindtap="bindUser">确认绑定</button>
+      </view>
+    </view>
 
-      <!-- 姓名输入框组 -->
+    <!-- 管理员模式 -->
+    <view wx:if="{{showAdminForm}}" class="bind-form">
       <view class="input-group">
         <text>姓名</text>
-        <!-- 双向绑定输入值到 data.name -->
-        <input value="{{name}}" bindinput="onNameInput" placeholder="请输入姓名" />
+        <input value="{{adminName}}" bindinput="onAdminNameInput" placeholder="请输入姓名" />
       </view>
-
-      <!-- 学号输入框组 -->
       <view class="input-group">
-        <text>学号</text>
-        <!-- 双向绑定输入值到 data.studentId -->
-        <input value="{{studentId}}" bindinput="onIdInput" placeholder="请输入学号" />
+        <text>工号</text>
+        <input value="{{adminWorkId}}" bindinput="onAdminWorkIdInput" placeholder="请输入工号" />
       </view>
-
-      <view class="bind-tip">
-        同一姓名与学号只能绑定一个微信账号，如需更换请联系管理员解绑。
+      <view wx:if="{{adminError}}" class="bind-error">
+        {{adminError}}
       </view>
-      <view wx:if="{{errorMessage}}" class="bind-error">
-        {{errorMessage}}
-      </view>
-      <!-- 绑定按钮 -->
-      <!-- 点击后调用 bindUser()，将填写的姓名与学号保存到数据库 -->
-      <button class="bind-btn" bindtap="bindUser">确认绑定</button>
+      <button class="bind-btn" bindtap="bindAdmin">绑定管理员</button>
     </view>
   </view>
 </view>

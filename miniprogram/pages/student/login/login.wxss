@@ -38,11 +38,38 @@
 }
   
 /* ====================== 标题文字 ====================== */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30rpx;
+}
+
 .title {
     font-size: 34rpx;      /* 字体大小 */
     font-weight: bold;     /* 加粗 */
     color: #333;           /* 字体颜色偏深灰 */
-    margin-bottom: 50rpx;  /* 标题与下方按钮之间的间距 */
+}
+
+.admin-link {
+    text-align: right;
+    font-size: 24rpx;
+    color: #5a6485;
+    display: flex;
+    flex-direction: column;
+    gap: 8rpx;
+    align-items: flex-end;
+}
+
+.link-btn {
+    border: none;
+    font-size: 24rpx;
+    color: #1f4e9d;
+    padding: 0;
+    background: transparent;
+}
+.link-btn::after {
+    border: none;
 }
   
 /* ====================== 登录按钮 ====================== */
@@ -115,4 +142,32 @@
     font-size: 28rpx;
     text-align: left;
     border: 1px solid rgba(192, 57, 43, 0.2);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30rpx;
+}
+
+.admin-link {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8rpx;
+    font-size: 24rpx;
+    color: #5c6c97;
+}
+
+.link-btn {
+    border-radius: 999rpx;
+    border: 2rpx solid rgba(31, 79, 163, 0.2);
+    background: rgba(255, 255, 255, 0.9);
+    color: #1f4e9d;
+    font-size: 24rpx;
+    padding: 0 28rpx;
+}
+.link-btn::after {
+    border: none;
 }

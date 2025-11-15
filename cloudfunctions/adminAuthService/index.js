@@ -22,6 +22,9 @@ exports.main = async (event, context) => {
         await ensureAdmin(OPENID);
         return { success: true };
 
+      case 'registerAdmin':
+        return { success: true, data: await registerAdmin(OPENID, event.payload || {}) };
+
       case 'getProfile':
       default: {
         const profile = await getProfile(OPENID);
@@ -64,4 +67,50 @@ async function getProfile(openid) {
     academy: user?.academy || '',
     className: user?.className || ''
   };
+}
+
+async function registerAdmin(openid, payload = {}) {
+  const name = (payload.name || '').trim();
+  const adminWorkId = (payload.workId || payload.adminWorkId || '').trim();
+  if (!name || !adminWorkId) {
+    throw new Error('请填写姓名和工号');
+  }
+
+  const whitelistRes = await db.collection('adminWhitelist')
+    .where({ name, adminWorkId })
+    .limit(1)
+    .get();
+  const entry = whitelistRes.data?.[0];
+  if (!entry) {
+    throw new AuthError('未在管理员白名单中');
+  }
+
+  const usersCollection = db.collection('users');
+  const existing = await usersCollection.where({ _openid: openid }).limit(1).get();
+  const now = new Date();
+  if (existing.data && existing.data.length) {
+    await usersCollection.doc(existing.data[0]._id).update({
+      data: {
+        name,
+        studentId: adminWorkId,
+        adminWorkId,
+        role: 'admin',
+        updatedAt: now
+      }
+    });
+  } else {
+    await usersCollection.add({
+      data: {
+        _openid: openid,
+        name,
+        studentId: adminWorkId,
+        adminWorkId,
+        role: 'admin',
+        createdAt: now,
+        updatedAt: now
+      }
+    });
+  }
+
+  return { openid, role: 'admin' };
 }
