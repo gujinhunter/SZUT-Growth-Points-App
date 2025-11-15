@@ -24,7 +24,13 @@ Page({
         ...item,
         createTimeFormatted: item.createTime ? this.formatDateTime(item.createTime) : '',
         reviewTimeFormatted: item.reviewTime ? this.formatDateTime(item.reviewTime) : '',
-        latestTimeFormatted: item.latestTime ? this.formatDateTime(item.latestTime) : ''
+        latestTimeFormatted: item.latestTime ? this.formatDateTime(item.latestTime) : '',
+        rejectHistoryFormatted: Array.isArray(item.rejectHistory)
+          ? item.rejectHistory.map(record => ({
+              remark: record?.remark || '',
+              timeFormatted: record?.time ? this.formatDateTime(record.time) : ''
+            }))
+          : []
       }));
 
       const formattedGroups = groups.map(group => ({
@@ -128,6 +134,16 @@ Page({
       console.error('获取附件失败', err);
       wx.showToast({ title: err.message || '附件获取失败', icon: 'none' });
     }
+  },
+
+  handleResubmit(e) {
+    const applicationId = e.currentTarget.dataset.id;
+    const projectId = e.currentTarget.dataset.projectid || '';
+    const projectName = e.currentTarget.dataset.projectname || '';
+    if (!applicationId) return;
+    const encodedName = projectName ? encodeURIComponent(projectName) : '';
+    const url = `/pages/student/apply/apply?applicationId=${applicationId}&mode=edit${projectId ? `&projectId=${projectId}` : ''}${encodedName ? `&projectName=${encodedName}` : ''}`;
+    wx.navigateTo({ url });
   }
 });
 

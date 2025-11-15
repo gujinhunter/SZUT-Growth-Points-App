@@ -32,10 +32,32 @@
             查看附件（{{item.fileIDs.length}} 个）
           </text>
         </view>
-           <view wx:if="{{item.status === '已驳回' && item.rejectRemark}}" class="row">
-     <text class="label">驳回说明：</text>
-     <text class="reject-text">{{item.rejectRemark}}</text>
-   </view>
+        <view wx:if="{{item.status === '已驳回' && item.rejectRemark}}" class="row">
+          <text class="label">驳回说明：</text>
+          <text class="reject-text">{{item.rejectRemark}}</text>
+        </view>
+        <view wx:if="{{item.rejectHistoryFormatted && item.rejectHistoryFormatted.length}}" class="row history-row">
+          <text class="label">驳回历史：</text>
+          <view class="history-list">
+            <block wx:for="{{item.rejectHistoryFormatted}}" wx:key="index">
+              <view class="history-item">
+                <text class="history-time">{{historyItem.timeFormatted || '—'}}</text>
+                <text class="history-dot">·</text>
+                <text class="history-remark">{{historyItem.remark || '无驳回说明'}}</text>
+              </view>
+            </block>
+          </view>
+        </view>
+        <view wx:if="{{item.status === '已驳回'}}" class="row action-row">
+          <button class="resubmit-btn"
+                  size="mini"
+                  bindtap="handleResubmit"
+                  data-id="{{item._id}}"
+                  data-projectid="{{item.projectId}}"
+                  data-projectname="{{item.projectName}}">
+            修改后重新提交
+          </button>
+        </view>
       </view>
     </block>
   </block>

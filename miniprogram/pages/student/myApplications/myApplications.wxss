@@ -69,4 +69,60 @@
     margin-top: 200rpx;
     font-size: 28rpx;
   }
+
+.action-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16rpx;
+}
+
+.resubmit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 0 34rpx;
+  height: 64rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid rgba(31, 79, 163, 0.25);
+  background: rgba(31, 79, 163, 0.08);
+  color: #1f4e9d;
+  font-size: 26rpx;
+  font-weight: 500;
+}
+.resubmit-btn::after {
+  border: none;
+}
+
+.history-row {
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 8rpx;
+}
+.history-list {
+  width: 100%;
+  margin-top: 8rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.history-item {
+  font-size: 24rpx;
+  color: #5a647d;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+}
+.history-time {
+  margin-right: 12rpx;
+  color: #8a92ad;
+  min-width: 220rpx;
+}
+.history-dot {
+  margin-right: 12rpx;
+  color: #c1c7dd;
+}
+.history-remark {
+  color: #5a647d;
+  flex: 1;
+}
   

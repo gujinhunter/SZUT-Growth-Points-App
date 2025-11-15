@@ -6,6 +6,11 @@
     <view class="hero-desc">请完善以下信息，提交后我们会在 15 个工作日内反馈结果</view>
   </view>
 
+  <view class="edit-alert" wx:if="{{isEditMode}}">
+    <view>该申请已被驳回，请根据说明修改后重新提交。</view>
+    <view class="edit-remark" wx:if="{{rejectRemark}}">驳回说明：{{rejectRemark}}</view>
+  </view>
+
   <form class="form-card" bindsubmit="submitForm">
   <view class="section">
     <view class="section-title">基本信息</view>
@@ -27,7 +32,12 @@
     <view class="section-title">申请理由</view>
 
     <view class="field">
-      <textarea name="reason" placeholder="请详细描述申请原因、预期收获等信息" placeholder-class="placeholder" auto-height></textarea>
+      <textarea name="reason"
+                value="{{reasonText}}"
+                bindinput="onReasonInput"
+                placeholder="请详细描述申请原因、预期收获等信息"
+                placeholder-class="placeholder"
+                auto-height></textarea>
       <view class="word-limit">建议不超过 50 字</view>
     </view>
   </view>
@@ -46,6 +56,9 @@
       </view>
       <button type="default" class="upload-btn" bindtap="chooseFile">选择文件</button>
     </view>
+    <button wx:if="{{isEditMode && fileIDs.length}}" type="default" class="reset-files-btn" bindtap="resetFiles">
+      重新上传附件
+    </button>
   </view>
 
   <button formType="submit" type="primary" class="submit-btn">提交申请</button>

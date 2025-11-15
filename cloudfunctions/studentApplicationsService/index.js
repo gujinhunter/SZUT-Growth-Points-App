@@ -25,6 +25,10 @@ exports.main = async (event) => {
         return { success: true, data: await getFileUrl(OPENID, payload) };
       case 'bindStudentProfile':
         return { success: true, data: await bindStudentProfile(OPENID, payload) };
+      case 'getApplicationDetail':
+        return { success: true, data: await getApplicationDetail(OPENID, payload) };
+      case 'resubmitApplication':
+        return { success: true, data: await resubmitApplication(OPENID, payload) };
       default:
         throw new Error(`未知操作: ${action}`);
     }
@@ -79,6 +83,8 @@ async function listApplications(openid, { page = 1, pageSize = 50 }) {
         .skip(i * MAX_LIMIT)
         .limit(MAX_LIMIT)
         .field({
+          _id: true,
+          projectId: true,
           projectName: true,
           projectCategory: true,
           status: true,
@@ -89,6 +95,7 @@ async function listApplications(openid, { page = 1, pageSize = 50 }) {
           createTime: true,
           reviewTime: true,
           rejectRemark: true,
+          rejectHistory: true,
           studentOpenId: true  // 包含此字段用于二次验证
         })
         .get()
@@ -149,19 +156,31 @@ async function listApplications(openid, { page = 1, pageSize = 50 }) {
     const reviewTimeTimestamp = normalizeDate(item.reviewTime)?.getTime() || null;
     const latestTimeTimestamp = latestTime?.getTime() || null;
 
+    const rejectHistory = Array.isArray(item.rejectHistory)
+      ? item.rejectHistory.map(entry => ({
+          remark: entry?.remark || '',
+          time: normalizeDate(entry?.time)?.getTime() || null
+        }))
+      : [];
+
     return {
+      _id: item._id,
+      projectId: item.projectId || '',
       projectName: item.projectName || '—',
       projectCategory: item.projectCategory || '',
       status: item.status || '待审核',
       statusClass: statusClassMap[item.status] || 'pending',
       pointsText: formatScore(item.points),
+      points: item.points || 0,
       reason: item.reason || '',
       rejectRemark: item.rejectRemark || '',
       fileIDs,
       fileNames,
       createTime: createTimeTimestamp,
       reviewTime: reviewTimeTimestamp,
-      latestTime: latestTimeTimestamp
+      latestTime: latestTimeTimestamp,
+      canResubmit: item.status === '已驳回',
+      rejectHistory
       // 注意：createTimeFormatted 由前端根据时间戳格式化，确保使用本地时区
     };
   });
@@ -360,6 +379,144 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
   }
 
   return { bound: true };
+}
+
+async function getApplicationDetail(openid, { applicationId = '' }) {
+  if (!applicationId) {
+    throw new Error('缺少 applicationId');
+  }
+  const appRes = await db.collection('applications').doc(applicationId).get();
+  const app = appRes.data;
+  if (!app || app.studentOpenId !== openid) {
+    throw new Error('无权访问该申请');
+  }
+  return {
+    applicationId,
+    projectId: app.projectId || '',
+    projectName: app.projectName || '',
+    points: app.points || 0,
+    reason: app.reason || '',
+    fileIDs: app.fileIDs || [],
+    fileNames: app.fileNames || [],
+    status: app.status || '',
+    rejectRemark: app.rejectRemark || ''
+  };
+}
+
+async function resubmitApplication(openid, payload = {}) {
+  const {
+    applicationId = '',
+    reason = '',
+    fileIDs = [],
+    fileNames = [],
+    points = 0
+  } = payload || {};
+
+  if (!applicationId) {
+    throw new Error('缺少 applicationId');
+  }
+  if (!reason) {
+    throw new Error('请填写申请理由');
+  }
+
+  const appRef = db.collection('applications').doc(applicationId);
+  const appSnap = await appRef.get();
+  const app = appSnap.data;
+  if (!app || app.studentOpenId !== openid) {
+    throw new Error('无权操作该申请');
+  }
+  if (app.status !== '已驳回') {
+    throw new Error('仅驳回的申请可重新提交');
+  }
+
+  const projectId = app.projectId;
+  if (!projectId) {
+    throw new Error('缺少项目编号，无法重新提交');
+  }
+
+  const safeFiles = Array.isArray(fileIDs) ? fileIDs.slice(0, 3) : [];
+  if (!safeFiles.length) {
+    throw new Error('请上传附件');
+  }
+
+  const projectRes = await db.collection('activities')
+    .doc(projectId)
+    .field({ name: true, category: true, score: true })
+    .get();
+  if (!projectRes.data) {
+    throw new Error('项目不存在或已下架');
+  }
+
+  const scoreOptions = normalizeScore(projectRes.data.score);
+  const validPoints = scoreOptions.includes(points) ? points : scoreOptions[0] || points;
+
+  const userRes = await db.collection('users')
+    .where({ _openid: openid })
+    .field({ name: true, studentId: true, phone: true })
+    .limit(1)
+    .get();
+  const user = userRes.data?.[0] || {};
+
+  const applicantName = user.name || app.name || '';
+  const applicantStudentId = user.studentId || app.studentId || '';
+  if (!applicantName || !applicantStudentId) {
+    throw new Error('无法获取申请人信息，请先完成绑定');
+  }
+  const applicantPhone = user.phone || app.phone || '';
+
+  const formattedFileNames = Array.isArray(fileNames) && fileNames.length
+    ? fileNames.slice(0, 3)
+    : safeFiles.map((_, idx) => `附件${idx + 1}`);
+
+  const now = new Date();
+  const history = Array.isArray(app.rejectHistory) ? app.rejectHistory.slice(0, 20) : [];
+  if (app.rejectRemark) {
+    history.push({
+      remark: app.rejectRemark,
+      time: app.reviewTime || now
+    });
+  }
+
+  await appRef.update({
+    data: {
+      projectName: projectRes.data.name || app.projectName || '',
+      projectCategory: projectRes.data.category || app.projectCategory || '',
+      name: applicantName,
+      studentId: applicantStudentId,
+      phone: applicantPhone,
+      reason,
+      fileIDs: safeFiles,
+      fileNames: formattedFileNames,
+      points: validPoints || 0,
+      status: '待审核',
+      reviewTime: null,
+      rejectRemark: '',
+      rejectHistory: history,
+      reviewRemark: '',
+      updatedAt: now,
+      resubmitCount: _.inc(1),
+      resubmittedAt: now
+    }
+  });
+
+  await db.collection('reviewLogs').add({
+    data: {
+      applicationId,
+      projectId,
+      studentName: applicantName,
+      studentId: applicantStudentId,
+      projectName: projectRes.data.name || app.projectName || '',
+      projectCategory: projectRes.data.category || app.projectCategory || '',
+      beforeStatus: '已驳回',
+      afterStatus: '待审核',
+      remark: '学生重新提交',
+      adminOpenId: '',
+      adminName: '学生',
+      createTime: now
+    }
+  });
+
+  return { applicationId };
 }
 
 async function fetchArchivedSnapshot(name, studentId) {

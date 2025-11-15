@@ -91,12 +91,42 @@
 
 .edit-phone-btn {
   margin-top: 24rpx;
-  width: 100%;
+  align-self: flex-start;
+  padding: 0 36rpx;
+  min-width: 320rpx;
   height: 72rpx;
   line-height: 72rpx;
-  background: #1f4e9d;
+  background: linear-gradient(135deg, #1f4e9d, #2f6fd2);
   color: #fff;
-  border-radius: 20rpx;
+  border-radius: 999rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  box-shadow: 0 12rpx 24rpx rgba(31, 79, 163, 0.25);
+}
+.edit-phone-btn::after {
+  border: none;
+}
+.edit-phone-btn__icon {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+}
+.edit-phone-btn__text {
+  white-space: nowrap;
+}
+.edit-phone-btn:disabled {
+  opacity: 0.6;
+  box-shadow: none;
 }
 
 .hint-text {

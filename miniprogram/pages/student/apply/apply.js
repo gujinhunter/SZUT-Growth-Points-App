@@ -14,16 +14,33 @@ Page({
     selectedScoreIndex: 0,
     selectedScore: null,
     submitting: false,
-    loadingProject: true
+    loadingProject: true,
+    applicationId: '',
+    isEditMode: false,
+    reasonText: '',
+    rejectRemark: ''
   },
 
   async onLoad(options) {
     const projectId = options.projectId || '';
-    const projectName = options.projectName || '';
-    this.setData({ projectId, projectName });
+    const projectName = options.projectName ? decodeURIComponent(options.projectName) : '';
+    const applicationId = options.applicationId || '';
+    const isEditMode = options.mode === 'edit' && applicationId;
+    this.setData({ projectId, projectName, applicationId, isEditMode });
 
     try {
-      await Promise.all([this.loadProfile(), this.loadProjectScore(projectId)]);
+      if (isEditMode) {
+        await this.loadProfile();
+        await this.loadApplicationDetail(applicationId);
+        const pid = this.data.projectId;
+        if (pid) {
+          await this.loadProjectScore(pid, this.data.selectedScore);
+        } else {
+          this.setData({ loadingProject: false });
+        }
+      } else {
+        await Promise.all([this.loadProfile(), this.loadProjectScore(projectId)]);
+      }
     } catch (err) {
       console.error('初始化失败', err);
       wx.showToast({ title: err.message || '加载失败', icon: 'none' });
@@ -44,7 +61,7 @@ Page({
     }
   },
 
-  async loadProjectScore(projectId) {
+  async loadProjectScore(projectId, targetPoints = null) {
     if (!projectId) {
       this.setData({ loadingProject: false });
       return;
@@ -59,9 +76,18 @@ Page({
         throw new Error(result.message || '项目加载失败');
       }
       const scoreList = result.data?.scoreOptions || [];
+      let selectedScoreIndex = 0;
+      if (targetPoints !== null) {
+        const idx = scoreList.findIndex(item => Number(item) === Number(targetPoints));
+        if (idx >= 0) {
+          selectedScoreIndex = idx;
+        }
+      }
+      const selectedScore = Number(scoreList[selectedScoreIndex] ?? scoreList[0] ?? 0);
       this.setData({
-        scoreOptions: scoreList.map(s => String(s)),
-        selectedScore: scoreList[0] || 0,
+        scoreOptions: scoreList,
+        selectedScoreIndex,
+        selectedScore,
         loadingProject: false
       });
     } catch (err) {
@@ -139,10 +165,52 @@ Page({
     }
   },
 
+  async loadApplicationDetail(applicationId) {
+    wx.showLoading({ title: '加载申请信息...', mask: true });
+    try {
+      const res = await wx.cloud.callFunction({
+        name: APPLICATION_SERVICE,
+        data: { action: 'getApplicationDetail', payload: { applicationId } }
+      });
+      const result = res.result || {};
+      if (!result.success) {
+        throw new Error(result.message || '获取申请详情失败');
+      }
+      const detail = result.data || {};
+      const fileIDs = Array.isArray(detail.fileIDs) ? detail.fileIDs.slice(0, 3) : [];
+      const fileNames = Array.isArray(detail.fileNames) && detail.fileNames.length
+        ? detail.fileNames.slice(0, 3)
+        : fileIDs.map((_, idx) => `附件${idx + 1}`);
+      this.setData({
+        projectId: detail.projectId || this.data.projectId,
+        projectName: detail.projectName || this.data.projectName,
+        fileIDs,
+        fileNames,
+        selectedScore: detail.points || 0,
+        reasonText: detail.reason || '',
+        rejectRemark: detail.rejectRemark || ''
+      });
+    } catch (err) {
+      console.error('加载申请详情失败', err);
+      wx.showToast({ title: err.message || '无法加载申请详情', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  onReasonInput(e) {
+    this.setData({ reasonText: e.detail.value });
+  },
+
+  resetFiles() {
+    this.setData({ fileIDs: [], fileNames: [] });
+    wx.showToast({ title: '附件已清空，请重新上传', icon: 'none' });
+  },
+
   async submitForm(e) {
     if (this.data.submitting) return;
     const { reason } = e.detail.value;
-    const { projectId, projectName, fileIDs, fileNames, selectedScore, profile } = this.data;
+    const { projectId, projectName, fileIDs, fileNames, selectedScore, profile, isEditMode, applicationId } = this.data;
 
     if (!reason) {
       wx.showToast({ title: '请填写申请理由', icon: 'none' });
@@ -159,8 +227,9 @@ Page({
       const res = await wx.cloud.callFunction({
         name: APPLICATION_SERVICE,
         data: {
-          action: 'createApplication',
+          action: isEditMode ? 'resubmitApplication' : 'createApplication',
           payload: {
+            applicationId: isEditMode ? applicationId : undefined,
             projectId,
             projectName,
             reason,
@@ -177,7 +246,7 @@ Page({
       }
 
       wx.hideLoading();
-      wx.showToast({ title: '提交成功', icon: 'success' });
+      wx.showToast({ title: isEditMode ? '重新提交成功' : '提交成功', icon: 'success' });
       setTimeout(() => wx.navigateBack(), 1500);
     } catch (err) {
       wx.hideLoading();
