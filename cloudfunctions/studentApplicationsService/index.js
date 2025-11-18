@@ -334,6 +334,11 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
   const trimmedName = name.trim();
   const trimmedStudentId = studentId.trim();
 
+  const whitelistRecord = await fetchWhitelistRecord(trimmedName, trimmedStudentId);
+  if (!whitelistRecord) {
+    throw new Error('未在学生白名单中，请核对姓名与学号或联系管理员');
+  }
+
   // 检查是否已有其他账号使用同一姓名+学号
   const conflict = await usersCollection
     .where({
@@ -351,16 +356,19 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
   const existing = await usersCollection.where({ _openid: openid }).limit(1).get();
   const now = new Date();
   if (existing.data && existing.data.length) {
+    const profileFields = buildProfileFields(whitelistRecord);
     await usersCollection.doc(existing.data[0]._id).update({
       data: {
         name: trimmedName,
         studentId: trimmedStudentId,
-        updatedAt: now
+        updatedAt: now,
+        ...profileFields
       }
     });
   } else {
     const archiveSnapshot = await fetchArchivedSnapshot(trimmedName, trimmedStudentId);
     const restoredPoints = Number(archiveSnapshot?.totalPoints);
+    const profileFields = buildProfileFields(whitelistRecord, archiveSnapshot);
     const newUserData = {
       _openid: openid,
       name: trimmedName,
@@ -368,8 +376,7 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
       role: 'student',
       totalPoints: Number.isFinite(restoredPoints) ? restoredPoints : 0,
       phone: archiveSnapshot?.phone || '',
-      academy: archiveSnapshot?.academy || '',
-      className: archiveSnapshot?.className || '',
+      ...profileFields,
       createdAt: now,
       updatedAt: now
     };
@@ -517,6 +524,48 @@ async function resubmitApplication(openid, payload = {}) {
   });
 
   return { applicationId };
+}
+
+async function fetchWhitelistRecord(name, studentId) {
+  try {
+    const res = await db.collection('studentWhitelist')
+      .where({ name, studentId })
+      .limit(1)
+      .get();
+    return res.data?.[0] || null;
+  } catch (err) {
+    if (err?.errCode === -502005 || err?.code === 'DATABASE_COLLECTION_NOT_EXIST') {
+      console.warn('studentWhitelist collection missing, skip whitelist check');
+      return null;
+    }
+    console.error('fetchWhitelistRecord error', err);
+    return null;
+  }
+}
+
+function buildProfileFields(whitelistRecord = {}, fallback = {}) {
+  const safeWhitelist = whitelistRecord || {};
+  const safeFallback = (fallback && typeof fallback === 'object') ? fallback : {};
+
+  const pick = (primary, secondary = '') => {
+    const first = toSafeString(primary);
+    if (first) return first;
+    return toSafeString(secondary);
+  };
+
+  return {
+    academy: pick(safeWhitelist.academy, safeFallback.academy),
+    className: pick(safeWhitelist.className, safeFallback.className),
+    grade: pick(safeWhitelist.grade, safeFallback.grade),
+    major: pick(safeWhitelist.major, safeFallback.major),
+    gender: pick(safeWhitelist.gender, safeFallback.gender)
+  };
+}
+
+function toSafeString(value) {
+  if (value === undefined || value === null) return '';
+  const str = String(value).trim();
+  return str;
 }
 
 async function fetchArchivedSnapshot(name, studentId) {

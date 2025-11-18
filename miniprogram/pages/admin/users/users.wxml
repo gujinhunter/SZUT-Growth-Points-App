@@ -44,7 +44,9 @@
         <view class="card-header">
           <view class="card-left">
             <view class="user-name">{{item.name || '未填写'}}</view>
-            <view class="user-id">学号：{{item.studentId || '—'}}</view>
+            <view class="user-id">
+              {{item.role === 'admin' ? '工号' : '学号'}}：{{item.studentId || '—'}}
+            </view>
           </view>
           <view class="role-tag {{item.role === 'admin' ? 'role-admin' : 'role-student'}}">
             {{item.role === 'admin' ? '管理员' : '学生'}}
@@ -58,11 +60,11 @@
           <text class="info-label">联系电话</text>
           <text class="info-value">{{item.phone || '—'}}</text>
         </view>
-        <view class="info-line">
+        <view class="info-line" wx:if="{{item.role !== 'admin'}}">
           <text class="info-label">学院班级</text>
           <text class="info-value">{{item.academy || '—'}} {{item.className || ''}}</text>
         </view>
-        <view class="info-line">
+        <view class="info-line" wx:if="{{item.role !== 'admin'}}">
           <text class="info-label">当前积分</text>
           <text class="info-value">{{item.totalPoints || 0}}</text>
         </view>
