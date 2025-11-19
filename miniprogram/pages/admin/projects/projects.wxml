@@ -52,7 +52,7 @@
   <view wx:if="{{categorySheetVisible}}" class="sheet-panel" catchtap="noop">
     <view class="sheet-header">
       <view class="sheet-title">类别管理</view>
-      <button class="sheet-add" bindtap="openCreateCategory">＋ 新增类别</button>
+      <button wx:if="{{categorySheetMode === 'list'}}" class="sheet-add" bindtap="openCreateCategory">＋ 新增类别</button>
     </view>
 
     <view wx:if="{{categorySheetMode === 'list'}}" class="sheet-list">
