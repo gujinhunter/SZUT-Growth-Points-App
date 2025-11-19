@@ -1,11 +1,35 @@
 // pages/projectList/projectList.js
 const PROJECT_SERVICE = 'studentProjectService';
+const DEFAULT_ICON = '../../../assets/projects/project_active.png';
+const CATEGORY_ICONS = {
+  '其他': '../../../assets/projects/project_active.png',
+  '创新创业': '../../../assets/projects/创新创业.png',
+  '宿舍安全': '../../../assets/projects/宿舍安全.png',
+  '心理健康': '../../../assets/projects/心理健康.png',
+  '志愿服务': '../../../assets/projects/志愿服务.png',
+  '招生就业': '../../../assets/projects/招生就业.png',
+  '文体工作': '../../../assets/projects/文体工作.png',
+  '苏乡永助': '../../../assets/projects/苏乡永助.png',
+  '资助宣传大使': '../../../assets/projects/资助宣传大使.png'
+};
+const CARD_GRADIENTS = [
+  ['#eef6ff', '#f4fbff'],
+  ['#fef6ec', '#fff8ef'],
+  ['#eefcf6', '#f5fffb'],
+  ['#f4f0ff', '#f8f5ff'],
+  ['#fff0f3', '#fff5f6'],
+  ['#e9f7ff', '#f5fbff']
+];
 
 Page({
   data: {
     activities: [],
     loading: true,
-    activeCategory: null
+    categoryCards: [],
+    activeCategory: '',
+    activeCategoryItems: [],
+    defaultIcon: DEFAULT_ICON,
+    showDrawer: false
   },
 
   onLoad() {
@@ -26,21 +50,64 @@ Page({
       }
       const list = result.data?.list || [];
       this.setData({ activities: list, loading: false });
+      this.decorateCategories(list);
     } catch (err) {
       console.error('加载项目失败', err);
       wx.showToast({ title: err.message || '加载失败', icon: 'none' });
-      this.setData({ activities: [], loading: false });
+      this.setData({ activities: [], categoryCards: [], activeCategory: '', activeCategoryItems: [], loading: false });
     } finally {
       wx.hideLoading();
     }
   },
 
-  toggleCategory(e) {
-    const { category } = e.currentTarget.dataset;
+  decorateCategories(list = []) {
+    const normalized = list.map((group, index) => {
+      const items = Array.isArray(group.items) ? group.items : [];
+      const gradient = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
+      return {
+        category: group.category || `分类${index + 1}`,
+        icon: group.icon || CATEGORY_ICONS[group.category] || DEFAULT_ICON,
+        bgStart: gradient[0],
+        bgEnd: gradient[1],
+        itemCount: items.length,
+        summary: this.buildSummary(items),
+        items
+      };
+    });
+
     this.setData({
-      activeCategory: this.data.activeCategory === category ? null : category
+      categoryCards: normalized
     });
   },
+
+  buildSummary(items = []) {
+    if (!items.length) return '暂无可申请项目';
+    const first = items[0];
+    if (first.remark) {
+      return first.remark.length > 20 ? `${first.remark.slice(0, 20)}...` : first.remark;
+    }
+    if (first.displayScore) {
+      return `积分参考：${first.displayScore} 分`;
+    }
+    return '点击查看项目详情';
+  },
+
+  selectCategory(e) {
+    const { category } = e.currentTarget.dataset;
+    if (!category) return;
+    const target = this.data.categoryCards.find(item => item.category === category);
+    this.setData({
+      activeCategory: category,
+      activeCategoryItems: target?.items || [],
+      showDrawer: true
+    });
+  },
+
+  closeDrawer() {
+    this.setData({ showDrawer: false });
+  },
+
+  noop() {},
 
   goToApply(e) {
     const item = e.currentTarget.dataset.item;

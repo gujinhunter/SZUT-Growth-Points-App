@@ -30,26 +30,26 @@
       {
         "pagePath": "pages/student/projectList/projectList",
         "text": "积分项目",
-        "iconPath": "assets/icons/project_active.png",
-        "selectedIconPath": "assets/icons/project_active.png"
+        "iconPath": "assets/student/icons/project_active.png",
+        "selectedIconPath": "assets/student/icons/project_active.png"
       },
       {
         "pagePath": "pages/student/myApplications/myApplications",
         "text": "我的申请",
-        "iconPath": "assets/icons/apply_active.png",
-        "selectedIconPath": "assets/icons/apply_active.png"
+        "iconPath": "assets/student/icons/apply_active.png",
+        "selectedIconPath": "assets/student/icons/apply_active.png"
       },
       {
         "pagePath": "pages/student/myPoints/myPoints",
         "text": "我的积分",
-        "iconPath": "assets/icons/points_active.png",
-        "selectedIconPath": "assets/icons/points_active.png"
+        "iconPath": "assets/student/icons/points_active.png",
+        "selectedIconPath": "assets/student/icons/points_active.png"
       },
       {
         "pagePath": "pages/student/profile/profile",
         "text": "我的信息",
-        "iconPath": "assets/icons/profile_active.png",
-        "selectedIconPath": "assets/icons/profile_active.png"
+        "iconPath": "assets/student/icons/profile_active.png",
+        "selectedIconPath": "assets/student/icons/profile_active.png"
       }
     ]
   },

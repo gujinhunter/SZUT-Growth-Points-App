@@ -1,77 +1,177 @@
 /* pages/projectList/projectList.wxss */
 
-/* 页面容器：设定整体内边距、背景色、最小高度撑满屏幕 */
-.container {
-  padding: 20rpx;
-  background-color: #f9f9fb;
+.project-page {
   min-height: 100vh;
+  background: #f5f7fb;
+  padding: 32rpx 28rpx 140rpx;
+  box-sizing: border-box;
 }
 
-/* 分类标题区域：横向排列标题和箭头，蓝底白字 */
-.category {
+.hero-card {
+  background: linear-gradient(135deg, #edf4ff 0%, #f9fbff 100%);
+  border-radius: 28rpx;
+  padding: 40rpx 36rpx;
+  box-shadow: 0 20rpx 40rpx rgba(43, 93, 199, 0.1);
+  margin-bottom: 32rpx;
+}
+
+.hero-title {
+  font-size: 38rpx;
+  font-weight: 600;
+  color: #1f2b46;
+}
+
+.hero-desc {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #7c8aa6;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 24rpx;
+}
+
+.category-card {
+  border-radius: 26rpx;
+  padding: 28rpx;
+  color: #1f2b46;
+  box-shadow: 0 16rpx 28rpx rgba(31, 69, 148, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.category-card:active {
+  transform: scale(0.98);
+}
+
+.category-card-top {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.category-icon {
+  width: 72rpx;
+  height: 72rpx;
+}
+
+.category-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.category-name {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.category-meta {
+  font-size: 24rpx;
+  color: rgba(31, 43, 70, 0.7);
+}
+
+.category-summary {
+  margin-top: 18rpx;
+  font-size: 24rpx;
+  color: rgba(31, 43, 70, 0.85);
+  line-height: 1.4;
+}
+
+.loading,
+.empty {
+  text-align: center;
+  margin: 160rpx auto;
+  color: #8a94ac;
+  font-size: 28rpx;
+}
+
+.drawer-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 90;
+}
+
+.drawer-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 40rpx 36rpx 60rpx;
+  box-shadow: 0 -12rpx 30rpx rgba(5, 17, 51, 0.15);
+  z-index: 91;
+}
+
+.drawer-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #34589e;
-  color: white;
-  padding: 25rpx;
-  margin-top: 20rpx;
-  border-radius: 12rpx;
-  font-size: 30rpx;
+}
+
+.drawer-title {
+  font-size: 34rpx;
   font-weight: 600;
+  color: #1f2b46;
 }
 
-/* 分类右侧的小箭头图标样式 */
-.arrow {
-  font-size: 28rpx;
-  opacity: 0.8;
-}
-
-/* 活动列表外层间距 */
-.activity-list {
-  margin-top: 10rpx;
-}
-
-/* 单条活动卡片：白底圆角、阴影、内边距 */
-.activity-card {
-  background: white;
-  border-radius: 16rpx;
-  padding: 25rpx 30rpx;
-  margin: 15rpx 0;
-  box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1);
-}
-
-/* 活动名称：字号稍大、深色加粗 */
-.activity-name {
-  font-size: 30rpx;
-  color: #333;
-  font-weight: 500;
-  margin-bottom: 10rpx;
-}
-
-/* 积分文本区域：次要信息，灰色小字 */
-.activity-score {
-  font-size: 26rpx;
-  color: #666;
-}
-
-/* 积分数值高亮为绿色并加粗 */
-.score {
-  color: #1aad19;
-  font-weight: 600;
-}
-
-/* 活动备注说明：更小字号浅灰色 */
-.activity-remark {
+.drawer-meta {
+  margin-top: 6rpx;
   font-size: 24rpx;
-  color: #999;
-  margin-top: 8rpx;
+  color: #8a94ac;
 }
 
-/* 加载提示样式：居中显示灰色提示文字 */
-.loading {
+.drawer-close {
+  font-size: 40rpx;
+  color: #8a94ac;
+  padding: 8rpx 10rpx;
+}
+
+.drawer-body {
+  margin-top: 30rpx;
+  max-height: 60vh;
+}
+
+.drawer-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 0;
+  border-bottom: 1px solid #f0f2f7;
+}
+
+.drawer-item:last-child {
+  border-bottom: none;
+}
+
+.drawer-item-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1f2b46;
+}
+
+.drawer-item-remark {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #8a94ac;
+}
+
+.drawer-item-score {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #ff7a00;
+  margin-left: 20rpx;
+}
+
+.drawer-empty {
   text-align: center;
-  margin-top: 200rpx;
-  color: #666;
-  font-size: 28rpx;
+  color: #8a94ac;
+  padding: 60rpx 0;
+  font-size: 26rpx;
 }

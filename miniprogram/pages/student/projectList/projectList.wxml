@@ -1,33 +1,53 @@
 <!-- pages/projectList/projectList.wxml -->
 
-<view class="container">
-  <!-- loading 状态提示 -->
+<view class="project-page">
+  <view class="hero-card">
+    <view class="hero-title">积分项目</view>
+    <view class="hero-desc">选择分类查看可申报的积分项目</view>
+  </view>
+
   <view wx:if="{{loading}}" class="loading">正在加载活动列表...</view>
 
-  <!-- 遍历活动分类（activities 数组），wx:key 以 category 去重 -->
-  <block wx:for="{{activities}}" wx:key="category">
-    <!-- 分类标题：点击可展开/收起项目列表 -->
-    <view class="category" bindtap="toggleCategory" data-category="{{item.category}}">
-      <text class="category-title">{{item.category}}</text>
-      <!-- 根据 activeCategory 判断箭头朝向 -->
-      <text class="arrow">{{activeCategory === item.category ? '▲' : '▼'}}</text>
-    </view>
-
-    <!-- 展开状态时显示分类下的项目列表 -->
-    <view wx:if="{{activeCategory === item.category}}" class="activity-list">
-      <block wx:for="{{item.items}}" wx:key="name">
-        <!-- 项目卡片：点击跳转到申请页，并携带当前项目数据 -->
-        <view class="activity-card" bindtap="goToApply" data-item="{{item}}">
-          <view class="activity-name">{{item.name}}</view>
-          <view class="activity-score">
-            积分：
-            <text class="score">
-                {{item.displayScore}}
-            </text>点
+  <view wx:elif="{{categoryCards.length}}" class="category-grid">
+    <block wx:for="{{categoryCards}}" wx:key="category">
+      <view class="category-card"
+            data-category="{{item.category}}"
+            bindtap="selectCategory"
+            style="background-image: linear-gradient(135deg, {{item.bgStart}}, {{item.bgEnd}});">
+        <view class="category-card-top">
+          <image class="category-icon" src="{{item.icon || defaultIcon}}" mode="aspectFit"></image>
+          <view class="category-info">
+            <view class="category-name">{{item.category}}</view>
+            <view class="category-meta">{{item.itemCount}} 个项目</view>
           </view>
-          <view class="activity-remark">{{item.remark}}</view>
+        </view>
+        <view class="category-summary">{{item.summary}}</view>
+      </view>
+    </block>
+  </view>
+
+  <view wx:if="{{!loading && !categoryCards.length}}" class="empty">暂无积分项目</view>
+
+  <view wx:if="{{showDrawer}}" class="drawer-mask" bindtap="closeDrawer"></view>
+  <view wx:if="{{showDrawer}}" class="drawer-panel" catchtap="noop">
+    <view class="drawer-header">
+      <view>
+        <view class="drawer-title">{{activeCategory}}</view>
+        <view class="drawer-meta">{{activeCategoryItems.length}} 个项目</view>
+      </view>
+      <view class="drawer-close" bindtap="closeDrawer">×</view>
+    </view>
+    <scroll-view scroll-y class="drawer-body">
+      <block wx:for="{{activeCategoryItems}}" wx:key="_id">
+        <view class="drawer-item" bindtap="goToApply" data-item="{{item}}">
+          <view>
+            <view class="drawer-item-name">{{item.name}}</view>
+            <view class="drawer-item-remark">{{item.remark || '点击申报该项目'}}</view>
+          </view>
+          <view class="drawer-item-score">{{item.displayScore || '--'}}分</view>
         </view>
       </block>
-    </view>
-  </block>
+      <view wx:if="{{!activeCategoryItems.length}}" class="drawer-empty">暂无项目</view>
+    </scroll-view>
+  </view>
 </view>
