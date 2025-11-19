@@ -34,6 +34,7 @@
       <view>
         <view class="drawer-title">{{activeCategory}}</view>
         <view class="drawer-meta">{{activeCategoryItems.length}} 个项目</view>
+        <view class="drawer-desc" wx:if="{{activeCategoryDescription}}">{{activeCategoryDescription}}</view>
       </view>
       <view class="drawer-close" bindtap="closeDrawer">×</view>
     </view>

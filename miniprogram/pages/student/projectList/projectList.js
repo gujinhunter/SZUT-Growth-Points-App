@@ -29,7 +29,8 @@ Page({
     activeCategory: '',
     activeCategoryItems: [],
     defaultIcon: DEFAULT_ICON,
-    showDrawer: false
+    showDrawer: false,
+    activeCategoryDescription: ''
   },
 
   onLoad() {
@@ -70,21 +71,33 @@ Page({
         bgStart: gradient[0],
         bgEnd: gradient[1],
         itemCount: items.length,
-        summary: this.buildSummary(items),
+        summary: this.buildSummary(items, group.description),
+        description: group.description || '',
+        order: typeof group.order === 'number' ? group.order : index,
         items
       };
     });
 
+    const sorted = normalized.slice().sort((a, b) => {
+      const orderA = a.order ?? 0;
+      const orderB = b.order ?? 0;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.category.localeCompare(b.category);
+    });
+
     this.setData({
-      categoryCards: normalized
+      categoryCards: sorted
     });
   },
 
-  buildSummary(items = []) {
+  buildSummary(items = [], description = '') {
+    if (description) {
+      return description.length > 24 ? `${description.slice(0, 24)}...` : description;
+    }
     if (!items.length) return '暂无可申请项目';
     const first = items[0];
     if (first.remark) {
-      return first.remark.length > 20 ? `${first.remark.slice(0, 20)}...` : first.remark;
+      return first.remark.length > 24 ? `${first.remark.slice(0, 24)}...` : first.remark;
     }
     if (first.displayScore) {
       return `积分参考：${first.displayScore} 分`;
@@ -99,6 +112,7 @@ Page({
     this.setData({
       activeCategory: category,
       activeCategoryItems: target?.items || [],
+      activeCategoryDescription: target?.description || '',
       showDrawer: true
     });
   },

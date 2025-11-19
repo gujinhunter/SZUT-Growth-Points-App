@@ -89,10 +89,36 @@ async function listProjects({ page = 1, pageSize = 100, keyword = '', category =
     });
   });
 
-  const categories = Object.keys(grouped).sort().map(categoryName => ({
-    category: categoryName,
-    items: grouped[categoryName]
-  }));
+  const categoriesMetaList = await fetchAllCategoryMeta();
+  const categoryMap = {};
+  const categories = [];
+
+  categoriesMetaList.forEach((meta, index) => {
+    const name = meta.name || `分类${index + 1}`;
+    const items = grouped[name] || [];
+    categories.push({
+      category: name,
+      description: meta.description || '',
+      order: typeof meta.order === 'number' ? meta.order : index,
+      items
+    });
+    categoryMap[name] = true;
+  });
+
+  Object.keys(grouped).forEach(categoryName => {
+    if (categoryMap[categoryName]) return;
+    categories.push({
+      category: categoryName,
+      description: '',
+      order: Number.MAX_SAFE_INTEGER,
+      items: grouped[categoryName]
+    });
+  });
+
+  categories.sort((a, b) => {
+    if (a.order !== b.order) return a.order - b.order;
+    return a.category.localeCompare(b.category);
+  });
 
   return {
     page,
@@ -110,6 +136,26 @@ async function listProjects({ page = 1, pageSize = 100, keyword = '', category =
       createTime: item.createTime || null
     }))
   };
+}
+
+async function fetchAllCategoryMeta() {
+  try {
+    const res = await db.collection('projectCategories')
+      .orderBy('order', 'asc')
+      .orderBy('createdAt', 'asc')
+      .field({
+        name: true,
+        description: true,
+        order: true
+      })
+      .get();
+    if (res.data && res.data.length) {
+      return res.data;
+    }
+  } catch (err) {
+    console.warn('fetchAllCategoryMeta error', err);
+  }
+  return [];
 }
 
 async function getProjectDetail({ projectId }) {

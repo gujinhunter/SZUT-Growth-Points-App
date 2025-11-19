@@ -127,6 +127,13 @@
   color: #8a94ac;
 }
 
+.drawer-desc {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #6b7faf;
+  line-height: 1.5;
+}
+
 .drawer-close {
   font-size: 40rpx;
   color: #8a94ac;

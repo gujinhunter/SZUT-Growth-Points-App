@@ -128,16 +128,14 @@ Page({
           name,
           projectCount: projects.length
         };
-        if (projects.length) {
-          groupedProjects.push({
-            category: name,
-            categoryId: updated._id || '',
-            order: typeof updated.order === 'number' ? updated.order : idx,
-            description: updated.description || '',
-            projectCount: projects.length,
-            projects
-          });
-        }
+        groupedProjects.push({
+          category: name,
+          categoryId: updated._id || '',
+          order: typeof updated.order === 'number' ? updated.order : idx,
+          description: updated.description || '',
+          projectCount: projects.length,
+          projects
+        });
         return updated;
       });
 
