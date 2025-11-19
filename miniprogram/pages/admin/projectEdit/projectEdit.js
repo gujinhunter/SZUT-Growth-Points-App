@@ -67,8 +67,13 @@ Page({
   async loadCategories() {
     try {
       const data = await callProjectService('listCategories');
+      const names = Array.isArray(data)
+        ? data
+            .map(item => (typeof item === 'string' ? item : item?.name))
+            .filter(Boolean)
+        : [];
       this.setData({
-        categoryOptions: Array.isArray(data) && data.length ? data : ['其他']
+        categoryOptions: names.length ? names : ['其他']
       });
     } catch (err) {
       console.error('加载类别失败', err);

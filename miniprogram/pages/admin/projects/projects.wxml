@@ -3,8 +3,12 @@
     <view class="header-content">
       <text class="page-title">项目管理</text>
       <view class="header-spacer"></view>
+      <button class="ghost-btn" bindtap="openCategorySheet">
+        <text class="add-icon">≡</text>
+        <text>类别管理</text>
+      </button>
       <button class="add-btn" bindtap="addProject">
-        <text class="add-icon">+</text>
+        <text class="add-icon">＋</text>
         <text>新增项目</text>
       </button>
     </view>
@@ -14,8 +18,10 @@
     <block wx:for="{{groupedProjects}}" wx:key="category">
       <view class="category-section">
         <view class="category-header">
-          <text class="category-title">{{item.category}}</text>
-          <text class="category-count">{{item.projects.length}} 项</text>
+          <view class="category-info">
+            <text class="category-title">{{item.category}}</text>
+            <text class="category-count">{{item.projects.length}} 项</text>
+          </view>
         </view>
         <view class="category-projects">
           <block wx:for="{{item.projects}}" wx:for-item="project" wx:key="_id">
@@ -39,6 +45,66 @@
 
     <view wx:if="{{projects.length === 0}}" class="empty">
       暂无项目，请添加。
+    </view>
+  </view>
+
+  <view wx:if="{{categorySheetVisible}}" class="sheet-mask" bindtap="closeCategorySheet"></view>
+  <view wx:if="{{categorySheetVisible}}" class="sheet-panel" catchtap="noop">
+    <view class="sheet-header">
+      <view class="sheet-title">类别管理</view>
+      <button class="sheet-add" bindtap="openCreateCategory">＋ 新增类别</button>
+    </view>
+
+    <view wx:if="{{categorySheetMode === 'list'}}" class="sheet-list">
+      <block wx:for="{{categories}}" wx:key="name">
+        <view class="sheet-item">
+          <view class="sheet-item-info">
+            <view class="sheet-item-name">{{item.name}}</view>
+            <view class="sheet-item-meta">
+              <text>排序：{{item.order || 0}}</text>
+              <text>项目：{{item.projectCount || 0}}</text>
+            </view>
+          </view>
+          <button class="sheet-item-btn"
+                  bindtap="openCategoryForm"
+                  data-id="{{item._id}}"
+                  data-name="{{item.name}}"
+                  data-order="{{item.order}}"
+                  data-description="{{item.description}}">
+            编辑
+          </button>
+        </view>
+      </block>
+      <view wx:if="{{!categories.length}}" class="sheet-empty">暂无类别</view>
+    </view>
+
+    <view wx:if="{{categorySheetMode === 'form'}}" class="sheet-form">
+      <view class="dialog-field">
+        <view class="dialog-label">类别名称</view>
+        <input class="dialog-input"
+               placeholder="请输入类别名称"
+               value="{{categoryForm.name}}"
+               bindinput="onCategoryNameInput" />
+      </view>
+      <view class="dialog-field">
+        <view class="dialog-label">显示排序</view>
+        <input class="dialog-input"
+               type="number"
+               placeholder="数值越小越靠前"
+               value="{{categoryForm.order}}"
+               bindinput="onCategoryOrderInput" />
+      </view>
+      <view class="dialog-field">
+        <view class="dialog-label">类别描述 (可选)</view>
+        <textarea class="dialog-textarea"
+                  placeholder="填写描述信息，方便快速识别"
+                  value="{{categoryForm.description}}"
+                  bindinput="onCategoryDescInput"></textarea>
+      </view>
+      <view class="sheet-actions">
+        <button class="dialog-cancel" bindtap="closeCategorySheet">取消</button>
+        <button class="dialog-confirm" bindtap="saveCategory" loading="{{categorySaving}}">保存</button>
+      </view>
     </view>
   </view>
 </view>

@@ -5,6 +5,8 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const db = cloud.database();
 const _ = db.command;
+const $ = db.command.aggregate;
+const CATEGORY_COLLECTION = 'projectCategories';
 
 class AuthError extends Error {
   constructor(message, code = 'AUTH_DENIED') {
@@ -24,6 +26,8 @@ exports.main = async (event) => {
         return { success: true, data: await listProjects(event.payload || {}) };
       case 'listCategories':
         return { success: true, data: await listCategories() };
+      case 'saveCategory':
+        return { success: true, data: await saveCategory(event.payload || {}) };
       case 'saveProject':
         return { success: true, data: await saveProject(event.payload || {}) };
       case 'deleteProject':
@@ -98,21 +102,69 @@ async function listProjects({ page = 1, pageSize = 50, category = '', keyword = 
 }
 
 async function listCategories() {
-  const res = await db.collection('activities')
-    .field({ category: true })
-    .get();
-  const set = new Set();
-  (res.data || []).forEach(item => {
-    const raw = item?.category;
-    const list = Array.isArray(raw) ? raw : [raw];
-    list.forEach(value => {
-      const text = (value ?? '').toString().trim();
-      if (text) set.add(text);
-    });
-  });
-  const categories = Array.from(set).sort();
-  if (!categories.length) categories.push('其他');
-  return categories;
+  const collection = db.collection(CATEGORY_COLLECTION);
+  let categoriesRes;
+  try {
+    categoriesRes = await collection
+      .orderBy('order', 'asc')
+      .orderBy('createdAt', 'asc')
+      .get();
+  } catch (err) {
+    if (isCollectionNotExist(err)) {
+      await ensureCategoryCollection();
+      categoriesRes = await collection
+        .orderBy('order', 'asc')
+        .orderBy('createdAt', 'asc')
+        .get();
+    } else {
+      throw err;
+    }
+  }
+  let categories = categoriesRes.data || [];
+
+  if (!categories.length) {
+    await seedCategories();
+    categoriesRes = await collection
+      .orderBy('order', 'asc')
+      .orderBy('createdAt', 'asc')
+      .get();
+    categories = categoriesRes.data || [];
+  } else {
+    const existingNames = new Set(categories.map(item => item.name));
+    const additional = await fetchDistinctActivityCategories();
+    const missing = additional.filter(name => !existingNames.has(name));
+    if (missing.length) {
+      const now = new Date();
+      for (let i = 0; i < missing.length; i++) {
+        await collection.add({
+          data: {
+            name: missing[i],
+            order: categories.length + i,
+            description: '',
+            createdAt: now,
+            updatedAt: now
+          }
+        });
+      }
+      categoriesRes = await collection
+        .orderBy('order', 'asc')
+        .orderBy('createdAt', 'asc')
+        .get();
+      categories = categoriesRes.data || [];
+    }
+  }
+
+  const names = categories.map(item => item.name);
+  const counts = await fetchCategoryCounts(names);
+
+  return categories.map(item => ({
+    _id: item._id,
+    name: item.name,
+    order: item.order ?? 0,
+    description: item.description || '',
+    projectCount: counts[item.name] || 0,
+    createdAt: item.createdAt || null
+  }));
 }
 
 async function saveProject(payload) {
@@ -152,6 +204,239 @@ async function deleteProject({ projectId }) {
   }
   await db.collection('activities').doc(projectId).remove();
   return { projectId };
+}
+
+async function saveCategory(payload = {}) {
+  await ensureCategoryCollection();
+  const categories = db.collection(CATEGORY_COLLECTION);
+  const categoryId = payload.categoryId || payload._id || '';
+  const name = (payload.name || '').trim();
+  const description = (payload.description || '').trim();
+  const orderValue = Number(payload.order);
+  const order = Number.isFinite(orderValue) ? orderValue : 0;
+  const now = new Date();
+
+  if (!name) {
+    throw new Error('类别名称不能为空');
+  }
+
+  if (categoryId) {
+    const existingRes = await categories.doc(categoryId).get();
+    const existing = existingRes.data;
+    if (!existing) {
+      throw new Error('类别不存在或已被删除');
+    }
+
+    if (existing.name !== name) {
+      const dup = await categories
+        .where({
+          name,
+          _id: _.neq(categoryId)
+        })
+        .limit(1)
+        .get();
+      if (dup.data && dup.data.length) {
+        throw new Error('已存在同名类别');
+      }
+    }
+
+    let targetOrder = order;
+    if (existing.order !== targetOrder) {
+      await shiftCategoryOrders(targetOrder, categoryId);
+    }
+
+    await categories.doc(categoryId).update({
+      data: {
+        name,
+        description,
+        order: targetOrder,
+        updatedAt: now
+      }
+    });
+
+    if (existing.name !== name) {
+      await renameActivitiesCategory(existing.name, name);
+    }
+
+    await normalizeCategoryOrders();
+    return { categoryId };
+  }
+
+  const dup = await categories.where({ name }).limit(1).get();
+  if (dup.data && dup.data.length) {
+    throw new Error('已存在同名类别');
+  }
+
+  await shiftCategoryOrders(order);
+
+  const res = await categories.add({
+    data: {
+      name,
+      description,
+      order,
+      createdAt: now,
+      updatedAt: now
+    }
+  });
+  await normalizeCategoryOrders();
+  return { categoryId: res._id };
+}
+
+async function seedCategories() {
+  const activities = await fetchDistinctActivityCategories();
+  const list = activities.length ? activities : ['其他'];
+  const now = new Date();
+  const collection = db.collection(CATEGORY_COLLECTION);
+  for (let i = 0; i < list.length; i++) {
+    await collection.add({
+      data: {
+        name: list[i],
+        order: i,
+        description: '',
+        createdAt: now,
+        updatedAt: now
+      }
+    });
+  }
+}
+
+async function fetchDistinctActivityCategories() {
+  const res = await db.collection('activities').field({ category: true }).get();
+  const set = new Set();
+  (res.data || []).forEach(item => {
+    const raw = item?.category;
+    const list = Array.isArray(raw) ? raw : [raw];
+    list.forEach(value => {
+      const text = (value ?? '').toString().trim();
+      if (text) set.add(text);
+    });
+  });
+  return Array.from(set);
+}
+
+async function fetchCategoryCounts(names = []) {
+  const counts = {};
+  if (!Array.isArray(names) || !names.length) {
+    return counts;
+  }
+  try {
+    const res = await db.collection('activities')
+      .aggregate()
+      .match({
+        category: _.in(names)
+      })
+      .group({
+        _id: '$category',
+        count: $.sum(1)
+      })
+      .end();
+    (res.list || []).forEach(item => {
+      if (item?._id) {
+        counts[item._id] = item.count || 0;
+      }
+    });
+  } catch (err) {
+    console.warn('fetchCategoryCounts aggregate error', err);
+  }
+  return counts;
+}
+
+async function renameActivitiesCategory(oldName, newName) {
+  if (!oldName || oldName === newName) return;
+  const collection = db.collection('activities');
+  const { total } = await collection.where({ category: oldName }).count();
+  if (!total) return;
+  const BATCH_SIZE = 100;
+  const rounds = Math.ceil(total / BATCH_SIZE);
+  for (let i = 0; i < rounds; i++) {
+    const { data } = await collection
+      .where({ category: oldName })
+      .field({ _id: true })
+      .limit(BATCH_SIZE)
+      .get();
+    if (!data || !data.length) break;
+    const ids = data.map(item => item._id);
+    await collection
+      .where({ _id: _.in(ids) })
+      .update({
+        data: { category: newName }
+      });
+  }
+}
+
+async function ensureCategoryCollection() {
+  try {
+    await db.createCollection(CATEGORY_COLLECTION);
+  } catch (err) {
+    if (!isCollectionAlreadyExists(err)) {
+      console.warn('ensureCategoryCollection error', err);
+    }
+  }
+}
+
+function isCollectionNotExist(err = {}) {
+  return err?.errCode === -502005 || err?.code === 'DATABASE_COLLECTION_NOT_EXIST';
+}
+
+function isCollectionAlreadyExists(err = {}) {
+  // errCode -502006 indicates already exists
+  return err?.errCode === -502006 || err?.code === 'DATABASE_COLLECTION_ALREADY_EXISTS';
+}
+
+async function shiftCategoryOrders(order, excludeId = '') {
+  const categories = db.collection(CATEGORY_COLLECTION);
+  const where = excludeId
+    ? { order: _.gte(order), _id: _.neq(excludeId) }
+    : { order: _.gte(order) };
+  let res;
+  try {
+    res = await categories.where(where).field({ _id: true }).get();
+  } catch (err) {
+    if (isCollectionNotExist(err)) {
+      await ensureCategoryCollection();
+      return;
+    }
+    throw err;
+  }
+
+  const ids = (res.data || []).map(item => item._id).filter(Boolean);
+  if (!ids.length) return;
+  const BATCH_SIZE = 100;
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batchIds = ids.slice(i, i + BATCH_SIZE);
+    await categories
+      .where({ _id: _.in(batchIds) })
+      .update({
+        data: { order: _.inc(1) }
+      });
+  }
+}
+
+async function normalizeCategoryOrders() {
+  const categories = db.collection(CATEGORY_COLLECTION);
+  let res;
+  try {
+    res = await categories
+      .orderBy('order', 'asc')
+      .orderBy('createdAt', 'asc')
+      .get();
+  } catch (err) {
+    if (isCollectionNotExist(err)) {
+      return;
+    }
+    throw err;
+  }
+
+  const list = res.data || [];
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    const currentOrder = typeof item.order === 'number' ? item.order : i;
+    if (currentOrder !== i) {
+      await categories.doc(item._id).update({
+        data: { order: i }
+      });
+    }
+  }
 }
 
 function parseScore(input) {
