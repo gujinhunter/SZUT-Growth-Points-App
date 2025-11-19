@@ -61,6 +61,12 @@
     </button>
   </view>
 
-  <button formType="submit" type="primary" class="submit-btn">提交申请</button>
+  <button formType="submit"
+          type="primary"
+          class="submit-btn"
+          loading="{{submitting}}"
+          disabled="{{submitting}}">
+    提交申请
+  </button>
 </form>
 </view>

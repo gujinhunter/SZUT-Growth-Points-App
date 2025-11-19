@@ -208,16 +208,23 @@ Page({
   },
 
   async submitForm(e) {
-    if (this.data.submitting) return;
+    if (this._submitLock) return;
+    this._submitLock = true;
+    if (this.data.submitting) {
+      this._submitLock = false;
+      return;
+    }
     const { reason } = e.detail.value;
     const { projectId, projectName, fileIDs, fileNames, selectedScore, profile, isEditMode, applicationId } = this.data;
 
     if (!reason) {
       wx.showToast({ title: '请填写申请理由', icon: 'none' });
+      this._submitLock = false;
       return;
     }
     if (!fileIDs.length) {
       wx.showToast({ title: '请上传附件', icon: 'none' });
+      this._submitLock = false;
       return;
     }
 
@@ -253,6 +260,7 @@ Page({
       console.error('提交申请失败', err);
       wx.showToast({ title: err.message || '提交失败', icon: 'none' });
     } finally {
+      this._submitLock = false;
       this.setData({ submitting: false });
     }
   }

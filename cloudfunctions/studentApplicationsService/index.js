@@ -265,6 +265,20 @@ async function createApplication(openid, payload) {
     throw new Error('无法获取学号，请先完成用户绑定');
   }
 
+  const now = new Date();
+  const duplicateWindowStart = new Date(now.getTime() - 5000);
+  const duplicateRes = await db.collection('applications')
+    .where({
+      studentOpenId: openid,
+      projectId,
+      status: '待审核',
+      createTime: _.gte(duplicateWindowStart)
+    })
+    .count();
+  if (duplicateRes.total > 0) {
+    throw new Error('您已提交，请勿重复点击');
+  }
+
   const formattedFileNames = Array.isArray(fileNames) && fileNames.length
     ? fileNames.slice(0, 3)
     : safeFiles.map((_, idx) => `附件${idx + 1}`);
@@ -283,7 +297,7 @@ async function createApplication(openid, payload) {
       studentOpenId: openid,
       points: validPoints || 0,
       status: '待审核',
-      createTime: new Date()
+      createTime: now
     }
   });
 
