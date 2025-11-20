@@ -48,7 +48,11 @@
             </block>
           </view>
         </view>
-        <view wx:if="{{item.status === '已驳回'}}" class="row action-row">
+        <view wx:if="{{item.status === '已驳回'}}" class="resubmit-toolbar">
+          <view class="resubmit-text">
+            <view class="resubmit-title">申请已被驳回</view>
+            <view class="resubmit-sub">按要求调整内容后，可再次提交审核</view>
+          </view>
           <button class="resubmit-btn"
                   size="mini"
                   bindtap="handleResubmit"
