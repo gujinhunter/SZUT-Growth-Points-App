@@ -28,6 +28,8 @@ exports.main = async (event) => {
         return { success: true, data: await listCategories() };
       case 'saveCategory':
         return { success: true, data: await saveCategory(event.payload || {}) };
+      case 'deleteCategory':
+        return { success: true, data: await deleteCategory(event.payload || {}) };
       case 'saveProject':
         return { success: true, data: await saveProject(event.payload || {}) };
       case 'deleteProject':
@@ -204,6 +206,28 @@ async function deleteProject({ projectId }) {
   }
   await db.collection('activities').doc(projectId).remove();
   return { projectId };
+}
+
+async function deleteCategory({ categoryId }) {
+  if (!categoryId) {
+    throw new Error('缺少 categoryId');
+  }
+  await ensureCategoryCollection();
+  const categories = db.collection(CATEGORY_COLLECTION);
+  const categoryRes = await categories.doc(categoryId).get();
+  const category = categoryRes.data;
+  if (!category) {
+    throw new Error('类别不存在或已被删除');
+  }
+
+  const { total } = await db.collection('activities').where({ category: category.name }).count();
+  if (total > 0) {
+    throw new Error('该类别仍有关联项目，无法删除');
+  }
+
+  await categories.doc(categoryId).remove();
+  await normalizeCategoryOrders();
+  return { categoryId };
 }
 
 async function saveCategory(payload = {}) {

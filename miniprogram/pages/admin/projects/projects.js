@@ -260,6 +260,35 @@ Page({
     });
   },
 
+  deleteCategory(e) {
+    const { id = '', name = '', count = 0 } = e.currentTarget.dataset;
+    if (!id) return;
+    const projectCount = Number(count) || 0;
+    if (projectCount > 0) {
+      wx.showToast({ title: '该类别仍有项目，无法删除', icon: 'none' });
+      return;
+    }
+    wx.showModal({
+      title: '删除类别',
+      content: `确认删除「${name || ''}」？该操作不可恢复`,
+      success: async res => {
+        if (!res.confirm) return;
+        wx.showLoading({ title: '删除中...' });
+        try {
+          await callProjectService('deleteCategory', { categoryId: id });
+          wx.showToast({ title: '已删除', icon: 'success' });
+          await this.loadCategories();
+          await this.loadProjects();
+        } catch (err) {
+          console.error('删除类别失败', err);
+          wx.showToast({ title: err.message || '删除失败', icon: 'none' });
+        } finally {
+          wx.hideLoading();
+        }
+      }
+    });
+  },
+
   openCreateCategory() {
     this.setData({
       categorySheetMode: 'form',

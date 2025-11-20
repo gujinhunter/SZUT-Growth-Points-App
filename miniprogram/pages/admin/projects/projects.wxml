@@ -65,14 +65,24 @@
               <text>项目：{{item.projectCount || 0}}</text>
             </view>
           </view>
-          <button class="sheet-item-btn"
-                  bindtap="openCategoryForm"
-                  data-id="{{item._id}}"
-                  data-name="{{item.name}}"
-                  data-order="{{item.order}}"
-                  data-description="{{item.description}}">
-            编辑
-          </button>
+          <view class="sheet-item-actions">
+            <button class="sheet-item-btn"
+                    bindtap="openCategoryForm"
+                    data-id="{{item._id}}"
+                    data-name="{{item.name}}"
+                    data-order="{{item.order}}"
+                    data-description="{{item.description}}">
+              编辑
+            </button>
+            <button class="sheet-item-btn sheet-item-delete"
+                    disabled="{{(item.projectCount || 0) > 0}}"
+                    bindtap="deleteCategory"
+                    data-id="{{item._id}}"
+                    data-name="{{item.name}}"
+                    data-count="{{item.projectCount || 0}}">
+              删除
+            </button>
+          </view>
         </view>
       </block>
       <view wx:if="{{!categories.length}}" class="sheet-empty">暂无类别</view>

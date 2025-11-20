@@ -310,10 +310,11 @@
 .sheet-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   padding: 24rpx 28rpx;
   background: #f5f7fb;
   border-radius: 24rpx;
+  gap: 24rpx;
 }
 
 .sheet-item-info {
@@ -348,6 +349,27 @@
 
 .sheet-item-btn::after {
   border: none;
+}
+
+.sheet-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.sheet-item-delete {
+  border-color: rgba(255, 107, 107, 0.4);
+  color: #ff6b6b;
+}
+
+.sheet-item-delete::after {
+  border: none;
+}
+
+.sheet-item-delete:disabled {
+  opacity: 0.35;
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #9aa1c7;
 }
 
 .sheet-empty {
