@@ -53,8 +53,8 @@ Page({
       { label: '姓名', value: profile.name || '' },
       { label: '学号', value: profile.studentId || '' },
       { label: '学院', value: profile.academy || '' },
-      { label: '班级', value: profile.className || '' },
-      { label: '当前角色', value: roleText }
+      { label: '专业', value: profile.major || '' },
+      { label: '班级', value: profile.className || '' }
     ];
   },
 

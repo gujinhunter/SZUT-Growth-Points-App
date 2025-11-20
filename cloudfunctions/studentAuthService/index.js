@@ -43,6 +43,7 @@ async function getProfile(openid) {
       studentId: true,
       phone: true,
       academy: true,
+      major: true,
       className: true,
       role: true
     })
@@ -58,6 +59,7 @@ async function getProfile(openid) {
       studentId: '',
       phone: '',
       academy: '',
+      major: '',
       className: '',
       role: ''
     };
@@ -69,6 +71,7 @@ async function getProfile(openid) {
     studentId: user.studentId || '',
     phone: user.phone || '',
     academy: user.academy || '',
+    major: user.major || '',
     className: user.className || '',
     role: user.role || ''
   };
