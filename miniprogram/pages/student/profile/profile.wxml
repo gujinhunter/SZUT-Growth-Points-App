@@ -21,9 +21,15 @@
       <text class="info-label">联系电话</text>
       <text class="info-value">{{profile.phone || '未填写'}}</text>
     </view>
-    <button class="edit-phone-btn" size="mini" bindtap="editPhone" disabled="{{needBind}}">
-      编辑联系电话
-    </button>
+    <view class="info-toolbar">
+      <view class="toolbar-text">
+        <view class="toolbar-title">保持联系方式畅通</view>
+        <view class="toolbar-sub">如有变更请及时更新联系电话</view>
+      </view>
+      <button class="toolbar-btn toolbar-btn--ghost" size="mini" bindtap="editPhone" disabled="{{needBind}}">
+        编辑联系电话
+      </button>
+    </view>
   </view>
 
   <view class="info-card">
@@ -31,7 +37,15 @@
     <view class="hint-text">
       姓名 + 学号仅允许绑定一个微信账号。如需更换或校正信息，请联系管理员执行解绑后再重新绑定。
     </view>
-    <button class="refresh-btn" size="mini" bindtap="loadProfile">刷新信息</button>
+    <view class="info-toolbar info-toolbar--ghost">
+      <view class="toolbar-text">
+        <view class="toolbar-title">资料未更新？</view>
+        <view class="toolbar-sub">点击刷新即可同步管理员的最新调整</view>
+      </view>
+      <button class="toolbar-btn toolbar-btn--ghost" size="mini" bindtap="loadProfile">
+        刷新信息
+      </button>
+    </view>
   </view>
 
   <view class="bind-tip" wx:if="{{needBind}}">

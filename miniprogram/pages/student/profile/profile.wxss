@@ -89,56 +89,80 @@
   max-width: 60%;
 }
 
-.edit-phone-btn {
-  margin-top: 24rpx;
-  align-self: flex-start;
-  padding: 0 36rpx;
-  min-width: 320rpx;
-  height: 72rpx;
-  line-height: 72rpx;
-  background: linear-gradient(135deg, #1f4e9d, #2f6fd2);
-  color: #fff;
+.info-toolbar {
+  margin-top: 28rpx;
+  padding: 24rpx 28rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, rgba(31, 78, 157, 0.08), rgba(47, 111, 210, 0.1));
+  border: 2rpx dashed rgba(31, 79, 163, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.toolbar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  color: #1f2b50;
+}
+
+.toolbar-title {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.toolbar-sub {
+  font-size: 24rpx;
+  color: #61729a;
+}
+
+.toolbar-btn {
+  min-width: 220rpx;
+  height: 64rpx;
   border-radius: 999rpx;
   border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16rpx;
-  font-size: 28rpx;
+  background: linear-gradient(135deg, #1f4e9d, #2f6fd2);
+  color: #fff;
+  font-size: 26rpx;
   font-weight: 500;
   box-shadow: 0 12rpx 24rpx rgba(31, 79, 163, 0.25);
-}
-.edit-phone-btn::after {
-  border: none;
-}
-.edit-phone-btn__icon {
-  width: 40rpx;
-  height: 40rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26rpx;
 }
-.edit-phone-btn__text {
-  white-space: nowrap;
+
+.toolbar-btn::after {
+  border: none;
 }
-.edit-phone-btn:disabled {
-  opacity: 0.6;
+
+.toolbar-btn:disabled {
+  opacity: 0.55;
   box-shadow: none;
+}
+
+.info-toolbar--ghost {
+  margin-top: 24rpx;
+  background: rgba(31, 79, 163, 0.06);
+  border-style: solid;
+}
+
+.toolbar-btn--ghost {
+  background: #ffffff;
+  color: #1f4e9d;
+  border: 2rpx solid rgba(31, 79, 163, 0.3);
+  box-shadow: none;
+}
+
+.toolbar-btn--ghost::after {
+  border: none;
 }
 
 .hint-text {
   font-size: 26rpx;
   color: #4c5879;
   line-height: 1.6;
-}
-
-.refresh-btn {
-  margin-top: 20rpx;
-  background: #eef2fb;
-  color: #1f4e9d;
 }
 
 .bind-tip {
