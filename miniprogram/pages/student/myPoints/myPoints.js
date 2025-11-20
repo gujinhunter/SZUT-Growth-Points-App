@@ -18,6 +18,10 @@ Page({
     this.loadData();
   },
 
+  onPullDownRefresh() {
+    this.loadData();
+  },
+
   async loadData() {
     try {
       this.setData({ loading: true });
@@ -49,6 +53,7 @@ Page({
     } finally {
       wx.hideLoading();
       this.setData({ loading: false });
+      wx.stopPullDownRefresh();
     }
   },
 

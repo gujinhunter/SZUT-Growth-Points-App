@@ -28,6 +28,26 @@
 
   <view wx:if="{{!loading && !categoryCards.length}}" class="empty">暂无积分项目</view>
 
+  <view wx:if="{{announcement}}" class="notice-card">
+    <view class="notice-header">
+      <view class="notice-left">
+        <image class="notice-icon" src="{{announcement.icon || defaultNoticeIcon}}" mode="aspectFit"></image>
+        <view class="notice-title">活动资讯</view>
+      </view>
+      <view class="notice-time" wx:if="{{announcement.publishTimeText}}">{{announcement.publishTimeText}}</view>
+    </view>
+    <view class="notice-content">
+      <view class="notice-content-title">{{announcement.title}}</view>
+      <view class="notice-content-body">{{announcement.content || '敬请关注更多活动'}}</view>
+      <view class="notice-expire" wx:if="{{announcement.expireTimeText}}">
+        截止：{{announcement.expireTimeText}}
+      </view>
+    </view>
+  </view>
+  <view wx:elif="{{!loading}}" class="notice-card notice-card--empty">
+    <view class="notice-empty-text">暂无相关公告</view>
+  </view>
+
   <view wx:if="{{showDrawer}}" class="drawer-mask" bindtap="closeDrawer"></view>
   <view wx:if="{{showDrawer}}" class="drawer-panel" catchtap="noop">
     <view class="drawer-header">

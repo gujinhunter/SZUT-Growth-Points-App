@@ -11,6 +11,10 @@ Page({
     this.loadApplications();
   },
 
+  onPullDownRefresh() {
+    this.loadApplications();
+  },
+
   async loadApplications() {
     this.setData({ loading: true });
     wx.showLoading({ title: '加载中...' });
@@ -58,6 +62,7 @@ Page({
       });
     } finally {
       wx.hideLoading();
+      wx.stopPullDownRefresh();
     }
   },
 

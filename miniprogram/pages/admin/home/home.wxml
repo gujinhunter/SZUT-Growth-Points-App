@@ -54,4 +54,68 @@
     </view>
   </view>
 
+  <view class="announcement-card">
+    <view class="announcement-header">
+      <view>
+        <view class="announcement-title">活动公告</view>
+        <view class="announcement-sub" wx:if="{{announcement && announcement.publishTime}}">最近发布：{{announcement.publishTime}}</view>
+      </view>
+      <view class="announcement-actions">
+        <view class="announcement-action" bindtap="openAnnouncementSheet">
+          <text class="announcement-icon">✎</text>
+          <text class="announcement-action-text">发布公告</text>
+        </view>
+        <view wx:if="{{announcement}}" class="announcement-delete" bindtap="confirmDeleteAnnouncement">
+          删除
+        </view>
+      </view>
+    </view>
+    <view class="announcement-body" wx:if="{{announcement}}">
+      <view class="announcement-content">{{announcement.content}}</view>
+      <view class="announcement-expire" wx:if="{{announcement.expireTime}}">
+        截止：{{announcement.expireTime}}
+      </view>
+    </view>
+    <view class="announcement-empty" wx:if="{{!announcement}}">
+      暂未发布公告，点击右上角发布通知。
+    </view>
+  </view>
+
+</view>
+
+<view wx:if="{{announcementSheetVisible}}" class="sheet-mask" bindtap="closeAnnouncementSheet"></view>
+<view wx:if="{{announcementSheetVisible}}" class="sheet-panel" catchtap="noop">
+  <view class="sheet-header">
+    <view class="sheet-title">发布活动公告</view>
+  </view>
+  <view class="sheet-form">
+    <view class="dialog-field">
+      <view class="dialog-label">标题</view>
+      <input class="dialog-input"
+             placeholder="例如：本周新增志愿活动"
+             value="{{announcementForm.title}}"
+             bindinput="onAnnouncementTitleInput" />
+    </view>
+    <view class="dialog-field">
+      <view class="dialog-label">公告内容</view>
+      <textarea class="dialog-textarea"
+                placeholder="请输入公告内容"
+                value="{{announcementForm.content}}"
+                bindinput="onAnnouncementContentInput"></textarea>
+    </view>
+    <view class="dialog-field">
+      <view class="dialog-label">截止时间 (可选)</view>
+      <picker mode="date"
+              value="{{announcementForm.expireTime}}"
+              bindchange="onAnnouncementExpireInput">
+        <view class="dialog-input dialog-picker">
+          {{announcementForm.expireTime || '请选择截止日期'}}
+        </view>
+      </picker>
+    </view>
+    <view class="sheet-actions">
+      <button class="dialog-cancel" bindtap="closeAnnouncementSheet">取消</button>
+      <button class="dialog-confirm" bindtap="saveAnnouncement" loading="{{announcementSaving}}">保存并发布</button>
+    </view>
+  </view>
 </view>

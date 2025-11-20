@@ -1,6 +1,7 @@
 // pages/projectList/projectList.js
 const PROJECT_SERVICE = 'studentProjectService';
 const DEFAULT_ICON = '../../../assets/projects/project_active.png';
+const DEFAULT_NOTICE_ICON = '../../../assets/projects/project_notice.png';
 const CATEGORY_ICONS = {
   '其他': '../../../assets/projects/project_active.png',
   '创新创业': '../../../assets/projects/创新创业.png',
@@ -30,11 +31,19 @@ Page({
     activeCategoryItems: [],
     defaultIcon: DEFAULT_ICON,
     showDrawer: false,
-    activeCategoryDescription: ''
+    activeCategoryDescription: '',
+    announcement: null,
+    defaultNoticeIcon: DEFAULT_NOTICE_ICON
   },
 
   onLoad() {
     this.loadActivities();
+  },
+
+  onPullDownRefresh() {
+    this.loadActivities()
+      .catch(() => {})
+      .finally(() => wx.stopPullDownRefresh());
   },
 
   async loadActivities() {
@@ -49,8 +58,9 @@ Page({
       if (!result.success) {
         throw new Error(result.message || '项目加载失败');
       }
-      const list = result.data?.list || [];
-      this.setData({ activities: list, loading: false });
+    const list = result.data?.list || [];
+    const announcement = this.normalizeAnnouncement(result.data?.announcement || null);
+      this.setData({ activities: list, loading: false, announcement });
       this.decorateCategories(list);
     } catch (err) {
       console.error('加载项目失败', err);
@@ -128,5 +138,32 @@ Page({
     wx.navigateTo({
       url: `/pages/student/apply/apply?projectId=${item._id}&projectName=${item.name}`
     });
+  },
+
+  normalizeAnnouncement(raw) {
+    if (!raw) return null;
+    return {
+      icon: raw.icon || '',
+      title: raw.title || '活动公告',
+      content: raw.content || '',
+      expireTimeText: raw.expireTime ? this.formatDate(raw.expireTime) : '',
+      publishTimeText: this.formatDateTime(raw.publishTime || raw.updatedAt)
+    };
+  },
+
+  formatDateTime(input) {
+    if (!input) return '';
+    const date = input instanceof Date ? input : new Date(input);
+    if (Number.isNaN(date.getTime())) return '';
+    const pad = n => `${n}`.padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  },
+
+  formatDate(input) {
+    if (!input) return '';
+    const date = input instanceof Date ? input : new Date(input);
+    if (Number.isNaN(date.getTime())) return '';
+    const pad = n => `${n}`.padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   }
 });

@@ -120,6 +120,8 @@ async function listProjects({ page = 1, pageSize = 100, keyword = '', category =
     return a.category.localeCompare(b.category);
   });
 
+  const announcement = await fetchLatestAnnouncement();
+
   return {
     page,
     pageSize,
@@ -134,7 +136,8 @@ async function listProjects({ page = 1, pageSize = 100, keyword = '', category =
       remark: item.remark || '',
       isOpen: item.isOpen !== false,
       createTime: item.createTime || null
-    }))
+    })),
+    announcement
   };
 }
 
@@ -193,4 +196,27 @@ function sanitizeExt(ext) {
   const lower = ext.toLowerCase();
   const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.pdf', '.doc', '.docx'];
   return allowed.includes(lower) ? lower : '.jpg';
+}
+
+async function fetchLatestAnnouncement() {
+  try {
+    const now = new Date();
+    const res = await db.collection('projectAnnouncements')
+      .where(_.or([
+        { expireTime: _.exists(false) },
+        { expireTime: _.eq(null) },
+        { expireTime: _.gte(now) }
+      ]))
+      .orderBy('publishTime', 'desc')
+      .orderBy('updatedAt', 'desc')
+      .limit(1)
+      .get();
+    return res.data?.[0] || null;
+  } catch (err) {
+    if (err?.errCode === -502005 || err?.code === 'DATABASE_COLLECTION_NOT_EXIST') {
+      return null;
+    }
+    console.warn('fetchLatestAnnouncement error', err);
+    return null;
+  }
 }

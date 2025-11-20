@@ -7,6 +7,7 @@ const db = cloud.database();
 const _ = db.command;
 const $ = db.command.aggregate;
 const CATEGORY_COLLECTION = 'projectCategories';
+const ANNOUNCEMENT_COLLECTION = 'projectAnnouncements';
 
 class AuthError extends Error {
   constructor(message, code = 'AUTH_DENIED') {
@@ -26,6 +27,12 @@ exports.main = async (event) => {
         return { success: true, data: await listProjects(event.payload || {}) };
       case 'listCategories':
         return { success: true, data: await listCategories() };
+      case 'getAnnouncement':
+        return { success: true, data: await getAnnouncement() };
+      case 'saveAnnouncement':
+        return { success: true, data: await saveAnnouncement(event.payload || {}) };
+      case 'deleteAnnouncement':
+        return { success: true, data: await deleteAnnouncement(event.payload || {}) };
       case 'saveCategory':
         return { success: true, data: await saveCategory(event.payload || {}) };
       case 'deleteCategory':
@@ -481,4 +488,106 @@ function formatScore(score) {
   if (typeof score === 'number') return score.toString();
   if (typeof score === 'string') return score;
   return '';
+}
+
+async function getAnnouncement() {
+  try {
+    const res = await db.collection(ANNOUNCEMENT_COLLECTION)
+      .orderBy('publishTime', 'desc')
+      .orderBy('updatedAt', 'desc')
+      .limit(1)
+      .get();
+    return res.data?.[0] || null;
+  } catch (err) {
+    if (isCollectionNotExist(err)) {
+      return null;
+    }
+    throw err;
+  }
+}
+
+async function saveAnnouncement(payload = {}) {
+  await ensureAnnouncementCollection();
+  const collection = db.collection(ANNOUNCEMENT_COLLECTION);
+  const announcementId = payload.announcementId || payload._id || '';
+  const title = (payload.title || '活动资讯').trim() || '活动资讯';
+  const content = (payload.content || '').trim();
+  if (!content) {
+    throw new Error('公告内容不能为空');
+  }
+  const now = new Date();
+  let expireTime = null;
+  if (payload.expireTime) {
+    const date = new Date(payload.expireTime);
+    if (!Number.isNaN(date.getTime())) {
+      date.setHours(23, 59, 59, 999);
+      expireTime = date;
+    }
+  }
+  const publishTime = payload.publishTime ? new Date(payload.publishTime) : now;
+
+  if (announcementId) {
+    await collection.doc(announcementId).update({
+      data: {
+        title,
+        content,
+        expireTime,
+        publishTime,
+        updatedAt: now
+      }
+    });
+    return { announcementId };
+  }
+
+  const existing = await collection.limit(1).get();
+  if (existing.data && existing.data.length) {
+    const docId = existing.data[0]._id;
+    await collection.doc(docId).update({
+      data: {
+        title,
+        content,
+        expireTime,
+        publishTime,
+        updatedAt: now
+      }
+    });
+    return { announcementId: docId };
+  }
+
+  const res = await collection.add({
+    data: {
+      title,
+      content,
+      expireTime,
+      publishTime,
+      createdAt: now,
+      updatedAt: now
+    }
+  });
+  return { announcementId: res._id };
+}
+
+async function ensureAnnouncementCollection() {
+  try {
+    await db.createCollection(ANNOUNCEMENT_COLLECTION);
+  } catch (err) {
+    if (!isCollectionAlreadyExists(err)) {
+      console.warn('ensureAnnouncementCollection error', err);
+    }
+  }
+}
+
+async function deleteAnnouncement(payload = {}) {
+  await ensureAnnouncementCollection();
+  const collection = db.collection(ANNOUNCEMENT_COLLECTION);
+  let targetId = payload.announcementId || payload._id || '';
+  if (!targetId) {
+    const existing = await collection.limit(1).get();
+    targetId = existing.data?.[0]?._id || '';
+  }
+  if (!targetId) {
+    throw new Error('暂无公告可删除');
+  }
+  await collection.doc(targetId).remove();
+  return { announcementId: targetId };
 }
