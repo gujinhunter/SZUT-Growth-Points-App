@@ -90,6 +90,7 @@ Page({
           studentId: item.studentId || '—',
           academy: item.academy || '',
           className: item.className || '',
+          major: item.major || '',
           totalPoints: points
         };
       });

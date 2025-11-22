@@ -162,7 +162,7 @@
 }
 
 
-.cell.academy {
+.cell.major {
   flex: 1;
   gap: 4rpx;
   color: #4c6284;

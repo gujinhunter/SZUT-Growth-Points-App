@@ -20,7 +20,8 @@ exports.main = async () => {
           studentId: true,
           totalPoints: true,
           className: true,
-          academy: true
+          academy: true,
+          major: true
         })
         .get()
     );
@@ -38,6 +39,7 @@ exports.main = async () => {
     { header: '学号', key: 'studentId', width: 18 },
     { header: '学院', key: 'academy', width: 20 },
     { header: '班级', key: 'className', width: 18 },
+    { header: '专业', key: 'major', width: 20 },
     { header: '总积分', key: 'totalPoints', width: 12 }
   ];
 
@@ -48,6 +50,7 @@ exports.main = async () => {
       studentId: item.studentId || '',
       academy: item.academy || '',
       className: item.className || '',
+      major: item.major || '',
       totalPoints: item.totalPoints || 0
     });
   });

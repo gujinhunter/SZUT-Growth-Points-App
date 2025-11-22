@@ -88,6 +88,7 @@ async function listStudents({ page = 1, pageSize = 50, keyword = '', order = 'de
       studentId: true,
       academy: true,
       className: true,
+      major: true,
       totalPoints: true,
       phone: true
     })
@@ -99,6 +100,7 @@ async function listStudents({ page = 1, pageSize = 50, keyword = '', order = 'de
     studentId: item.studentId || '—',
     academy: item.academy || '',
     className: item.className || '',
+    major: item.major || '',
     phone: item.phone || '',
     totalPoints: item.totalPoints || 0,
     rank: (page - 1) * pageSize + index + 1
