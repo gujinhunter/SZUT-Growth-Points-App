@@ -22,7 +22,7 @@
       <view class="cell rank">排名</view>
       <view class="cell name">姓名</view>
       <view class="cell id">学号</view>
-      <view class="cell major">专业</view>
+      <!-- 学院/班级列已去掉，保留核心字段 -->
       <view class="cell points">总积分</view>
     </view>
     <scroll-view scroll-y class="table-body">
@@ -31,7 +31,6 @@
           <view class="cell rank">{{item.rank}}</view>
           <view class="cell name">{{item.name}}</view>
           <view class="cell id">{{item.studentId}}</view>
-          <view class="cell major">{{item.major || '—'}}</view>
           <view class="cell points">{{item.totalPoints}}</view>
         </view>
       </block>

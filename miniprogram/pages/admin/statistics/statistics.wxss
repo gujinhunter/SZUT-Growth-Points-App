@@ -162,12 +162,6 @@
 }
 
 
-.cell.major {
-  flex: 1;
-  gap: 4rpx;
-  color: #4c6284;
-}
-
 .cell.points {
   width: 160rpx;
   justify-content: flex-end;

@@ -516,14 +516,7 @@ async function saveAnnouncement(payload = {}) {
     throw new Error('公告内容不能为空');
   }
   const now = new Date();
-  let expireTime = null;
-  if (payload.expireTime) {
-    const date = new Date(payload.expireTime);
-    if (!Number.isNaN(date.getTime())) {
-      date.setHours(23, 59, 59, 999);
-      expireTime = date;
-    }
-  }
+  const expireTime = buildExpireTime(payload.expireTime);
   const publishTime = payload.publishTime ? new Date(payload.publishTime) : now;
 
   if (announcementId) {
@@ -590,4 +583,27 @@ async function deleteAnnouncement(payload = {}) {
   }
   await collection.doc(targetId).remove();
   return { announcementId: targetId };
+}
+
+function buildExpireTime(expireDateText) {
+  if (!expireDateText || typeof expireDateText !== 'string') {
+    return null;
+  }
+  const parts = expireDateText.split('-');
+  if (parts.length !== 3) {
+    return null;
+  }
+  const [yearStr, monthStr, dayStr] = parts.map(p => p.trim());
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  if (![year, month, day].every(n => Number.isInteger(n) && n > 0)) {
+    return null;
+  }
+  const yyyy = `${year}`.padStart(4, '0');
+  const mm = `${month}`.padStart(2, '0');
+  const dd = `${day}`.padStart(2, '0');
+  const iso = `${yyyy}-${mm}-${dd}T23:59:59.999+08:00`;
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
