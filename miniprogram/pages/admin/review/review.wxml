@@ -35,7 +35,7 @@
 
     <block wx:if="{{applications.length > 0}}">
       <block wx:for="{{applications}}" wx:key="_id">
-        <view class="review-card" data-id="{{item._id}}" bindtap="goDetail">
+        <view class="review-card" data-id="{{item._id}}">
           <view class="card-info">
             <view class="project">{{item.projectName || '未命名项目'}}</view>
             <view class="meta">申请人：{{item.name || item._openid}}</view>

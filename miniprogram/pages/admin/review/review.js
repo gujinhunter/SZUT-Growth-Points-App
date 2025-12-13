@@ -121,14 +121,6 @@ Page({
 
   noop() {},
 
-  goDetail(e) {
-    const id = e.currentTarget.dataset.id;
-    if (!id) return;
-    wx.navigateTo({
-      url: `/pages/admin/reviewDetail/reviewDetail?id=${id}`
-    });
-  },
-
   previewFile(e) {
     e.stopPropagation?.();
     const fileIDs = e.currentTarget.dataset.fileids;

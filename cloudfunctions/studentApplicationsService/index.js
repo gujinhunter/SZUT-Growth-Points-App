@@ -549,8 +549,9 @@ async function fetchWhitelistRecord(name, studentId) {
     return res.data?.[0] || null;
   } catch (err) {
     if (err?.errCode === -502005 || err?.code === 'DATABASE_COLLECTION_NOT_EXIST') {
-      console.warn('studentWhitelist collection missing, skip whitelist check');
-      return null;
+      // 白名单集合不存在时，返回一个空对象表示允许绑定（跳过白名单验证）
+      console.warn('studentWhitelist collection missing, allowing bind without whitelist check');
+      return {};
     }
     console.error('fetchWhitelistRecord error', err);
     return null;

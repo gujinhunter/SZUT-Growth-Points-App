@@ -191,13 +191,6 @@ function normalizeScore(score) {
   return Number.isFinite(single) ? [single] : [];
 }
 
-function sanitizeExt(ext) {
-  if (!ext) return '.jpg';
-  const lower = ext.toLowerCase();
-  const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.pdf', '.doc', '.docx'];
-  return allowed.includes(lower) ? lower : '.jpg';
-}
-
 async function fetchLatestAnnouncement() {
   try {
     const now = new Date();

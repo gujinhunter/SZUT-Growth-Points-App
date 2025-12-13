@@ -94,6 +94,9 @@ async function listStudents({ page = 1, pageSize = 50, keyword = '', order = 'de
     })
     .get();
 
+  // 计算排名：降序时 rank = skip + index + 1，升序时 rank = total - skip - index
+  const isDesc = order !== 'asc';
+  const skip = (page - 1) * pageSize;
   const list = (res.data || []).map((item, index) => ({
     _id: item._id,
     name: item.name || item.realName || item.nickName || '—',
@@ -103,7 +106,7 @@ async function listStudents({ page = 1, pageSize = 50, keyword = '', order = 'de
     major: item.major || '',
     phone: item.phone || '',
     totalPoints: item.totalPoints || 0,
-    rank: (page - 1) * pageSize + index + 1
+    rank: isDesc ? (skip + index + 1) : (total - skip - index)
   }));
 
   return { page, pageSize, total, list };

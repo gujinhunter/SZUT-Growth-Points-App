@@ -5,6 +5,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const db = cloud.database();
 const _ = db.command;
+const $ = db.command.aggregate;
 
 exports.main = async (event) => {
   try {
@@ -48,35 +49,32 @@ async function getSummary(openid) {
 
   const baseCondition = { role: _.neq('admin') };
 
-  const MAX_LIMIT = 100;
-  const totalRes = await usersCollection.where(baseCondition).count();
+  // 使用 aggregate 计算总积分和平均积分，避免加载所有学生数据
+  const [totalRes, aggRes] = await Promise.all([
+    usersCollection.where(baseCondition).count(),
+    usersCollection.aggregate()
+      .match({ role: _.neq('admin') })
+      .group({
+        _id: null,
+        totalPointsSum: $.sum('$totalPoints')
+      })
+      .end()
+  ]);
+
   const totalStudents = totalRes.total || 0;
-
-  let allStudents = [];
-  if (totalStudents > 0) {
-    const batches = Math.ceil(totalStudents / MAX_LIMIT);
-    const tasks = [];
-    for (let i = 0; i < batches; i++) {
-      tasks.push(
-        usersCollection
-          .where(baseCondition)
-          .skip(i * MAX_LIMIT)
-          .limit(MAX_LIMIT)
-          .field({ totalPoints: true, _openid: true })
-          .get()
-      );
-    }
-    const results = await Promise.all(tasks);
-    allStudents = results.flatMap(res => res.data || []);
-  }
-
-  const totalPointsSum = allStudents.reduce((sum, item) => sum + (item.totalPoints || 0), 0);
+  const totalPointsSum = aggRes.list?.[0]?.totalPointsSum || 0;
   const averagePoints = totalStudents ? Math.round(totalPointsSum / totalStudents) : 0;
 
+  // 使用 count 查询计算排名，避免加载所有学生数据
   let rank = '-';
   if (role !== 'admin' && totalStudents) {
-    const higherCount = allStudents.filter(item => (item.totalPoints || 0) > totalPoints).length;
-    rank = higherCount + 1;
+    const higherCountRes = await usersCollection
+      .where({
+        role: _.neq('admin'),
+        totalPoints: _.gt(totalPoints)
+      })
+      .count();
+    rank = (higherCountRes.total || 0) + 1;
   }
 
   return {

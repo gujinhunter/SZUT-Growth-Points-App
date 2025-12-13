@@ -97,15 +97,26 @@ async function approveApplication({ applicationId, remark = '' }, adminProfile, 
     return { applicationId, message: '该申请已通过' };
   }
 
+  // 使用条件更新防止并发重复操作：只有当 status 仍为原状态时才更新
   const points = Number(app.points || 0) || 0;
-  await appRef.update({
-    data: {
-      status: '已通过',
-      reviewTime: new Date(),
-      rejectRemark: '',
-      reviewRemark: remark
-    }
-  });
+  const updateRes = await db.collection('applications')
+    .where({
+      _id: applicationId,
+      status: app.status  // 乐观锁：确保状态未被其他操作修改
+    })
+    .update({
+      data: {
+        status: '已通过',
+        reviewTime: new Date(),
+        rejectRemark: '',
+        reviewRemark: remark
+      }
+    });
+
+  // 如果没有更新任何记录，说明状态已被其他操作修改
+  if (updateRes.stats?.updated === 0) {
+    return { applicationId, message: '该申请状态已变更，请刷新后重试' };
+  }
 
   if (app.studentOpenId && points > 0) {
     await db.collection('users')
@@ -349,33 +360,6 @@ async function fetchApplicationsByIds(ids) {
         projectCategory: true,
         createTime: true,
         reviewTime: true,
-        _openid: true,
-        projectId: true
-      })
-      .get();
-    (res.data || []).forEach(item => map.set(item._id, item));
-  }
-  return map;
-}
-
-async function fetchApplications(ids) {
-  const map = new Map();
-  if (!ids.length) return map;
-  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
-    const batch = ids.slice(i, i + BATCH_SIZE);
-    const res = await db.collection('applications')
-      .where({ _id: _.in(batch) })
-      .field({
-        name: true,
-        studentId: true,
-        studentOpenId: true,
-        projectName: true,
-        projectCategory: true,
-        createTime: true,
-        reviewTime: true,
-        points: true,
-        reason: true,
-        fileIDs: true,
         _openid: true,
         projectId: true
       })
