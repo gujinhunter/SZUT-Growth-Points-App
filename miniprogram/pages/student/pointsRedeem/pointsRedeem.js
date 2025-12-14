@@ -17,6 +17,10 @@ Page({
     this.loadData();
   },
 
+  goRedeemRecords() {
+    wx.navigateTo({ url: '/pages/student/redeemRecords/redeemRecords' });
+  },
+
   async loadData() {
     try {
       this.setData({ loading: true });

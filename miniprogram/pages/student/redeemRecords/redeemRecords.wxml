@@ -1,0 +1,24 @@
+<view class="container">
+  <block wx:if="{{records.length}}">
+    <block wx:for="{{records}}" wx:key="id">
+      <view class="card">
+        <image wx:if="{{item.cover}}" class="cover" mode="aspectFill" src="{{item.cover}}"></image>
+        <view wx:else class="cover placeholder">无图</view>
+
+        <view class="info">
+          <view class="row">
+            <view class="name">{{item.rewardName}}</view>
+            <view class="status {{item.statusClass}}">{{item.statusText}}</view>
+          </view>
+          <view class="meta">
+            <text>消耗 {{item.needPoints}} 分</text>
+            <text>{{item.date}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <view wx:else class="empty">暂无兑换记录</view>
+</view>
+

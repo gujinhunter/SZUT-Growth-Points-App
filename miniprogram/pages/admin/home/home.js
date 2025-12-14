@@ -10,7 +10,8 @@ Page({
       pendingTotal: 0,
       totalProjects: 0,
       approvalRate: '0.0',
-      redeemToday: 0
+      redeemToday: 0,
+      redeemPending: 0
     },
     loading: false,
     announcement: null,
@@ -114,7 +115,10 @@ Page({
       const result = res.result || {};
       if (!result.success) throw new Error(result.message || '兑换统计失败');
       const data = result.data || {};
-      this.setData({ 'metrics.redeemToday': data.today || 0 });
+      this.setData({
+        'metrics.redeemToday': data.today || 0,
+        'metrics.redeemPending': data.pendingUnissued || 0
+      });
     } catch (err) {
       console.error('兑换统计失败', err);
     }

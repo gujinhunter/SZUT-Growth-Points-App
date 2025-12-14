@@ -8,6 +8,8 @@
       <text class="header-label">可用积分</text>
       <text class="header-score highlight">{{redeemablePoints}}</text>
     </view>
+
+    <view class="header-action" bindtap="goRedeemRecords">兑换记录</view>
   </view>
 
   <view class="section-title">可兑换奖品</view>

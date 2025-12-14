@@ -24,6 +24,8 @@ exports.main = async (event) => {
         return { success: true, data: await listDetails(OPENID, payload) };
       case 'listRewards':
         return { success: true, data: await listRewards(payload) };
+      case 'listMyRedeemRecords':
+        return { success: true, data: await listMyRedeemRecords(OPENID, payload) };
       case 'redeemReward':
         return { success: true, data: await redeemReward(OPENID, payload) };
       default:
@@ -195,6 +197,43 @@ async function listRewards({ page = 1, pageSize = 50, enabledOnly = true }) {
     stock: item.stock ?? null,
     description: item.description || '',
     status: item.status || 'enabled'
+  }));
+
+  return { page, pageSize, total, list };
+}
+
+async function listMyRedeemRecords(openid, { page = 1, pageSize = 30 }) {
+  page = Math.max(Number(page) || 1, 1);
+  pageSize = Math.min(Math.max(Number(pageSize) || 10, 1), 100);
+
+  const collection = db.collection('redeem_records');
+  const where = { openid };
+  const totalRes = await collection.where(where).count();
+  const total = totalRes.total || 0;
+  if (!total) {
+    return { page, pageSize, total: 0, list: [] };
+  }
+
+  const res = await collection
+    .where(where)
+    .orderBy('createdAt', 'desc')
+    .skip((page - 1) * pageSize)
+    .limit(pageSize)
+    .field({
+      rewardId: true,
+      rewardName: true,
+      needPoints: true,
+      status: true,
+      createdAt: true,
+      cover: true
+    })
+    .get();
+
+  const raw = res.data || [];
+  const coverTempMap = await buildCoverTempMap(raw);
+  const list = raw.map(item => ({
+    ...item,
+    cover: normalizeCover(item.cover, coverTempMap)
   }));
 
   return { page, pageSize, total, list };
