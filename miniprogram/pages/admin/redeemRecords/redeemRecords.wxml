@@ -1,0 +1,46 @@
+<view class="container">
+  <view class="filter-bar">
+    <view class="filter-item">
+      <text class="filter-label">状态</text>
+      <picker mode="selector"
+              range="{{statusOptions}}"
+              range-key="label"
+              value="{{statusIndex}}"
+              bindchange="onStatusChange">
+        <view class="picker-cell">
+          {{statusOptions[statusIndex].label}}
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <block wx:if="{{records.length}}">
+    <block wx:for="{{records}}" wx:key="id">
+      <view class="record-card">
+        <image wx:if="{{item.cover}}" class="cover" src="{{item.cover}}" mode="aspectFill"></image>
+        <view wx:else class="cover placeholder">无图</view>
+
+        <view class="info">
+          <view class="row top">
+            <view class="name">{{item.rewardName}}</view>
+            <view class="status {{item.statusClass}}">
+              {{item.statusText}}
+            </view>
+          </view>
+          <view class="row meta">
+            <text class="need">消耗 {{item.needPoints}} 分</text>
+            <text class="user">{{item.userName || '—'}} {{item.studentId || ''}}</text>
+          </view>
+          <view class="time">{{item.createdAt}}</view>
+          <view class="actions" wx:if="{{item.status !== 'issued'}}">
+            <button size="mini" type="primary" data-id="{{item.id}}" bindtap="markIssued" loading="{{updating}}">标记已发放</button>
+          </view>
+        </view>
+      </view>
+    </block>
+    <view class="footer" wx:if="{{!hasMore}}">没有更多了</view>
+  </block>
+
+  <view wx:else class="empty">暂无兑换记录</view>
+</view>
+

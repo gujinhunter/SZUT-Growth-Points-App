@@ -1,0 +1,96 @@
+<view class="container">
+  <view class="toolbar">
+    <view class="add-btn" bindtap="openSheet">
+      <text class="add-icon">＋</text>
+      <text class="add-text">新增奖品</text>
+    </view>
+    <view class="hint">点击卡片编辑，长按删除</view>
+  </view>
+  <view class="tip-card">上架状态的奖品将对学生可见，长按卡片可快速删除</view>
+
+  <block wx:if="{{rewards.length}}">
+    <block wx:for="{{rewards}}" wx:key="id">
+      <view class="reward-card"
+            bindtap="openSheet" data-id="{{item.id}}"
+            bindlongpress="confirmDelete" data-id="{{item.id}}">
+        <image wx:if="{{item.cover}}" class="cover" src="{{item.cover}}" mode="aspectFill"></image>
+        <view wx:else class="cover placeholder">无图</view>
+
+        <view class="info">
+          <view class="row head">
+            <view class="name">{{item.name}}</view>
+            <view class="status {{item.status === 'enabled' ? 'ok' : 'off'}}">
+              {{item.status === 'enabled' ? '上架' : '下架'}}
+            </view>
+          </view>
+          <view class="meta">
+            <text class="need">需要 {{item.needPoints}} 分</text>
+            <text class="stock" wx:if="{{item.stock !== '—' && item.stock !== null}}">库存 {{item.stock}}</text>
+          </view>
+          <view class="desc" wx:if="{{item.description}}">{{item.description}}</view>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <view wx:else class="empty">暂无奖品，点击“新增奖品”开始</view>
+
+  <!-- 抽屉表单 -->
+  <view wx:if="{{sheetVisible}}" class="sheet-mask" bindtap="closeSheet"></view>
+  <view wx:if="{{sheetVisible}}" class="sheet" catchtap="noop">
+    <view class="sheet-header">
+      <view class="sheet-title">{{editingId ? '编辑奖品' : '新增奖品'}}</view>
+    </view>
+    <view class="sheet-body">
+      <view class="field">
+        <view class="label">名称</view>
+        <input class="input" placeholder="请输入奖品名称" value="{{form.name}}" data-key="name" bindinput="onInput"/>
+      </view>
+      <view class="field">
+        <view class="label">所需积分</view>
+        <input class="input" type="number" placeholder="例如 10" value="{{form.needPoints}}" data-key="needPoints" bindinput="onInput"/>
+      </view>
+      <view class="field">
+        <view class="label">库存（空=不限）</view>
+        <input class="input" type="number" placeholder="留空表示不限" value="{{form.stock}}" data-key="stock" bindinput="onInput"/>
+      </view>
+      <view class="field">
+        <view class="label">封面图（可选，可填URL或fileID）</view>
+        <view class="cover-row">
+          <input class="input flex" placeholder="https://... 或 fileID" value="{{form.cover}}" data-key="cover" bindinput="onInput"/>
+          <button class="btn-upload" size="mini" type="primary" bindtap="uploadCover" loading="{{uploading}}">上传</button>
+        </view>
+      </view>
+      <view class="field">
+        <view class="label">排序（越小越靠前）</view>
+        <picker mode="selector"
+                range="{{orderOptions}}"
+                value="{{form.sort}}"
+                bindchange="onSortChange">
+          <view class="picker-row">
+            <text class="picker-text">{{form.sort}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="label">状态</view>
+        <picker mode="selector"
+                range="{{['上架','下架']}}"
+                value="{{form.status === 'disabled' ? 1 : 0}}"
+                bindchange="onStatusChange">
+          <view class="picker">{{form.status === 'disabled' ? '下架' : '上架'}}</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="label">描述（可选）</view>
+        <textarea class="textarea" placeholder="可填写使用说明" value="{{form.description}}" data-key="description" bindinput="onInput"></textarea>
+      </view>
+    </view>
+    <view class="sheet-actions">
+      <button class="btn-cancel" bindtap="closeSheet">取消</button>
+      <button class="btn-save" type="primary" loading="{{saving}}" bindtap="saveReward">保存</button>
+    </view>
+  </view>
+</view>
+

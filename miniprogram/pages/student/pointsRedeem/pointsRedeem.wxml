@@ -1,0 +1,45 @@
+<view class="container">
+  <view class="header-card">
+    <view class="header-left">
+      <text class="header-label">总积分</text>
+      <text class="header-score">{{totalPoints}}</text>
+    </view>
+    <view class="header-left">
+      <text class="header-label">可用积分</text>
+      <text class="header-score highlight">{{redeemablePoints}}</text>
+    </view>
+  </view>
+
+  <view class="section-title">可兑换奖品</view>
+
+  <block wx:if="{{rewards.length > 0}}">
+    <block wx:for="{{rewards}}" wx:key="id">
+      <view class="reward-card">
+        <image wx:if="{{item.cover}}" class="reward-cover" mode="aspectFill" src="{{item.cover}}"></image>
+        <view wx:else class="reward-cover placeholder">无图</view>
+
+        <view class="reward-info">
+          <view class="reward-name">{{item.name}}</view>
+          <view class="reward-meta">
+            <text class="need">需要 {{item.needPoints}} 分</text>
+            <text class="stock" wx:if="{{item.stock !== null && item.stock !== '—'}}">库存 {{item.stock}}</text>
+          </view>
+          <view class="reward-desc" wx:if="{{item.description}}">{{item.description}}</view>
+
+          <button class="redeem-btn"
+                  size="mini"
+                  type="primary"
+                  disabled="{{item.disabled || redeemingId === item.id}}"
+                  loading="{{redeemingId === item.id}}"
+                  data-id="{{item.id}}"
+                  bindtap="onRedeemTap">
+            {{item.disabled ? '不可兑换' : (redeemingId === item.id ? '兑换中...' : '立即兑换')}}
+          </button>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <view wx:else class="empty">暂无可兑换奖品</view>
+</view>
+

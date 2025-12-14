@@ -43,8 +43,8 @@
     justify-content: center;
     align-items: baseline; /* 保证“分”与数字底部对齐 */
     margin-top: 20rpx;
+  gap: 12rpx;
   }
-  
   
   .summary-content .score {
     display: block;    /* 独占一行。 */
@@ -59,6 +59,56 @@
     opacity: 0.8;     /* 轻微透明。 */
   }
   
+.redeem-chip.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 14rpx;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1rpx solid rgba(255, 255, 255, 0.28);
+  border-radius: 999rpx;
+  color: #fff;
+}
+
+.chip-label {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+.chip-value {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.redeem-float {
+  position: absolute;
+  right: 36rpx;
+  bottom: 30rpx;
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
+  border-radius: 999rpx;
+  color: #fff;
+}
+
+.redeem-float .chip-label {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+.redeem-float .chip-value {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.redeem-float .chip-unit {
+  font-size: 24rpx;
+  opacity: 0.85;
+}
+
   /* --- */
 
 /* 标题 */
@@ -160,4 +210,26 @@
   color: #aaa;
   margin-top: 200rpx;
   font-size: 28rpx;
+}
+
+.redeem-entry {
+  margin: -10rpx 20rpx 20rpx;
+  padding: 28rpx 32rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #1f4e9d;
+  font-size: 30rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.05);
+}
+
+.redeem-entry:active {
+  opacity: 0.9;
+}
+
+.redeem-entry .arrow {
+  font-size: 34rpx;
+  color: #7c89a3;
 }

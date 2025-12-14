@@ -1,0 +1,127 @@
+.container {
+  padding: 32rpx;
+  background: #f7f8fa;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.header-card {
+  background: linear-gradient(135deg, #2f5fb8, #103c9f);
+  color: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx 32rpx;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+  box-shadow: 0 8rpx 18rpx rgba(16, 60, 159, 0.18);
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.header-label {
+  font-size: 28rpx;
+  opacity: 0.9;
+}
+
+.header-score {
+  font-size: 48rpx;
+  font-weight: 700;
+}
+
+.header-score.highlight {
+  color: #ffe89c;
+}
+
+.section-title {
+  margin: 32rpx 0 12rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #2f365f;
+}
+
+.reward-card {
+  background: #fff;
+  border-radius: 18rpx;
+  padding: 20rpx;
+  display: flex;
+  gap: 20rpx;
+  align-items: stretch;
+  box-shadow: 0 6rpx 14rpx rgba(0, 0, 0, 0.05);
+  margin-bottom: 20rpx;
+}
+
+.reward-cover {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 14rpx;
+  background: #eef2f7;
+}
+
+.reward-cover.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8a94a7;
+  font-size: 26rpx;
+}
+
+.reward-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.reward-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1f2c4d;
+}
+
+.reward-meta {
+  display: flex;
+  gap: 16rpx;
+  font-size: 26rpx;
+  color: #4b5c7a;
+}
+
+.need {
+  color: #e65a00;
+  font-weight: 600;
+}
+
+.stock {
+  color: #2f5fb8;
+}
+
+.reward-desc {
+  font-size: 26rpx;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.redeem-btn {
+  align-self: flex-start;
+  padding: 0 26rpx;
+  margin-top: 6rpx;
+  background: linear-gradient(135deg, #2f5fb8, #103c9f);
+  color: #fff;
+  border: none;
+}
+
+.redeem-btn[disabled] {
+  background: #cfd5e1;
+  color: #fff;
+}
+
+.empty {
+  margin-top: 120rpx;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 28rpx;
+}
+

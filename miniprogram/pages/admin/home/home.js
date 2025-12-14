@@ -9,7 +9,8 @@ Page({
     metrics: {
       pendingTotal: 0,
       totalProjects: 0,
-      approvalRate: '0.0'
+      approvalRate: '0.0',
+      redeemToday: 0
     },
     loading: false,
     announcement: null,
@@ -29,6 +30,7 @@ Page({
     if (ok) {
       this.loadOverview();
       this.loadAnnouncement();
+      this.loadRedeemSummary();
     }
   },
 
@@ -36,6 +38,7 @@ Page({
     if (this.data.adminName) {
       this.loadOverview();
       this.loadAnnouncement();
+      this.loadRedeemSummary();
     }
   },
 
@@ -99,6 +102,21 @@ Page({
     } finally {
       wx.hideLoading();
       this.setData({ loading: false });
+    }
+  },
+
+  async loadRedeemSummary() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'adminRewardService',
+        data: { action: 'getRedeemSummary' }
+      });
+      const result = res.result || {};
+      if (!result.success) throw new Error(result.message || '兑换统计失败');
+      const data = result.data || {};
+      this.setData({ 'metrics.redeemToday': data.today || 0 });
+    } catch (err) {
+      console.error('兑换统计失败', err);
     }
   },
 

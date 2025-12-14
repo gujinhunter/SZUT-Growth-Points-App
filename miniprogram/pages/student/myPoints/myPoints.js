@@ -5,6 +5,7 @@ Page({
   data: {
     loading: true,
     totalPoints: 0,
+    redeemablePoints: 0,
     averagePoints: 0,
     rank: '-',
     detail: []
@@ -30,6 +31,10 @@ Page({
       const summary = await callPointsService('getSummary');
       this.setData({
         totalPoints: summary?.totalPoints || 0,
+        redeemablePoints: summary?.redeemablePoints
+          ?? summary?.availablePoints
+          ?? summary?.totalPoints
+          ?? 0,
         averagePoints: summary?.averagePoints || 0,
         rank: summary?.rank ?? '-'
       });
@@ -55,6 +60,12 @@ Page({
       this.setData({ loading: false });
       wx.stopPullDownRefresh();
     }
+  },
+
+  goRedeem() {
+    wx.navigateTo({
+      url: '/pages/student/pointsRedeem/pointsRedeem'
+    });
   },
 
   formatDateTime(time) {

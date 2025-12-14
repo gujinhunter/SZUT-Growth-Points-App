@@ -5,6 +5,7 @@
     "pages/student/apply/apply",
     "pages/student/myApplications/myApplications",
     "pages/student/myPoints/myPoints",
+    "pages/student/pointsRedeem/pointsRedeem",
     "pages/student/profile/profile",
     "pages/admin/home/home",
     "pages/admin/users/users",
@@ -12,7 +13,9 @@
     "pages/admin/projects/projects",
     "pages/admin/statistics/statistics",
     "pages/admin/projectEdit/projectEdit",
-    "pages/admin/reviewHistory/reviewHistory"
+    "pages/admin/reviewHistory/reviewHistory",
+    "pages/admin/rewards/rewards",
+    "pages/admin/redeemRecords/redeemRecords"
   ],
   "window": {
     "backgroundColor": "#F6F6F6",
