@@ -236,18 +236,13 @@ async function getRedeemSummary() {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  const [totalRes, todayRes, pendingRes] = await Promise.all([
+  const [totalRes, pendingRes] = await Promise.all([
     collection.count(),
-    collection.where({
-      createdAt: _.gte(startOfDay),
-      status: 'success'
-    }).count(),
     collection.where({ status: 'unissued' }).count()
   ]);
 
   return {
     total: totalRes.total || 0,
-    today: todayRes.total || 0,
     pendingUnissued: pendingRes.total || 0
   };
 }
