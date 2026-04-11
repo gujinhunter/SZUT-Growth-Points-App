@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const xlsx = require('xlsx');
 
-const INPUT_FILE = path.resolve(__dirname, '../miniprogram/计算机名单.xlsx');
+const INPUT_FILE = path.resolve(__dirname, '../计算机名单.xlsx');
 const OUTPUT_FILE = path.resolve(__dirname, '../student-whitelist.jsonl'); // 新文件名
 
 const workbook = xlsx.readFile(INPUT_FILE);

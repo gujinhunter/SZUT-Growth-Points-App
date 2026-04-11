@@ -4,14 +4,16 @@ const DEFAULT_ICON = '../../../assets/projects/project_active.png';
 const DEFAULT_NOTICE_ICON = '../../../assets/projects/project_notice.png';
 const CATEGORY_ICONS = {
   '其他': '../../../assets/projects/project_active.png',
-  '创新创业': '../../../assets/projects/创新创业.png',
-  '宿舍安全': '../../../assets/projects/宿舍安全.png',
+  '学科竞赛': '../../../assets/projects/学科竞赛.png',
+  '宿舍文明': '../../../assets/projects/宿舍文明.png',
   '心理健康': '../../../assets/projects/心理健康.png',
   '志愿服务': '../../../assets/projects/志愿服务.png',
-  '招生就业': '../../../assets/projects/招生就业.png',
+  '生涯规划': '../../../assets/projects/生涯规划.png',
   '文体工作': '../../../assets/projects/文体工作.png',
   '苏乡永助': '../../../assets/projects/苏乡永助.png',
-  '资助宣传大使': '../../../assets/projects/资助宣传大使.png'
+  '资助宣传': '../../../assets/projects/资助宣传.png',
+  '“彩虹桥”赋能项目': '../../../assets/projects/彩虹桥.png',
+  '创新创业': '../../../assets/projects/创新创业.png'
 };
 const CARD_GRADIENTS = [
   ['#eef6ff', '#f4fbff'],

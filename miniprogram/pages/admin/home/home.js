@@ -115,6 +115,7 @@ Page({
       if (!result.success) throw new Error(result.message || '兑换统计失败');
       const data = result.data || {};
       this.setData({
+        'metrics.redeemToday': data.today || 0,
         'metrics.redeemPending': data.pendingUnissued || 0
       });
     } catch (err) {
