@@ -37,6 +37,8 @@
   display: flex;
   align-items: center;
   gap: 20rpx;
+  margin-top: 24rpx;
+  flex-wrap: wrap;
 }
 
 .primary-btn {
@@ -91,6 +93,8 @@
 }
 
 .export-btn {
+  flex: 1;
+  min-width: 200rpx;
   /* 导出按钮，保持较大尺寸和圆角，强调主操作 */
   height: 78rpx;
   border-radius: 999rpx;

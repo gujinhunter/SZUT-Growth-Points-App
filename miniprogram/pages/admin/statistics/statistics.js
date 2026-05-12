@@ -25,6 +25,10 @@ Page({
     this.loadStudents().finally(() => wx.stopPullDownRefresh());
   },
 
+  goPointsBatch() {
+    wx.navigateTo({ url: '/pages/admin/pointsBatch/pointsBatch' });
+  },
+
   async ensureAdmin() {
     if (this.data.isAdmin) return true;
     try {

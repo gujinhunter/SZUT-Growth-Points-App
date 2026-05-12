@@ -13,6 +13,7 @@
     "pages/admin/review/review",
     "pages/admin/projects/projects",
     "pages/admin/statistics/statistics",
+    "pages/admin/pointsBatch/pointsBatch",
     "pages/admin/projectEdit/projectEdit",
     "pages/admin/reviewHistory/reviewHistory",
     "pages/admin/rewards/rewards",

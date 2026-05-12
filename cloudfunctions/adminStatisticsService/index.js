@@ -6,6 +6,11 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
 
+const MAX_BATCH_ADD = 50;
+const MAX_POINTS_PER_ADD = 5000;
+const MIN_POINTS_PER_ADD = 1;
+const MANUAL_RECORD_TITLE = '管理员加分';
+
 class AuthError extends Error {
   constructor(message, code = 'AUTH_DENIED') {
     super(message);
@@ -24,6 +29,8 @@ exports.main = async (event) => {
         return { success: true, data: await listStudents(event.payload || {}) };
       case 'getSummary':
         return { success: true, data: await getSummary() };
+      case 'batchAddPoints':
+        return { success: true, data: await batchAddPoints(OPENID, event.payload || {}) };
       default:
         throw new Error(`未知操作: ${action}`);
     }
@@ -134,5 +141,77 @@ async function getSummary() {
     totalPoints: aggRes.totalPoints || 0,
     maxPoints: aggRes.maxPoints || 0,
     minPoints: aggRes.minPoints || 0
+  };
+}
+
+async function batchAddPoints(adminOpenId, payload = {}) {
+  const { userIds = [], points: rawPoints, remark = '' } = payload;
+  const points = Math.floor(Number(rawPoints));
+  if (!Array.isArray(userIds) || userIds.length === 0) {
+    throw new Error('请选择至少一名学生');
+  }
+  if (userIds.length > MAX_BATCH_ADD) {
+    throw new Error(`单次最多为 ${MAX_BATCH_ADD} 名学生加分`);
+  }
+  if (!Number.isFinite(points) || points < MIN_POINTS_PER_ADD || points > MAX_POINTS_PER_ADD) {
+    throw new Error(`分值须为 ${MIN_POINTS_PER_ADD}～${MAX_POINTS_PER_ADD} 的整数`);
+  }
+
+  const uniqueIds = [...new Set(userIds.map(id => String(id)).filter(Boolean))];
+  const usersCol = db.collection('users');
+  const recordsCol = db.collection('manual_point_records');
+  const remarkTrim = String(remark || '').trim().slice(0, 200);
+
+  const successes = [];
+  const failures = [];
+
+  for (const userId of uniqueIds) {
+    try {
+      const snap = await usersCol.doc(userId).get();
+      const u = snap.data;
+      if (!u) {
+        failures.push({ userId, reason: '用户不存在' });
+        continue;
+      }
+      if (u.role === 'admin') {
+        failures.push({
+          userId,
+          name: u.name || u.realName || '',
+          reason: '不能给管理员加分'
+        });
+        continue;
+      }
+      const studentOpenId = u._openid;
+      if (!studentOpenId) {
+        failures.push({ userId, reason: '缺少用户标识' });
+        continue;
+      }
+
+      await usersCol.doc(userId).update({ data: { totalPoints: _.inc(points) } });
+      await recordsCol.add({
+        data: {
+          studentOpenId,
+          points,
+          title: MANUAL_RECORD_TITLE,
+          remark: remarkTrim,
+          createTime: new Date(),
+          adminOpenId
+        }
+      });
+      successes.push({
+        userId,
+        name: u.name || u.realName || u.nickName || '—'
+      });
+    } catch (e) {
+      console.error('batchAddPoints item error', userId, e);
+      failures.push({ userId, reason: e.message || '操作失败' });
+    }
+  }
+
+  return {
+    okCount: successes.length,
+    failCount: failures.length,
+    successes,
+    failures
   };
 }

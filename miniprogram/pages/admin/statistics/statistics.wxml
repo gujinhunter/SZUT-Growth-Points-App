@@ -9,12 +9,18 @@
     </view>
   </view>
 
-  <button class="export-btn"
-          bindtap="handleExport"
-          loading="{{exporting}}"
-          disabled="{{exporting || loading}}">
-    导出名单
-  </button>
+  <view class="button-group">
+    <button class="ghost-btn"
+            bindtap="goPointsBatch">
+      批量加分
+    </button>
+    <button class="export-btn"
+            bindtap="handleExport"
+            loading="{{exporting}}"
+            disabled="{{exporting || loading}}">
+      导出名单
+    </button>
+  </view>
 </view>
 
   <view class="table-wrapper" wx:if="{{students.length}}">

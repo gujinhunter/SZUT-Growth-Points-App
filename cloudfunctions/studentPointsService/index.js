@@ -98,50 +98,109 @@ async function listDetails(openid, { page = 1, pageSize = 100 }) {
   page = Math.max(Number(page) || 1, 1);
   pageSize = Math.min(Math.max(Number(pageSize) || 20, 1), 200);
 
-  const where = { studentOpenId: openid, status: '已通过' };
+  const appWhere = { studentOpenId: openid, status: '已通过' };
+  const manualWhere = { studentOpenId: openid };
   const applicationsCollection = db.collection('applications');
+  const manualCollection = db.collection('manual_point_records');
 
-  const countRes = await applicationsCollection.where(where).count();
-  const total = countRes.total || 0;
+  const [appCountRes, manualCountRes] = await Promise.all([
+    applicationsCollection.where(appWhere).count(),
+    manualCollection.where(manualWhere).count()
+  ]);
+  const appTotal = appCountRes.total || 0;
+  const manualTotal = manualCountRes.total || 0;
+  const total = appTotal + manualTotal;
   if (!total) {
     return { page, pageSize, total: 0, list: [] };
   }
 
   const MAX_LIMIT = 100;
-  const batches = Math.ceil(total / MAX_LIMIT);
-  const tasks = [];
-  for (let i = 0; i < batches; i++) {
-    tasks.push(
-      applicationsCollection
-        .where(where)
-        .orderBy('createTime', 'desc')
-        .skip(i * MAX_LIMIT)
-        .limit(MAX_LIMIT)
-        .field({
-          projectName: true,
-          points: true,
-          createTime: true,
-          reviewTime: true,
-          status: true
-        })
-        .get()
-    );
+  const MANUAL_FETCH_CAP = 1000;
+
+  const appTasks = [];
+  if (appTotal > 0) {
+    const appBatches = Math.ceil(appTotal / MAX_LIMIT);
+    for (let i = 0; i < appBatches; i++) {
+      appTasks.push(
+        applicationsCollection
+          .where(appWhere)
+          .orderBy('createTime', 'desc')
+          .skip(i * MAX_LIMIT)
+          .limit(MAX_LIMIT)
+          .field({
+            projectName: true,
+            points: true,
+            createTime: true,
+            reviewTime: true,
+            status: true
+          })
+          .get()
+      );
+    }
   }
 
-  const results = await Promise.all(tasks);
-  const all = results.flatMap(res => res.data || []);
-  all.sort((a, b) => {
-    const timeA = normalizeDate(a.reviewTime || a.createTime)?.getTime() || 0;
-    const timeB = normalizeDate(b.reviewTime || b.createTime)?.getTime() || 0;
-    return timeB - timeA;
-  });
+  const manualToFetch = Math.min(manualTotal, MANUAL_FETCH_CAP);
+  const manualTasks = [];
+  if (manualToFetch > 0) {
+    const manualBatches = Math.ceil(manualToFetch / MAX_LIMIT);
+    for (let i = 0; i < manualBatches; i++) {
+      manualTasks.push(
+        manualCollection
+          .where(manualWhere)
+          .orderBy('createTime', 'desc')
+          .skip(i * MAX_LIMIT)
+          .limit(MAX_LIMIT)
+          .field({
+            points: true,
+            title: true,
+            remark: true,
+            createTime: true
+          })
+          .get()
+      );
+    }
+  }
+
+  const [appResults, manualResults] = await Promise.all([
+    appTasks.length ? Promise.all(appTasks) : Promise.resolve([]),
+    manualTasks.length ? Promise.all(manualTasks) : Promise.resolve([])
+  ]);
+
+  const appRows = (Array.isArray(appResults) ? appResults : []).flatMap(res => res.data || []);
+  const manualRows = (Array.isArray(manualResults) ? manualResults : []).flatMap(res => res.data || []);
+
+  const merged = [];
+
+  for (const item of appRows) {
+    const t = normalizeDate(item.reviewTime || item.createTime)?.getTime() || 0;
+    merged.push({
+      sortTime: t,
+      projectName: item.projectName || '—',
+      points: item.points || 0,
+      createTime: t || null
+    });
+  }
+
+  for (const item of manualRows) {
+    const t = normalizeDate(item.createTime)?.getTime() || 0;
+    const title = item.title || '管理员加分';
+    const remark = (item.remark || '').trim();
+    merged.push({
+      sortTime: t,
+      projectName: remark ? `${title}（${remark}）` : title,
+      points: item.points || 0,
+      createTime: t || null
+    });
+  }
+
+  merged.sort((a, b) => b.sortTime - a.sortTime);
 
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
-  const pageList = all.slice(start, end).map(item => ({
-    projectName: item.projectName || '—',
-    points: item.points || 0,
-    createTime: normalizeDate(item.reviewTime || item.createTime)?.getTime() || null
+  const pageList = merged.slice(start, end).map(({ projectName, points, createTime }) => ({
+    projectName,
+    points,
+    createTime
   }));
 
   return {

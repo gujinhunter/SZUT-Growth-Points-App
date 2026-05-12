@@ -339,14 +339,16 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
     throw new Error('请填写完整信息');
   }
 
-  // 验证学号格式（可选，根据实际需求调整）
-  if (!/^\d+$/.test(studentId.trim())) {
-    throw new Error('学号格式不正确，请输入数字');
+  // 验证学号格式：允许数字/字母/下划线/短横线
+  // 注意：后续白名单校验仍是 name + studentId 的精确匹配
+  const trimmedStudentId = studentId.trim();
+  if (!/^[0-9A-Za-z_-]+$/.test(trimmedStudentId)) {
+    throw new Error('学号格式不正确，请输入字母/数字/下划线/短横线');
   }
 
   const usersCollection = db.collection('users');
   const trimmedName = name.trim();
-  const trimmedStudentId = studentId.trim();
+  const trimmedStudentIdSafe = trimmedStudentId;
 
   const whitelistRecord = await fetchWhitelistRecord(trimmedName, trimmedStudentId);
   if (!whitelistRecord) {
@@ -357,7 +359,7 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
   const conflict = await usersCollection
     .where({
       name: trimmedName,
-      studentId: trimmedStudentId,
+      studentId: trimmedStudentIdSafe,
       _openid: _.neq(openid)
     })
     .field({ _id: true })
@@ -374,7 +376,7 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
     await usersCollection.doc(existing.data[0]._id).update({
       data: {
         name: trimmedName,
-        studentId: trimmedStudentId,
+        studentId: trimmedStudentIdSafe,
         updatedAt: now,
         ...profileFields
       }
@@ -386,7 +388,7 @@ async function bindStudentProfile(openid, { name = '', studentId = '' }) {
     const newUserData = {
       _openid: openid,
       name: trimmedName,
-      studentId: trimmedStudentId,
+      studentId: trimmedStudentIdSafe,
       role: 'student',
       totalPoints: Number.isFinite(restoredPoints) ? restoredPoints : 0,
       phone: archiveSnapshot?.phone || '',
